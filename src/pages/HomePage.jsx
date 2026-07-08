@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useMotionTemplate, animate } from 'framer-motion';
 import StatsStrip from '../components/StatsStrip.jsx';
 import HowItWorks from '../components/HowItWorks.jsx';
+import Capabilities from '../components/Capabilities.jsx';
 import MapTeaser from '../components/MapTeaser.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
@@ -52,6 +53,7 @@ export default function HomePage() {
       </section>
       <StatsStrip />
       <HowItWorks />
+      <Capabilities />
       <MapTeaser />
       <Footer />
     </>

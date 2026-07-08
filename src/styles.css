@@ -110,6 +110,12 @@ a { color: var(--voyage-teal); }
   padding: var(--space-16) var(--space-6);
 }
 
+.about-section { margin-bottom: var(--space-12); }
+.about-section h2 { margin: 0 0 var(--space-3); }
+.about-section p { color: var(--muted-text); margin: 0 0 var(--space-3); }
+.about-section p:last-child { margin-bottom: 0; }
+.about-section a { text-decoration: underline; }
+
 .hero {
   position: relative;
   flex: 1;
@@ -259,6 +265,42 @@ a { color: var(--voyage-teal); }
 
 .how-it-works-step h3 { margin: var(--space-2) 0; }
 .how-it-works-step p { margin: 0; color: var(--muted-text); }
+
+/* ==== HOME: CAPABILITIES ==== */
+
+.capabilities {
+  padding: var(--space-16) var(--space-6);
+  background: var(--atlas-paper);
+  text-align: center;
+}
+
+.capabilities h2 { margin: 0 0 var(--space-12); }
+
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-8);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.capability-card {
+  height: 100%;
+  text-align: left;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.capability-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
+}
+
+.capability-card h3 { margin: 0 0 var(--space-2); font-size: 1.05rem; }
+.capability-card p { margin: 0; color: var(--muted-text); }
 
 /* ==== HOME: MAP TEASER ==== */
 
