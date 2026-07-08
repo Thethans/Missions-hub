@@ -7,8 +7,9 @@ body {
   font-family: var(--font-body);
   color: var(--ink-navy);
   background-color: var(--atlas-paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%2316233b' stroke-opacity='0.05' stroke-width='1.5'%3E%3Cpath d='M-10,20 Q40,6 90,20 T190,20'/%3E%3Cpath d='M-10,60 Q40,42 90,60 T190,60'/%3E%3Cpath d='M-10,100 Q40,86 90,100 T190,100'/%3E%3Cpath d='M-10,140 Q40,120 90,140 T190,140'/%3E%3Cpath d='M-10,180 Q40,164 90,180 T190,180'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27700%27%20height%3D%27500%27%20viewBox%3D%270%200%20700%20500%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2316233b%27%20stroke-opacity%3D%270.055%27%20stroke-width%3D%271%27%3E%3Cpath%20d%3D%27M228.6%2C105.9%20Q250.9%2C130.0%20238.4%2C161.2%20Q225.8%2C192.4%20197.4%2C205.7%20Q168.9%2C219.1%20140.7%2C216.9%20Q112.4%2C214.8%2093.0%2C196.6%20Q73.5%2C178.3%2060.5%2C154.1%20Q47.6%2C130.0%2046.1%2C95.3%20Q44.6%2C60.7%2076.2%2C45.8%20Q107.8%2C31.0%20135.0%2C46.5%20Q162.1%2C62.0%20184.2%2C71.9%20Q206.3%2C81.8%20228.6%2C105.9%20Z%27%2F%3E%3Cpath%20d%3D%27M212.5%2C110.3%20Q230.7%2C130.0%20220.5%2C155.5%20Q210.2%2C181.0%20187.0%2C191.9%20Q163.7%2C202.9%20140.6%2C201.1%20Q117.4%2C199.4%20101.5%2C184.5%20Q85.6%2C169.5%2075.0%2C149.8%20Q64.4%2C130.0%2063.1%2C101.6%20Q61.9%2C73.3%2087.8%2C61.1%20Q113.7%2C49.0%20135.9%2C61.7%20Q158.1%2C74.4%20176.2%2C82.5%20Q194.3%2C90.6%20212.5%2C110.3%20Z%27%2F%3E%3Cpath%20d%3D%27M196.4%2C114.7%20Q210.6%2C130.0%20202.6%2C149.8%20Q194.6%2C169.7%20176.5%2C178.2%20Q158.4%2C186.7%20140.4%2C185.3%20Q122.5%2C184.0%20110.1%2C172.4%20Q97.7%2C160.7%2089.4%2C145.4%20Q81.2%2C130.0%2080.2%2C107.9%20Q79.3%2C85.9%2099.4%2C76.4%20Q119.5%2C67.0%20136.8%2C76.9%20Q154.1%2C86.7%20168.1%2C93.0%20Q182.2%2C99.3%20196.4%2C114.7%20Z%27%2F%3E%3Cpath%20d%3D%27M180.3%2C119.0%20Q190.4%2C130.0%20184.7%2C144.2%20Q179.0%2C158.3%20166.1%2C164.4%20Q153.2%2C170.5%20140.3%2C169.5%20Q127.5%2C168.6%20118.6%2C160.3%20Q109.8%2C152.0%20103.9%2C141.0%20Q98.0%2C130.0%2097.3%2C114.2%20Q96.6%2C98.5%20111.0%2C91.7%20Q125.4%2C85.0%20137.7%2C92.0%20Q150.0%2C99.1%20160.1%2C103.6%20Q170.1%2C108.1%20180.3%2C119.0%20Z%27%2F%3E%3Cpath%20d%3D%27M164.2%2C123.4%20Q170.2%2C130.0%20166.8%2C138.5%20Q163.4%2C147.0%20155.7%2C150.6%20Q147.9%2C154.3%20140.2%2C153.7%20Q132.5%2C153.1%20127.2%2C148.2%20Q121.9%2C143.2%20118.3%2C136.6%20Q114.8%2C130.0%20114.4%2C120.5%20Q114.0%2C111.1%20122.6%2C107.0%20Q131.2%2C103.0%20138.6%2C107.2%20Q146.0%2C111.5%20152.1%2C114.2%20Q158.1%2C116.9%20164.2%2C123.4%20Z%27%2F%3E%3Cpath%20d%3D%27M537.1%2C74.0%20Q550.3%2C90.0%20547.0%2C113.2%20Q543.8%2C136.3%20518.8%2C134.4%20Q493.8%2C132.4%20479.4%2C134.2%20Q465.1%2C135.9%20447.7%2C131.0%20Q430.2%2C126.2%20418.5%2C108.1%20Q406.7%2C90.0%20419.2%2C72.4%20Q431.6%2C54.8%20446.0%2C42.3%20Q460.4%2C29.7%20477.3%2C38.1%20Q494.1%2C46.6%20509.0%2C52.3%20Q524.0%2C58.0%20537.1%2C74.0%20Z%27%2F%3E%3Cpath%20d%3D%27M526.7%2C76.9%20Q537.5%2C90.0%20534.8%2C109.0%20Q532.2%2C127.9%20511.7%2C126.3%20Q491.3%2C124.7%20479.5%2C126.1%20Q467.8%2C127.6%20453.5%2C123.6%20Q439.3%2C119.6%20429.7%2C104.8%20Q420.1%2C90.0%20430.2%2C75.6%20Q440.4%2C61.2%20452.2%2C51.0%20Q464.0%2C40.7%20477.8%2C47.6%20Q491.5%2C54.5%20503.8%2C59.2%20Q516.0%2C63.9%20526.7%2C76.9%20Z%27%2F%3E%3Cpath%20d%3D%27M516.4%2C79.8%20Q524.7%2C90.0%20522.7%2C104.7%20Q520.6%2C119.5%20504.7%2C118.2%20Q488.8%2C117.0%20479.6%2C118.1%20Q470.5%2C119.2%20459.4%2C116.1%20Q448.3%2C113.0%20440.9%2C101.5%20Q433.4%2C90.0%20441.3%2C78.8%20Q449.2%2C67.6%20458.4%2C59.6%20Q467.5%2C51.6%20478.3%2C57.0%20Q489.0%2C62.4%20498.5%2C66.0%20Q508.0%2C69.7%20516.4%2C79.8%20Z%27%2F%3E%3Cpath%20d%3D%27M506.0%2C82.7%20Q511.9%2C90.0%20510.5%2C100.5%20Q509.0%2C111.1%20497.6%2C110.2%20Q486.3%2C109.3%20479.7%2C110.1%20Q473.2%2C110.9%20465.3%2C108.7%20Q457.4%2C106.4%20452.0%2C98.2%20Q446.7%2C90.0%20452.4%2C82.0%20Q458.0%2C74.0%20464.5%2C68.3%20Q471.1%2C62.6%20478.8%2C66.4%20Q486.4%2C70.3%20493.2%2C72.9%20Q500.0%2C75.5%20506.0%2C82.7%20Z%27%2F%3E%3Cpath%20d%3D%27M495.6%2C85.6%20Q499.2%2C90.0%20498.3%2C96.3%20Q497.4%2C102.6%20490.6%2C102.1%20Q483.8%2C101.6%20479.8%2C102.0%20Q475.9%2C102.5%20471.2%2C101.2%20Q466.4%2C99.9%20463.2%2C94.9%20Q460.0%2C90.0%20463.4%2C85.2%20Q466.8%2C80.4%20470.7%2C77.0%20Q474.7%2C73.6%20479.3%2C75.9%20Q483.8%2C78.2%20487.9%2C79.7%20Q492.0%2C81.3%20495.6%2C85.6%20Z%27%2F%3E%3Cpath%20d%3D%27M732.0%2C349.9%20Q761.2%2C380.0%20735.0%2C412.3%20Q708.8%2C444.5%20677.3%2C452.1%20Q645.9%2C459.6%20617.6%2C467.1%20Q589.3%2C474.5%20548.0%2C468.4%20Q506.8%2C462.2%20509.0%2C421.1%20Q511.2%2C380.0%20522.5%2C348.7%20Q533.9%2C317.4%20560.9%2C299.3%20Q587.9%2C281.1%20620.1%2C280.9%20Q652.3%2C280.7%20677.6%2C300.3%20Q702.9%2C319.8%20732.0%2C349.9%20Z%27%2F%3E%3Cpath%20d%3D%27M711.7%2C355.4%20Q735.5%2C380.0%20714.1%2C406.4%20Q692.7%2C432.8%20666.9%2C439.0%20Q641.2%2C445.1%20618.0%2C451.2%20Q594.9%2C457.3%20561.1%2C452.3%20Q527.4%2C447.3%20529.2%2C413.6%20Q531.0%2C380.0%20540.3%2C354.4%20Q549.5%2C328.8%20571.6%2C314.0%20Q593.7%2C299.1%20620.1%2C298.9%20Q646.4%2C298.8%20667.1%2C314.8%20Q687.8%2C330.7%20711.7%2C355.4%20Z%27%2F%3E%3Cpath%20d%3D%27M691.3%2C360.8%20Q709.8%2C380.0%20693.2%2C400.5%20Q676.5%2C421.1%20656.5%2C425.9%20Q636.5%2C430.7%20618.5%2C435.4%20Q600.5%2C440.2%20574.2%2C436.2%20Q548.0%2C432.3%20549.4%2C406.2%20Q550.7%2C380.0%20558.0%2C360.1%20Q565.2%2C340.2%20582.4%2C328.6%20Q599.6%2C317.1%20620.0%2C317.0%20Q640.5%2C316.8%20656.6%2C329.3%20Q672.7%2C341.7%20691.3%2C360.8%20Z%27%2F%3E%3Cpath%20d%3D%27M670.9%2C366.3%20Q684.2%2C380.0%20672.3%2C394.7%20Q660.4%2C409.3%20646.1%2C412.8%20Q631.8%2C416.2%20618.9%2C419.6%20Q606.0%2C423.0%20587.3%2C420.2%20Q568.5%2C417.4%20569.5%2C398.7%20Q570.5%2C380.0%20575.7%2C365.8%20Q580.9%2C351.6%20593.1%2C343.3%20Q605.4%2C335.1%20620.0%2C335.0%20Q634.7%2C334.9%20646.2%2C343.8%20Q657.7%2C352.6%20670.9%2C366.3%20Z%27%2F%3E%3Cpath%20d%3D%27M650.6%2C371.8%20Q658.5%2C380.0%20651.4%2C388.8%20Q644.2%2C397.6%20635.6%2C399.7%20Q627.1%2C401.7%20619.3%2C403.7%20Q611.6%2C405.8%20600.4%2C404.1%20Q589.1%2C402.4%20589.7%2C391.2%20Q590.3%2C380.0%20593.4%2C371.5%20Q596.5%2C362.9%20603.9%2C358.0%20Q611.2%2C353.0%20620.0%2C353.0%20Q628.8%2C352.9%20635.7%2C358.3%20Q642.6%2C363.6%20650.6%2C371.8%20Z%27%2F%3E%3Cpath%20d%3D%27M267.9%2C411.1%20Q283.8%2C430.0%20272.7%2C452.4%20Q261.7%2C474.8%20241.7%2C485.9%20Q221.7%2C496.9%20201.5%2C492.1%20Q181.3%2C487.4%20166.1%2C476.6%20Q150.8%2C465.7%20138.3%2C447.9%20Q125.7%2C430.0%20126.6%2C403.6%20Q127.5%2C377.3%20153.3%2C371.5%20Q179.1%2C365.6%20197.6%2C372.9%20Q216.2%2C380.1%20234.2%2C386.1%20Q252.1%2C392.1%20267.9%2C411.1%20Z%27%2F%3E%3Cpath%20d%3D%27M255.6%2C414.5%20Q268.5%2C430.0%20259.5%2C448.3%20Q250.5%2C466.7%20234.1%2C475.7%20Q217.8%2C484.7%20201.3%2C480.8%20Q184.7%2C477.0%20172.3%2C468.1%20Q159.8%2C459.2%20149.5%2C444.6%20Q139.2%2C430.0%20139.9%2C408.4%20Q140.6%2C386.9%20161.8%2C382.1%20Q182.9%2C377.3%20198.1%2C383.3%20Q213.3%2C389.2%20228.0%2C394.1%20Q242.7%2C399.0%20255.6%2C414.5%20Z%27%2F%3E%3Cpath%20d%3D%27M243.2%2C417.9%20Q253.3%2C430.0%20246.3%2C444.3%20Q239.3%2C458.5%20226.5%2C465.5%20Q213.8%2C472.6%20201.0%2C469.5%20Q188.1%2C466.5%20178.4%2C459.6%20Q168.7%2C452.7%20160.7%2C441.4%20Q152.7%2C430.0%20153.3%2C413.2%20Q153.8%2C396.5%20170.3%2C392.7%20Q186.7%2C389.0%20198.5%2C393.6%20Q210.3%2C398.3%20221.7%2C402.1%20Q233.2%2C405.9%20243.2%2C417.9%20Z%27%2F%3E%3Cpath%20d%3D%27M230.9%2C421.4%20Q238.1%2C430.0%20233.1%2C440.2%20Q228.0%2C450.4%20219.0%2C455.4%20Q209.9%2C460.4%20200.7%2C458.2%20Q191.5%2C456.1%20184.6%2C451.2%20Q177.7%2C446.2%20171.9%2C438.1%20Q166.2%2C430.0%20166.6%2C418.0%20Q167.0%2C406.0%20178.8%2C403.4%20Q190.5%2C400.7%20198.9%2C404.0%20Q207.4%2C407.3%20215.5%2C410.1%20Q223.7%2C412.8%20230.9%2C421.4%20Z%27%2F%3E%3Cpath%20d%3D%27M218.5%2C424.8%20Q222.8%2C430.0%20219.8%2C436.1%20Q216.8%2C442.2%20211.4%2C445.2%20Q205.9%2C448.2%20200.4%2C446.9%20Q194.9%2C445.7%20190.8%2C442.7%20Q186.6%2C439.7%20183.2%2C434.9%20Q179.7%2C430.0%20180.0%2C422.8%20Q180.2%2C415.6%20187.3%2C414.0%20Q194.3%2C412.4%20199.4%2C414.4%20Q204.4%2C416.4%20209.3%2C418.0%20Q214.2%2C419.7%20218.5%2C424.8%20Z%27%2F%3E%3Cpath%20d%3D%27M475.6%2C283.6%20Q486.0%2C300.0%20471.5%2C313.4%20Q457.0%2C326.9%20445.4%2C334.8%20Q433.9%2C342.7%20420.6%2C340.7%20Q407.4%2C338.8%20392.4%2C334.8%20Q377.5%2C330.9%20369.3%2C315.4%20Q361.0%2C300.0%20365.7%2C282.0%20Q370.4%2C264.0%20389.9%2C265.6%20Q409.3%2C267.2%20420.8%2C264.8%20Q432.2%2C262.5%20448.7%2C264.8%20Q465.2%2C267.2%20475.6%2C283.6%20Z%27%2F%3E%3Cpath%20d%3D%27M465.5%2C286.6%20Q474.0%2C300.0%20462.2%2C311.0%20Q450.3%2C322.0%20440.8%2C328.5%20Q431.3%2C334.9%20420.5%2C333.3%20Q409.7%2C331.7%20397.5%2C328.5%20Q385.2%2C325.3%20378.5%2C312.6%20Q371.8%2C300.0%20375.6%2C285.3%20Q379.4%2C270.5%20395.4%2C271.8%20Q411.3%2C273.1%20420.6%2C271.2%20Q430.0%2C269.3%20443.5%2C271.2%20Q457.0%2C273.1%20465.5%2C286.6%20Z%27%2F%3E%3Cpath%20d%3D%27M455.4%2C289.6%20Q462.0%2C300.0%20452.8%2C308.6%20Q443.6%2C317.1%20436.2%2C322.1%20Q428.8%2C327.1%20420.4%2C325.9%20Q412.0%2C324.7%20402.5%2C322.2%20Q392.9%2C319.7%20387.7%2C309.8%20Q382.5%2C300.0%20385.5%2C288.5%20Q388.5%2C277.1%20400.8%2C278.1%20Q413.2%2C279.1%20420.5%2C277.6%20Q427.8%2C276.1%20438.3%2C277.6%20Q448.8%2C279.1%20455.4%2C289.6%20Z%27%2F%3E%3Cpath%20d%3D%27M445.3%2C292.5%20Q450.0%2C300.0%20443.4%2C306.1%20Q436.8%2C312.2%20431.6%2C315.8%20Q426.3%2C319.4%20420.3%2C318.5%20Q414.3%2C317.6%20407.5%2C315.8%20Q400.7%2C314.0%20396.9%2C307.0%20Q393.2%2C300.0%20395.3%2C291.8%20Q397.5%2C283.6%20406.3%2C284.4%20Q415.2%2C285.1%20420.3%2C284.0%20Q425.5%2C282.9%20433.0%2C284.0%20Q440.5%2C285.1%20445.3%2C292.5%20Z%27%2F%3E%3Cpath%20d%3D%27M435.2%2C295.5%20Q438.0%2C300.0%20434.1%2C303.7%20Q430.1%2C307.3%20426.9%2C309.5%20Q423.8%2C311.6%20420.2%2C311.1%20Q416.6%2C310.6%20412.5%2C309.5%20Q408.4%2C308.4%20406.2%2C304.2%20Q403.9%2C300.0%20405.2%2C295.1%20Q406.5%2C290.2%20411.8%2C290.6%20Q417.1%2C291.0%20420.2%2C290.4%20Q423.3%2C289.8%20427.8%2C290.4%20Q432.3%2C291.0%20435.2%2C295.5%20Z%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
   background-repeat: repeat;
+  background-size: 700px 500px;
 }
 
 :is(a, button, input, select, [tabindex]):focus-visible {
@@ -222,7 +223,7 @@ a { color: var(--voyage-teal); }
 
 .journey {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 1fr;
   gap: var(--space-12);
   max-width: 1100px;
   margin: 0 auto;
@@ -231,83 +232,116 @@ a { color: var(--voyage-teal); }
 
 .journey-sticky {
   position: sticky;
-  top: var(--space-12);
+  top: var(--space-10);
   align-self: start;
+  height: 78vh;
 }
 
 .journey-panel {
-  background: var(--ink-navy);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--space-6);
+  position: relative;
+  height: 100%;
+  background: radial-gradient(120% 100% at 30% 15%, #1c2d49 0%, var(--ink-navy) 55%, #101a2c 100%);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(16, 26, 44, 0.35);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
-.journey-panel svg { width: 100%; height: auto; display: block; }
+.journey-panel-glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 30% 70%, rgba(43, 110, 118, 0.35), transparent 55%);
+  pointer-events: none;
+}
+
+.journey-panel-route {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+}
+
+.journey-panel-icon {
+  position: relative;
+  height: 3.5rem;
+  width: 3.5rem;
+  margin-top: var(--space-6);
+}
+
+.journey-panel-icon-glyph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--atlas-paper);
+  transition: opacity 0.5s ease;
+}
 
 .journey-panel-label {
+  position: relative;
   margin: var(--space-4) 0 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(250, 247, 240, 0.7);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--atlas-paper);
   text-align: center;
+  max-width: 26ch;
 }
 
-.journey-steps { display: flex; flex-direction: column; }
+.journey-steps { position: relative; display: flex; flex-direction: column; padding-left: var(--space-8); }
+
+.journey-thread {
+  position: absolute;
+  top: 0.4em;
+  bottom: 0.4em;
+  left: 0;
+  width: 2px;
+  background: var(--line);
+}
+
+.journey-thread-fill {
+  width: 100%;
+  background: var(--voyage-teal);
+  transform-origin: top;
+}
 
 .journey-step {
-  min-height: 55vh;
+  position: relative;
+  min-height: 60vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
+.journey-step-watermark {
+  position: absolute;
+  left: -0.06em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11rem;
+  line-height: 1;
+  color: var(--ink-navy);
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
 .journey-step-number {
+  position: relative;
   font-family: var(--font-mono);
   color: var(--voyage-teal);
   font-size: 1.1rem;
 }
 
-.journey-step h3 { margin: var(--space-2) 0; font-size: 1.5rem; }
-.journey-step p { margin: 0; color: var(--muted-text); max-width: 42ch; }
-
-/* ==== HOME: CAPABILITIES ==== */
-
-.capabilities {
-  padding: var(--space-16) var(--space-6);
-  background: var(--atlas-paper);
-  text-align: center;
-}
-
-.capabilities h2 { margin: 0 0 var(--space-12); }
-
-.capabilities-grid {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-8);
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.capability-wrapper { flex: 1; }
-
-.capability-card {
-  height: 100%;
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--space-8) var(--space-6);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.capability-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
-}
-
-.capability-card h3 { margin: 0 0 var(--space-2); font-size: 1.1rem; }
-.capability-card p { margin: 0; color: var(--muted-text); font-size: 0.95rem; }
+.journey-step h3 { position: relative; margin: var(--space-2) 0; font-size: 1.5rem; }
+.journey-step p { position: relative; margin: 0; color: var(--muted-text); max-width: 42ch; }
 
 /* ==== ABOUT / NOT FOUND / PAGE VARIANTS ==== */
 
@@ -393,10 +427,63 @@ a { color: var(--voyage-teal); }
 .map-teaser-copy h2 { margin: 0 0 var(--space-3); }
 .map-teaser-copy p { color: var(--muted-text); margin: 0 0 var(--space-6); }
 
+/* ==== HOME: FAQ ==== */
+
+.faq {
+  padding: var(--space-16) var(--space-6);
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+}
+
+.faq h2 { text-align: center; margin: 0 0 var(--space-10); }
+
+.faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-3); }
+
+.faq-item {
+  border: 1px solid rgba(250, 247, 240, 0.15);
+  border-radius: var(--radius);
+  background: rgba(250, 247, 240, 0.03);
+  overflow: hidden;
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--atlas-paper);
+  background: none;
+  border: none;
+  text-align: left;
+  padding: var(--space-4) var(--space-5);
+  cursor: pointer;
+}
+
+.faq-toggle {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  color: var(--voyage-teal);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.faq-answer {
+  margin: 0;
+  padding: 0 var(--space-5) var(--space-5);
+  color: rgba(250, 247, 240, 0.75);
+  max-width: 60ch;
+}
+
 @media (max-width: 640px) {
   .journey { grid-template-columns: 1fr; }
-  .journey-sticky { position: static; }
+  .journey-sticky { position: static; height: 60vh; margin-bottom: var(--space-8); }
+  .journey-steps { padding-left: var(--space-6); }
   .journey-step { min-height: 0; padding: var(--space-8) 0; }
+  .journey-step-watermark { font-size: 6rem; }
   .capabilities-grid { flex-direction: column; }
   .map-teaser { flex-direction: column; }
   .map-teaser-preview { width: 100%; }

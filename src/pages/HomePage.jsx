@@ -5,6 +5,7 @@ import StatsStrip from '../components/StatsStrip.jsx';
 import JourneySection from '../components/JourneySection.jsx';
 import Capabilities from '../components/Capabilities.jsx';
 import MapTeaser from '../components/MapTeaser.jsx';
+import Faq from '../components/Faq.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
@@ -55,6 +56,7 @@ export default function HomePage() {
       <JourneySection />
       <Capabilities />
       <MapTeaser />
+      <Faq />
       <Footer />
     </>
   );
