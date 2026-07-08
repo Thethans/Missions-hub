@@ -1,0 +1,31 @@
+name: Refresh Joshua Project data
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # every Monday 06:00 UTC
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - name: Fetch latest Joshua Project data
+        env:
+          JP_API_KEY: ${{ secrets.JP_API_KEY }}
+        run: npm run fetch-jp
+
+      - name: Commit updated data file
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add public/data/people-groups.geojson
+          git diff --quiet --cached || git commit -m "chore: refresh Joshua Project data"
+          git push

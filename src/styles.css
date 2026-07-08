@@ -1,0 +1,52 @@
+:root {
+  --ink: #1c1a17;
+  --paper: #faf7f2;
+  --accent: #8a2c1d;
+  --line: #ddd6ca;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Georgia', serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 { font-size: 1.4rem; margin: 0; letter-spacing: 0.02em; }
+
+.topbar nav button {
+  font-family: inherit;
+  background: none;
+  border: 1px solid var(--line);
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.topbar nav button.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+#map-container { width: 100%; height: calc(100vh - 64px); }
+
+.matcher { max-width: 640px; margin: 2rem auto; padding: 0 1.5rem; }
+.matcher .question { margin-bottom: 1.5rem; }
+.matcher label { display: block; margin: 0.4rem 0; }
+.matcher .results { margin-top: 2rem; }
+.matcher .board-card {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}

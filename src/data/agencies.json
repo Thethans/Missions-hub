@@ -1,0 +1,65 @@
+[
+  {
+    "name": "Pioneers",
+    "tradition": "broadly evangelical",
+    "focus": ["church planting", "unreached peoples", "creative access"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "trainingRequired": "Perspectives course + agency orientation",
+    "url": "https://www.pioneers.org"
+  },
+  {
+    "name": "ABWE",
+    "tradition": "Baptist / conservative evangelical",
+    "focus": ["church planting", "theological education", "medical"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "trainingRequired": "agency assessment + field orientation",
+    "url": "https://www.abwe.org"
+  },
+  {
+    "name": "TEAM",
+    "tradition": "broadly evangelical",
+    "focus": ["church planting", "leadership development"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "trainingRequired": "agency orientation",
+    "url": "https://team.org"
+  },
+  {
+    "name": "SIM",
+    "tradition": "broadly evangelical",
+    "focus": ["medical", "church planting", "community development"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "trainingRequired": "agency assessment",
+    "url": "https://sim.org"
+  },
+  {
+    "name": "WEC International",
+    "tradition": "broadly evangelical, faith-mission heritage",
+    "focus": ["unreached peoples", "creative access", "Bible translation support"],
+    "supportRaising": "faith-support model",
+    "familyFriendly": true,
+    "trainingRequired": "candidate orientation course",
+    "url": "https://www.wecinternational.org"
+  },
+  {
+    "name": "Frontiers",
+    "tradition": "broadly evangelical",
+    "focus": ["unreached peoples", "Muslim-majority contexts", "creative access"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "trainingRequired": "Perspectives course + field training",
+    "url": "https://frontiersusa.org"
+  },
+  {
+    "name": "Wycliffe Bible Translators",
+    "tradition": "broadly evangelical",
+    "focus": ["Bible translation", "linguistics", "literacy"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "trainingRequired": "linguistics training (GIAL or equivalent)",
+    "url": "https://www.wycliffe.org"
+  }
+]
