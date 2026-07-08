@@ -63,7 +63,7 @@ export default function WorldMap() {
   }, []);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="map-wrapper">
       <div id="map-container" ref={mapContainer} />
       {selected && (
         <div

@@ -1,33 +1,22 @@
-import React, { useState } from 'react';
-import WorldMap from './components/WorldMap.jsx';
-import MatchQuiz from './components/MatchQuiz.jsx';
-import Checklist from './components/Checklist.jsx';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import RootLayout from './layouts/RootLayout.jsx';
+import HomePage from './pages/HomePage.jsx';
+import MapPage from './pages/MapPage.jsx';
+import QuizPage from './pages/QuizPage.jsx';
+import ChecklistPage from './pages/ChecklistPage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
 
 export default function App() {
-  const [view, setView] = useState('map'); // 'map' | 'matcher' | 'checklist'
-
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <h1>Fielded</h1>
-        <nav>
-          <button className={view === 'map' ? 'active' : ''} onClick={() => setView('map')}>
-            World Map
-          </button>
-          <button className={view === 'matcher' ? 'active' : ''} onClick={() => setView('matcher')}>
-            Find My Board
-          </button>
-          <button className={view === 'checklist' ? 'active' : ''} onClick={() => setView('checklist')}>
-            Pre-Field Checklist
-          </button>
-        </nav>
-      </header>
-
-      <main>
-        {view === 'map' && <WorldMap />}
-        {view === 'matcher' && <MatchQuiz />}
-        {view === 'checklist' && <Checklist />}
-      </main>
-    </div>
+    <Routes>
+      <Route element={<RootLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/checklist" element={<ChecklistPage />} />
+        <Route path="/about" element={<AboutPage />} />
+      </Route>
+    </Routes>
   );
 }

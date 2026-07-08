@@ -16,11 +16,15 @@ body {
 
 h1, h2, h3 { font-family: var(--font-display); }
 
-/* ==== LAYOUT SHELL (nav/tabs — replaced with routed TopNav in Phase 2) ==== */
+/* ==== LAYOUT SHELL ==== */
 
 .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
 
-.topbar {
+.app-shell > main { flex: 1; display: flex; flex-direction: column; }
+
+/* ==== NAV ==== */
+
+.site-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,24 +33,96 @@ h1, h2, h3 { font-family: var(--font-display); }
   color: var(--atlas-paper);
 }
 
-.topbar h1 { font-size: 1.4rem; margin: 0; letter-spacing: 0.02em; }
-
-.topbar nav button {
-  font-family: var(--font-body);
-  background: none;
-  border: 1px solid rgba(250, 247, 240, 0.3);
+.site-nav-logo {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--atlas-paper);
+  text-decoration: none;
+}
+
+.site-nav-links { display: flex; gap: var(--space-2); }
+
+.site-nav-links a {
+  font-family: var(--font-body);
+  color: var(--atlas-paper);
+  text-decoration: none;
+  border: 1px solid rgba(250, 247, 240, 0.3);
   padding: var(--space-2) var(--space-4);
-  margin-left: var(--space-2);
-  cursor: pointer;
   border-radius: var(--radius);
 }
 
-.topbar nav button.active { background: var(--voyage-teal); color: white; border-color: var(--voyage-teal); }
+.site-nav-links a.active { background: var(--voyage-teal); border-color: var(--voyage-teal); }
+
+/* ==== FOOTER ==== */
+
+.site-footer {
+  padding: var(--space-8) var(--space-6);
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  text-align: center;
+}
+
+.site-footer p { margin: 0.25rem 0; }
+.site-footer-meta { font-size: 0.85rem; color: rgba(250, 247, 240, 0.65); }
+
+/* ==== PAGE CHROME ==== */
+
+.page-hero {
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+}
+
+.page-hero h1 { margin: 0 0 var(--space-3); }
+.page-hero p { margin: 0; color: rgba(250, 247, 240, 0.8); }
+
+.page-body { flex: 1; }
+
+.page-about {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6);
+}
+
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  padding: var(--space-16) var(--space-6);
+}
+
+.hero h1 {
+  font-size: clamp(2.75rem, 7vw + 1rem, 6.5rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-4);
+}
+
+.hero p { max-width: 480px; margin: 0 0 var(--space-6); color: rgba(250, 247, 240, 0.8); }
+
+.cta-button {
+  display: inline-block;
+  background: var(--voyage-teal);
+  color: white;
+  text-decoration: none;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-weight: 600;
+}
 
 /* ==== MAP ==== */
 
-#map-container { width: 100%; height: calc(100vh - 64px); }
+.page-map { flex: 1; display: flex; }
+.map-wrapper { position: relative; flex: 1; display: flex; }
+#map-container { width: 100%; flex: 1; }
 
 /* ==== QUIZ ==== */
 
