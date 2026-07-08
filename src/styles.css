@@ -5,8 +5,10 @@
 body {
   margin: 0;
   font-family: var(--font-body);
-  background: var(--atlas-paper);
   color: var(--ink-navy);
+  background-color: var(--atlas-paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%2316233b' stroke-opacity='0.05' stroke-width='1.5'%3E%3Cpath d='M-10,20 Q40,6 90,20 T190,20'/%3E%3Cpath d='M-10,60 Q40,42 90,60 T190,60'/%3E%3Cpath d='M-10,100 Q40,86 90,100 T190,100'/%3E%3Cpath d='M-10,140 Q40,120 90,140 T190,140'/%3E%3Cpath d='M-10,180 Q40,164 90,180 T190,180'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
 
 :is(a, button, input, select, [tabindex]):focus-visible {
