@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import RevealOnScroll from './RevealOnScroll.jsx';
 
 export default function StatsStrip() {
   const [stats, setStats] = useState(null);
@@ -22,20 +23,20 @@ export default function StatsStrip() {
 
   if (!stats) return null;
 
+  const items = [
+    { number: stats.groups.toLocaleString(), label: 'Unreached people groups' },
+    { number: stats.population.toLocaleString(), label: 'People still waiting to hear' },
+    { number: stats.countries, label: 'Countries represented' }
+  ];
+
   return (
     <section className="stats-strip">
-      <div className="stat">
-        <span className="stat-number">{stats.groups.toLocaleString()}</span>
-        <span className="stat-label">Unreached people groups</span>
-      </div>
-      <div className="stat">
-        <span className="stat-number">{stats.population.toLocaleString()}</span>
-        <span className="stat-label">People still waiting to hear</span>
-      </div>
-      <div className="stat">
-        <span className="stat-number">{stats.countries}</span>
-        <span className="stat-label">Countries represented</span>
-      </div>
+      {items.map((item, i) => (
+        <RevealOnScroll key={item.label} index={i} className="stat">
+          <span className="stat-number">{item.number}</span>
+          <span className="stat-label">{item.label}</span>
+        </RevealOnScroll>
+      ))}
     </section>
   );
 }

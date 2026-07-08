@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import RevealOnScroll from './RevealOnScroll.jsx';
 
 const BASEMAP_STYLE = 'https://demotiles.maplibre.org/style.json';
 const DATA_URL = '/data/people-groups.geojson';
@@ -50,13 +51,13 @@ export default function MapTeaser() {
   }, []);
 
   return (
-    <section className="map-teaser">
+    <RevealOnScroll className="map-teaser">
       <div className="map-teaser-preview" ref={mapContainer} />
       <div className="map-teaser-copy">
         <h2>See where the need is</h2>
         <p>Explore an interactive map of unreached and under-resourced people groups worldwide.</p>
         <Link to="/map" className="cta-button">Explore the full map</Link>
       </div>
-    </section>
+    </RevealOnScroll>
   );
 }

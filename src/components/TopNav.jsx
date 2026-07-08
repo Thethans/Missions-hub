@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import RouteLine from './RouteLine.jsx';
 
 const LINKS = [
   { to: '/', label: 'Home', end: true },
@@ -10,6 +11,8 @@ const LINKS = [
 ];
 
 export default function TopNav() {
+  const [hovered, setHovered] = useState(null);
+
   return (
     <header className="site-nav">
       <NavLink to="/" className="site-nav-logo">Fielded</NavLink>
@@ -20,8 +23,17 @@ export default function TopNav() {
             to={link.to}
             end={link.end}
             className={({ isActive }) => (isActive ? 'active' : undefined)}
+            onMouseEnter={() => setHovered(link.to)}
+            onMouseLeave={() => setHovered(null)}
           >
             {link.label}
+            <RouteLine
+              variant="hover"
+              hovered={hovered === link.to}
+              pathD="M0,4 L100,4"
+              viewBox="0 0 100 8"
+              className="site-nav-underline"
+            />
           </NavLink>
         ))}
       </nav>
