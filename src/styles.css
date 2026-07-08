@@ -1,18 +1,22 @@
-:root {
-  --ink: #1c1a17;
-  --paper: #faf7f2;
-  --accent: #8a2c1d;
-  --line: #ddd6ca;
-}
+/* ==== BASE / RESET ==== */
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: 'Georgia', serif;
-  background: var(--paper);
-  color: var(--ink);
+  font-family: var(--font-body);
+  background: var(--atlas-paper);
+  color: var(--ink-navy);
 }
+
+:is(a, button, input, select, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+h1, h2, h3 { font-family: var(--font-display); }
+
+/* ==== LAYOUT SHELL (nav/tabs — replaced with routed TopNav in Phase 2) ==== */
 
 .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
 
@@ -20,52 +24,62 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--line);
+  padding: var(--space-4) var(--space-6);
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
 }
 
 .topbar h1 { font-size: 1.4rem; margin: 0; letter-spacing: 0.02em; }
 
 .topbar nav button {
-  font-family: inherit;
+  font-family: var(--font-body);
   background: none;
-  border: 1px solid var(--line);
-  padding: 0.5rem 1rem;
-  margin-left: 0.5rem;
+  border: 1px solid rgba(250, 247, 240, 0.3);
+  color: var(--atlas-paper);
+  padding: var(--space-2) var(--space-4);
+  margin-left: var(--space-2);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
-.topbar nav button.active { background: var(--accent); color: white; border-color: var(--accent); }
+.topbar nav button.active { background: var(--voyage-teal); color: white; border-color: var(--voyage-teal); }
+
+/* ==== MAP ==== */
 
 #map-container { width: 100%; height: calc(100vh - 64px); }
 
-.matcher { max-width: 640px; margin: 2rem auto; padding: 0 1.5rem; }
-.matcher .question { margin-bottom: 1.5rem; }
+/* ==== QUIZ ==== */
+
+.matcher { max-width: 640px; margin: 2rem auto; padding: 0 var(--space-6); }
+.matcher .question { margin-bottom: var(--space-6); }
 .matcher label { display: block; margin: 0.4rem 0; }
-.matcher .results { margin-top: 2rem; }
+.matcher .results { margin-top: var(--space-8); }
 .matcher .board-card {
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  background: white;
+  box-shadow: var(--shadow);
 }
+
+/* ==== CHECKLIST ==== */
 
 .checklist-auth, .checklist-setup {
   max-width: 420px;
   margin: 3rem auto;
-  padding: 0 1.5rem;
+  padding: 0 var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .checklist-auth input, .checklist-setup select {
   font-family: inherit;
   font-size: 1rem;
-  padding: 0.5rem;
+  padding: var(--space-2);
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 .checklist-setup label {
@@ -76,43 +90,43 @@ body {
 
 .checklist-auth button, .checklist-setup button {
   font-family: inherit;
-  background: var(--accent);
+  background: var(--voyage-teal);
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
 }
 
-.checklist-error { color: var(--accent); }
+.checklist-error { color: #b3261e; }
 .checklist-loading { text-align: center; margin-top: 3rem; }
 
-.checklist { max-width: 720px; margin: 2rem auto; padding: 0 1.5rem 3rem; }
+.checklist { max-width: 720px; margin: 2rem auto; padding: 0 var(--space-6) 3rem; }
 
 .checklist-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
   position: sticky;
   top: 0;
-  background: var(--paper);
-  padding: 0.75rem 0;
+  background: var(--atlas-paper);
+  padding: var(--space-3) 0;
 }
 
 .checklist-progress { flex: 1; }
 
 .checklist-progress-bar {
   background: var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius);
   height: 8px;
   overflow: hidden;
   margin-bottom: 0.3rem;
 }
 
 .checklist-progress-fill {
-  background: var(--accent);
+  background: var(--voyage-teal);
   height: 100%;
   transition: width 0.2s ease;
 }
@@ -121,17 +135,19 @@ body {
   font-family: inherit;
   background: none;
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .checklist-category {
   border: 1px solid var(--line);
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
+  border-radius: var(--radius);
+  margin-bottom: var(--space-3);
   overflow: hidden;
+  background: white;
+  box-shadow: var(--shadow);
 }
 
 .checklist-category-toggle {
@@ -142,24 +158,24 @@ body {
   font-size: 1rem;
   background: none;
   border: none;
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
   text-align: left;
 }
 
-.checklist-category-count { color: #8a8477; }
+.checklist-category-count { color: var(--muted-text); font-family: var(--font-mono); }
 
-.checklist-items { list-style: none; margin: 0; padding: 0 1rem 1rem; }
+.checklist-items { list-style: none; margin: 0; padding: 0 var(--space-4) var(--space-4); }
 
 .checklist-item {
   border-top: 1px solid var(--line);
-  padding: 0.6rem 0;
+  padding: var(--space-2) 0;
 }
 
 .checklist-item label {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: var(--space-2);
   cursor: pointer;
 }
 
@@ -167,6 +183,6 @@ body {
 
 .checklist-item-desc {
   margin: 0.3rem 0 0 1.6rem;
-  color: #6b6559;
+  color: var(--muted-text);
   font-size: 0.92rem;
 }

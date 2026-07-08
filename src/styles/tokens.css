@@ -1,0 +1,35 @@
+:root {
+  /* color */
+  --ink-navy: #16233b;
+  --atlas-paper: #faf7f0;
+  --voyage-teal: #2b6e76;
+  --status-unreached: #b5482f;
+  --status-formative: #d9a441;
+  --status-reached: #4c8a5e;
+
+  /* neutral hairline, derived from ink-navy rather than a flat gray */
+  --line: rgba(22, 35, 59, 0.15);
+  --muted-text: rgba(22, 35, 59, 0.65);
+
+  /* type */
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+
+  /* spacing (4px base unit) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* radius / shadow — one value each, reused everywhere */
+  --radius: 8px;
+  --shadow: 0 2px 12px rgba(22, 35, 59, 0.12);
+
+  /* focus ring */
+  --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal);
+}
