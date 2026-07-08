@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import RouteLine from './RouteLine.jsx';
+import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
 const WIDTH = 1000;
 const HEIGHT = 500;
@@ -12,6 +14,10 @@ function project([lon, lat]) {
 
 export default function HeroBackground() {
   const [points, setPoints] = useState([]);
+  const prefersReduced = usePrefersReducedMotion();
+  const { scrollY } = useScroll();
+  // Dots drift slower than the page scroll — subtle depth layer behind the headline.
+  const y = useTransform(scrollY, [0, 600], [0, prefersReduced ? 0 : 120]);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,11 +35,11 @@ export default function HeroBackground() {
 
   return (
     <div className="hero-background" aria-hidden="true">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="xMidYMid slice">
+      <motion.svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="xMidYMid slice" style={{ y }}>
         {points.map(([x, y], i) => (
           <circle key={i} cx={x} cy={y} r="2" className="hero-background-dot" />
         ))}
-      </svg>
+      </motion.svg>
       <RouteLine
         variant="load"
         delay={0.5}

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useMotionTemplate, animate } from 'framer-motion';
 import StatsStrip from '../components/StatsStrip.jsx';
-import HowItWorks from '../components/HowItWorks.jsx';
+import JourneySection from '../components/JourneySection.jsx';
 import Capabilities from '../components/Capabilities.jsx';
 import MapTeaser from '../components/MapTeaser.jsx';
 import Footer from '../components/Footer.jsx';
@@ -52,7 +52,7 @@ export default function HomePage() {
         </motion.div>
       </section>
       <StatsStrip />
-      <HowItWorks />
+      <JourneySection />
       <Capabilities />
       <MapTeaser />
       <Footer />
