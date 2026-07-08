@@ -437,6 +437,7 @@ a { color: var(--voyage-teal); }
 
 .matcher label:hover { background: rgba(43, 110, 118, 0.06); }
 .matcher label:has(input:checked) { background: rgba(43, 110, 118, 0.1); }
+.option-label::first-letter { text-transform: uppercase; }
 
 .matcher .results { margin-top: var(--space-8); }
 .matcher .board-card {

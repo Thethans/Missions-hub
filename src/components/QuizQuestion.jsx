@@ -13,7 +13,7 @@ export default function QuizQuestion({ question, value, onChange }) {
             checked={value === opt}
             onChange={() => onChange(opt)}
           />
-          {' '}{opt}
+          {' '}<span className="option-label">{opt}</span>
         </label>
       ))}
     </div>
