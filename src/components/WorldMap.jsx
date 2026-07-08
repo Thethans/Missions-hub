@@ -1,10 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import basemapStyle from '../map/basemapStyle.js';
+import MapPopupCard from './MapPopupCard.jsx';
+import MapLegend from './MapLegend.jsx';
 
-// Free demo vector basemap — no API key needed. Swap for MapTiler/Protomaps later if desired.
-const BASEMAP_STYLE = 'https://demotiles.maplibre.org/style.json';
 const DATA_URL = '/data/people-groups.geojson';
+
+// sqrt-scaled so a handful of huge people groups don't visually swallow the
+// map; stops tuned against the actual population distribution in the live
+// dataset (p10/p50/p90/p99 percentiles), not a guessed range.
+const CIRCLE_RADIUS = ['interpolate', ['linear'], ['sqrt', ['get', 'population']], 7, 2, 160, 5, 790, 10, 4650, 16];
+
+const CIRCLE_COLOR = [
+  'match',
+  ['get', 'progressStatus'],
+  'unreached', '#b5482f',
+  'formative', '#d9a441',
+  'reached', '#4c8a5e',
+  '#999999'
+];
 
 export default function WorldMap() {
   const mapContainer = useRef(null);
@@ -14,7 +29,7 @@ export default function WorldMap() {
   useEffect(() => {
     const map = new maplibregl.Map({
       container: mapContainer.current,
-      style: BASEMAP_STYLE,
+      style: basemapStyle,
       center: [10, 15],
       zoom: 1.4
     });
@@ -32,23 +47,31 @@ export default function WorldMap() {
 
       map.addSource('people-groups', { type: 'geojson', data });
 
+      // Soft drop-shadow approximation: a larger, lower-opacity circle layer
+      // beneath the main markers (MapLibre circle layers have no native
+      // blur/shadow paint property).
+      map.addLayer({
+        id: 'people-groups-shadow',
+        type: 'circle',
+        source: 'people-groups',
+        paint: {
+          'circle-radius': ['+', CIRCLE_RADIUS, 3],
+          'circle-color': '#16233b',
+          'circle-opacity': 0.12,
+          'circle-blur': 0.6
+        }
+      });
+
       map.addLayer({
         id: 'people-groups-points',
         type: 'circle',
         source: 'people-groups',
         paint: {
-          'circle-radius': ['interpolate', ['linear'], ['get', 'population'], 1000, 3, 5000000, 14],
-          'circle-color': [
-            'match',
-            ['get', 'progressStatus'],
-            'unreached', '#8a2c1d',
-            'formative', '#c98a3a',
-            'reached', '#4a7a52',
-            '#999999'
-          ],
-          'circle-opacity': 0.75,
+          'circle-radius': CIRCLE_RADIUS,
+          'circle-color': CIRCLE_COLOR,
+          'circle-opacity': 0.85,
           'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff'
+          'circle-stroke-color': '#faf7f0'
         }
       });
 
@@ -63,33 +86,10 @@ export default function WorldMap() {
   }, []);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="map-wrapper">
       <div id="map-container" ref={mapContainer} />
-      {selected && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            background: 'white',
-            border: '1px solid #ddd',
-            borderRadius: 6,
-            padding: '1rem',
-            maxWidth: 280,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-          }}
-        >
-          <button style={{ float: 'right', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setSelected(null)}>
-            ✕
-          </button>
-          <h3 style={{ marginTop: 0 }}>{selected.name}</h3>
-          <p><strong>Country:</strong> {selected.country}</p>
-          <p><strong>Population:</strong> {Number(selected.population).toLocaleString()}</p>
-          <p><strong>% Evangelical:</strong> {selected.pctEvangelical}%</p>
-          <p><strong>Status:</strong> {selected.progressStatus}</p>
-          <p><strong>Primary religion:</strong> {selected.religion}</p>
-        </div>
-      )}
+      <MapLegend />
+      {selected && <MapPopupCard properties={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
