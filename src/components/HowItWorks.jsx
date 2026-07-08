@@ -23,10 +23,12 @@ export default function HowItWorks() {
           className="how-it-works-connector"
         />
         {STEPS.map((step, i) => (
-          <RevealOnScroll key={step.n} index={i} className="how-it-works-step">
-            <span className="how-it-works-number">{step.n}</span>
-            <h3>{step.title}</h3>
-            <p>{step.desc}</p>
+          <RevealOnScroll key={step.n} index={i} className="how-it-works-step-wrapper">
+            <div className="how-it-works-step">
+              <span className="how-it-works-number">{step.n}</span>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </div>
           </RevealOnScroll>
         ))}
       </div>

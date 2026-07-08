@@ -5,6 +5,7 @@ import StatsStrip from '../components/StatsStrip.jsx';
 import HowItWorks from '../components/HowItWorks.jsx';
 import MapTeaser from '../components/MapTeaser.jsx';
 import Footer from '../components/Footer.jsx';
+import HeroBackground from '../components/HeroBackground.jsx';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
 function HeroHeadline() {
@@ -36,11 +37,14 @@ export default function HomePage() {
   return (
     <>
       <section className="hero">
+        <HeroBackground />
         <motion.div
+          className="hero-content"
           initial={{ opacity: 0, y: prefersReduced ? 0 : 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
+          <span className="hero-eyebrow">Live map of unreached people groups worldwide</span>
           <HeroHeadline />
           <p>Find the people still waiting to hear, the agencies who can send you, and everything in between.</p>
           <Link to="/quiz" className="cta-button">Take the quiz</Link>

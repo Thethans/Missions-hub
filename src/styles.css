@@ -111,6 +111,7 @@ a { color: var(--voyage-teal); }
 }
 
 .hero {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -120,6 +121,35 @@ a { color: var(--voyage-teal); }
   background: var(--ink-navy);
   color: var(--atlas-paper);
   padding: var(--space-16) var(--space-6);
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-background svg { width: 100%; height: 100%; }
+
+.hero-background-dot { fill: var(--atlas-paper); opacity: 0.14; }
+.hero-background-route { position: absolute; inset: 0; color: var(--voyage-teal); opacity: 0.6; }
+
+.hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--atlas-paper);
+  background: rgba(43, 110, 118, 0.25);
+  border: 1px solid rgba(43, 110, 118, 0.6);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .hero h1 {
@@ -139,6 +169,14 @@ a { color: var(--voyage-teal); }
   border-radius: var(--radius);
   font-family: var(--font-body);
   font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.cta-button:hover {
+  background: #245e65;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 /* ==== HOME: STATS STRIP ==== */
@@ -197,14 +235,20 @@ a { color: var(--voyage-teal); }
   pointer-events: none;
 }
 
+.how-it-works-step-wrapper { position: relative; z-index: 1; flex: 1; }
+
 .how-it-works-step {
-  position: relative;
-  z-index: 1;
-  flex: 1;
+  height: 100%;
   background: white;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--space-8) var(--space-6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.how-it-works-step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
 }
 
 .how-it-works-number {
@@ -339,8 +383,10 @@ a { color: var(--voyage-teal); }
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius);
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
+.matcher label:hover { background: rgba(43, 110, 118, 0.06); }
 .matcher label:has(input:checked) { background: rgba(43, 110, 118, 0.1); }
 
 .matcher .results { margin-top: var(--space-8); }
@@ -351,6 +397,12 @@ a { color: var(--voyage-teal); }
   margin-bottom: var(--space-3);
   background: white;
   box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matcher .board-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
 }
 
 .matcher > button {
@@ -361,6 +413,13 @@ a { color: var(--voyage-teal); }
   padding: var(--space-3) var(--space-6);
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.matcher > button:hover {
+  background: #245e65;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 /* ==== CHECKLIST ==== */
@@ -399,6 +458,13 @@ a { color: var(--voyage-teal); }
   border-radius: var(--radius);
   padding: var(--space-3) var(--space-4);
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.checklist-auth button:hover, .checklist-setup button:hover {
+  background: #245e65;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 .checklist-error { color: #b3261e; }
@@ -451,7 +517,12 @@ a { color: var(--voyage-teal); }
   overflow: hidden;
   background: white;
   box-shadow: var(--shadow);
+  transition: box-shadow 0.2s ease;
 }
+
+.checklist-category:hover { box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16); }
+
+.checklist-category-toggle { cursor: pointer; }
 
 .checklist-category-toggle {
   width: 100%;
