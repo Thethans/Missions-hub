@@ -102,6 +102,13 @@ a { color: var(--voyage-teal); }
 .page-hero h1 { margin: 0 0 var(--space-3); }
 .page-hero p { margin: 0; color: rgba(250, 247, 240, 0.8); }
 
+.page-hero--compact {
+  padding: var(--space-8) var(--space-6);
+}
+
+.page-hero--compact p { max-width: 640px; margin: 0 auto; }
+.page-hero--compact a { color: var(--atlas-paper); text-decoration: underline; }
+
 .page-body { flex: 1; }
 
 .page-about {
