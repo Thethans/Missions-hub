@@ -102,6 +102,13 @@ a { color: var(--voyage-teal); }
 .page-hero h1 { margin: 0 0 var(--space-3); }
 .page-hero p { margin: 0; color: rgba(250, 247, 240, 0.8); }
 
+.page-hero--compact {
+  padding: var(--space-8) var(--space-6);
+}
+
+.page-hero--compact p { max-width: 640px; margin: 0 auto; }
+.page-hero--compact a { color: var(--atlas-paper); text-decoration: underline; }
+
 .page-body { flex: 1; }
 
 .page-about {
@@ -109,6 +116,12 @@ a { color: var(--voyage-teal); }
   margin: 0 auto;
   padding: var(--space-16) var(--space-6);
 }
+
+.about-section { margin-bottom: var(--space-12); }
+.about-section h2 { margin: 0 0 var(--space-3); }
+.about-section p { color: var(--muted-text); margin: 0 0 var(--space-3); }
+.about-section p:last-child { margin-bottom: 0; }
+.about-section a { text-decoration: underline; }
 
 .hero {
   position: relative;
@@ -260,6 +273,42 @@ a { color: var(--voyage-teal); }
 .how-it-works-step h3 { margin: var(--space-2) 0; }
 .how-it-works-step p { margin: 0; color: var(--muted-text); }
 
+/* ==== HOME: CAPABILITIES ==== */
+
+.capabilities {
+  padding: var(--space-16) var(--space-6);
+  background: var(--atlas-paper);
+  text-align: center;
+}
+
+.capabilities h2 { margin: 0 0 var(--space-12); }
+
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-8);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.capability-card {
+  height: 100%;
+  text-align: left;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.capability-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
+}
+
+.capability-card h3 { margin: 0 0 var(--space-2); font-size: 1.05rem; }
+.capability-card p { margin: 0; color: var(--muted-text); }
+
 /* ==== HOME: MAP TEASER ==== */
 
 .map-teaser {
@@ -388,6 +437,7 @@ a { color: var(--voyage-teal); }
 
 .matcher label:hover { background: rgba(43, 110, 118, 0.06); }
 .matcher label:has(input:checked) { background: rgba(43, 110, 118, 0.1); }
+.option-label::first-letter { text-transform: uppercase; }
 
 .matcher .results { margin-top: var(--space-8); }
 .matcher .board-card {
@@ -404,6 +454,51 @@ a { color: var(--voyage-teal); }
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
 }
+
+.match-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--voyage-teal);
+  margin-bottom: var(--space-2);
+}
+
+.match-attributes { margin-top: var(--space-3); }
+
+.match-attributes-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-1);
+}
+
+.match-chip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.match-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.88rem;
+  border-radius: var(--radius);
+  padding: var(--space-1) var(--space-2);
+}
+
+.match-chip svg { flex-shrink: 0; margin-top: 0.15em; }
+
+.match-chip--positive { background: rgba(43, 110, 118, 0.08); color: var(--ink-navy); }
+.match-chip--positive svg { color: var(--voyage-teal); }
+
+.match-chip--concern { background: rgba(217, 164, 65, 0.15); color: var(--ink-navy); }
+.match-chip--concern svg { color: #a6791f; }
 
 .matcher > button {
   background: var(--voyage-teal);
