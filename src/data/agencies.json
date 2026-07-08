@@ -1,65 +1,217 @@
 [
   {
     "name": "Pioneers",
+    "url": "https://pioneers.org/",
     "tradition": "broadly evangelical",
-    "focus": ["church planting", "unreached peoples", "creative access"],
+    "focus": ["church planting", "unreached peoples"],
     "supportRaising": "full personal support raising",
     "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": [],
     "trainingRequired": "Perspectives course + agency orientation",
-    "url": "https://www.pioneers.org"
+    "sourceNotes": { "roles": "not clearly stated" },
+    "sourceUrl": "https://pioneers.org/about"
   },
   {
     "name": "ABWE",
+    "url": "https://abwe.org/",
     "tradition": "Baptist / conservative evangelical",
-    "focus": ["church planting", "theological education", "medical"],
-    "supportRaising": "full personal support raising",
+    "focus": ["church planting", "medical", "theological education"],
+    "supportRaising": "faith-support model",
     "familyFriendly": true,
+    "termLengths": null,
+    "regions": ["global / multiple regions"],
+    "roles": ["medical", "education/TESOL", "church planting"],
     "trainingRequired": "agency assessment + field orientation",
-    "url": "https://www.abwe.org"
+    "sourceNotes": { "termLengths": "not clearly stated" },
+    "sourceUrl": "https://abwe.org/about/"
   },
   {
     "name": "TEAM",
+    "url": "https://www.team.org/",
+    "tradition": "broadly evangelical",
+    "focus": ["leadership development", "medical", "community development"],
+    "supportRaising": null,
+    "familyFriendly": null,
+    "termLengths": ["short-term (under 2 years)", "mid-term (2-4 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": ["medical", "education/TESOL", "business as mission", "relief and development"],
+    "trainingRequired": "agency orientation",
+    "sourceNotes": {
+      "supportRaising": "not clearly stated",
+      "familyFriendly": "not clearly stated"
+    },
+    "sourceUrl": "https://www.team.org/about-us/"
+  },
+  {
+    "name": "SIM",
+    "url": "https://sim.org/",
     "tradition": "broadly evangelical",
     "focus": ["church planting", "leadership development"],
     "supportRaising": "full personal support raising",
     "familyFriendly": true,
-    "trainingRequired": "agency orientation",
-    "url": "https://team.org"
-  },
-  {
-    "name": "SIM",
-    "tradition": "broadly evangelical",
-    "focus": ["medical", "church planting", "community development"],
-    "supportRaising": "full personal support raising",
-    "familyFriendly": true,
+    "termLengths": null,
+    "regions": ["global / multiple regions"],
+    "roles": [],
     "trainingRequired": "agency assessment",
-    "url": "https://sim.org"
+    "sourceNotes": {
+      "termLengths": "not clearly stated",
+      "roles": "not clearly stated"
+    },
+    "sourceUrl": "https://www.sim.org/about-sim-international/"
   },
   {
     "name": "WEC International",
-    "tradition": "broadly evangelical, faith-mission heritage",
-    "focus": ["unreached peoples", "creative access", "Bible translation support"],
-    "supportRaising": "faith-support model",
-    "familyFriendly": true,
+    "url": "https://wec-usa.org/",
+    "tradition": "interdenominational",
+    "focus": ["church planting", "unreached peoples", "creative access", "Bible translation", "medical"],
+    "supportRaising": null,
+    "familyFriendly": null,
+    "termLengths": null,
+    "regions": ["global / multiple regions"],
+    "roles": ["education/TESOL", "medical"],
     "trainingRequired": "candidate orientation course",
-    "url": "https://www.wecinternational.org"
+    "sourceNotes": {
+      "supportRaising": "not clearly stated",
+      "familyFriendly": "not clearly stated",
+      "termLengths": "not clearly stated"
+    },
+    "sourceUrl": "https://wec-usa.org/"
   },
   {
     "name": "Frontiers",
-    "tradition": "broadly evangelical",
-    "focus": ["unreached peoples", "Muslim-majority contexts", "creative access"],
-    "supportRaising": "full personal support raising",
+    "url": "https://frontiersusa.org/",
+    "tradition": "interdenominational",
+    "focus": ["church planting", "unreached peoples"],
+    "supportRaising": null,
     "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "career/long-term"],
+    "regions": ["Middle East / North Africa", "Sub-Saharan Africa", "Asia"],
+    "roles": [],
     "trainingRequired": "Perspectives course + field training",
-    "url": "https://frontiersusa.org"
+    "sourceNotes": {
+      "supportRaising": "not clearly stated",
+      "roles": "not clearly stated"
+    },
+    "sourceUrl": "https://frontiersusa.org/mission/"
   },
   {
     "name": "Wycliffe Bible Translators",
+    "url": "https://www.wycliffe.org/",
     "tradition": "broadly evangelical",
-    "focus": ["Bible translation", "linguistics", "literacy"],
+    "focus": ["Bible translation"],
     "supportRaising": "full personal support raising",
     "familyFriendly": true,
+    "termLengths": null,
+    "regions": ["global / multiple regions"],
+    "roles": ["Bible translation/linguistics", "support/admin", "media/creative"],
     "trainingRequired": "linguistics training (GIAL or equivalent)",
-    "url": "https://www.wycliffe.org"
+    "sourceNotes": { "termLengths": "not clearly stated" },
+    "sourceUrl": "https://www.wycliffe.org/serve/faq"
+  },
+  {
+    "name": "Ethnos360",
+    "url": "https://ethnos360.org/",
+    "tradition": "Baptist / conservative evangelical",
+    "focus": ["Bible translation", "church planting", "unreached peoples"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "mid-term (2-4 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": ["Bible translation/linguistics", "church planting"],
+    "trainingRequired": "agency assessment + missionary training program",
+    "sourceNotes": {},
+    "sourceUrl": "https://ethnos360.org/about"
+  },
+  {
+    "name": "OMF International",
+    "url": "https://omf.org/us/",
+    "tradition": "broadly evangelical",
+    "focus": ["church planting", "unreached peoples"],
+    "supportRaising": "faith-support model",
+    "familyFriendly": null,
+    "termLengths": ["short-term (under 2 years)", "career/long-term"],
+    "regions": ["Asia"],
+    "roles": ["education/TESOL", "church planting", "relief and development"],
+    "trainingRequired": "agency orientation",
+    "sourceNotes": { "familyFriendly": "not clearly stated" },
+    "sourceUrl": "https://omf.org/about-us/"
+  },
+  {
+    "name": "Youth With A Mission (YWAM)",
+    "url": "https://ywam.org/",
+    "tradition": "interdenominational",
+    "focus": ["medical", "creative access"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": ["medical", "education/TESOL", "media/creative"],
+    "trainingRequired": "Discipleship Training School (DTS)",
+    "sourceNotes": {},
+    "sourceUrl": "https://ywam.org/about-us/values"
+  },
+  {
+    "name": "OM (Operation Mobilisation)",
+    "url": "https://www.omusa.org/",
+    "tradition": "broadly evangelical",
+    "focus": ["church planting", "unreached peoples"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": ["church planting", "relief and development", "education/TESOL", "media/creative"],
+    "trainingRequired": "agency orientation",
+    "sourceNotes": {},
+    "sourceUrl": "https://www.omusa.org/about/what-we-do/"
+  },
+  {
+    "name": "Assemblies of God World Missions (AGWM)",
+    "url": "https://agwm.org/en/",
+    "tradition": "Pentecostal/charismatic",
+    "focus": ["church planting", "unreached peoples"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "mid-term (2-4 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": ["church planting", "relief and development"],
+    "trainingRequired": "agency assessment + pre-field itineration",
+    "sourceNotes": {},
+    "sourceUrl": "https://agwm.org/en/"
+  },
+  {
+    "name": "International Mission Board (IMB)",
+    "url": "https://www.imb.org/",
+    "tradition": "Baptist / conservative evangelical",
+    "focus": ["church planting", "medical"],
+    "supportRaising": null,
+    "familyFriendly": true,
+    "termLengths": ["short-term (under 2 years)", "mid-term (2-4 years)", "career/long-term"],
+    "regions": ["global / multiple regions"],
+    "roles": [],
+    "trainingRequired": "IMB assessment + active membership in a cooperating Southern Baptist church",
+    "sourceNotes": {
+      "supportRaising": "not clearly stated",
+      "roles": "not clearly stated"
+    },
+    "sourceUrl": "https://www.imb.org/"
+  },
+  {
+    "name": "Christar",
+    "url": "https://christar.org/",
+    "tradition": "broadly evangelical",
+    "focus": ["church planting", "unreached peoples"],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": null,
+    "termLengths": ["short-term (under 2 years)", "mid-term (2-4 years)", "career/long-term"],
+    "regions": ["Asia"],
+    "roles": [],
+    "trainingRequired": "agency assessment",
+    "sourceNotes": {
+      "familyFriendly": "not clearly stated",
+      "roles": "not clearly stated"
+    },
+    "sourceUrl": "https://christar.org/leastreached-faq"
   }
 ]
