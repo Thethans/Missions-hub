@@ -664,6 +664,17 @@ a { color: var(--voyage-teal); }
   box-shadow: var(--shadow);
   padding: var(--space-6);
   margin-bottom: var(--space-6);
+  /* .question is a <fieldset> (for native group semantics) styled to look
+     like the plain card it always was — reset the browser's fieldset chrome. */
+  border: none;
+  min-width: 0;
+}
+
+.matcher .question legend {
+  display: block;
+  width: 100%;
+  padding: 0;
+  font-weight: 600;
 }
 
 .matcher label {

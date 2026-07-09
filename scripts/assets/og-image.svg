@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="wordmark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="45%" stop-color="#faf7f0" />
+      <stop offset="115%" stop-color="#2b6e76" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#16233b" />
+
+  <!-- faint dot field, echoing the hero background -->
+  <g fill="#faf7f0" opacity="0.14">
+    <circle cx="120" cy="120" r="2" /><circle cx="180" cy="90" r="1.5" /><circle cx="240" cy="150" r="2" />
+    <circle cx="90" cy="220" r="1.5" /><circle cx="1080" cy="120" r="2" /><circle cx="1020" cy="80" r="1.5" />
+    <circle cx="960" cy="160" r="2" /><circle cx="1110" cy="220" r="1.5" /><circle cx="150" cy="500" r="2" />
+    <circle cx="220" cy="540" r="1.5" /><circle cx="1050" cy="500" r="2" /><circle cx="990" cy="550" r="1.5" />
+    <circle cx="70" cy="380" r="1.5" /><circle cx="1130" cy="380" r="1.5" />
+  </g>
+
+  <text x="600" y="255" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="150" letter-spacing="-4" fill="url(#wordmark)">Fielded</text>
+
+  <text x="600" y="320" text-anchor="middle" font-family="'Courier New', monospace" font-size="26" letter-spacing="4" fill="#2b6e76">GET TO THE FIELD.</text>
+
+  <text x="600" y="400" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#e7e3d8">
+    A live map of unreached people groups, a transparent
+  </text>
+  <text x="600" y="440" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#e7e3d8">
+    agency matcher, and a pre-field checklist.
+  </text>
+</svg>

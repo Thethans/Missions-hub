@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout.jsx';
 import HomePage from './pages/HomePage.jsx';
-import MapPage from './pages/MapPage.jsx';
-import QuizPage from './pages/QuizPage.jsx';
-import ChecklistPage from './pages/ChecklistPage.jsx';
-import AboutPage from './pages/AboutPage.jsx';
-import NotFoundPage from './pages/NotFoundPage.jsx';
+
+// Code-split everything but the landing page — visiting "/" shouldn't pull
+// in maplibre-gl (Map), the quiz scoring data, or any other route's code.
+const MapPage = lazy(() => import('./pages/MapPage.jsx'));
+const QuizPage = lazy(() => import('./pages/QuizPage.jsx'));
+const ChecklistPage = lazy(() => import('./pages/ChecklistPage.jsx'));
+const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 export default function App() {
   return (

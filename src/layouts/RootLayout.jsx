@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import TopNav from '../components/TopNav.jsx';
 
@@ -23,7 +23,9 @@ export default function RootLayout() {
     <div className="app-shell">
       <TopNav />
       <main>
-        <Outlet />
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

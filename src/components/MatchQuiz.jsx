@@ -25,10 +25,10 @@ export default function MatchQuiz() {
         />
       ))}
 
-      <button onClick={() => setSubmitted(true)}>See my matches</button>
+      <button type="button" onClick={() => setSubmitted(true)}>See my matches</button>
 
       {submitted && (
-        <div className="results">
+        <div className="results" aria-live="polite">
           <h3>Closest matches</h3>
           {results.map((r, i) => (
             <MatchResultCard key={r.name} result={r} index={i} />

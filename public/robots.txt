@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://missions-hub.vercel.app/sitemap.xml

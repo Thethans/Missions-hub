@@ -20,8 +20,8 @@ export default function QuizQuestion({ question, value, onChange }) {
     };
 
     return (
-      <div className="question">
-        <strong>{question.text}</strong>
+      <fieldset className="question">
+        <legend>{question.text}</legend>
         {question.options.map((opt) => (
           <label key={opt}>
             <input
@@ -34,13 +34,13 @@ export default function QuizQuestion({ question, value, onChange }) {
             {' '}<span className="option-label">{opt}</span>
           </label>
         ))}
-      </div>
+      </fieldset>
     );
   }
 
   return (
-    <div className="question">
-      <strong>{question.text}</strong>
+    <fieldset className="question">
+      <legend>{question.text}</legend>
       {question.options.map((opt) => (
         <label key={opt}>
           <input
@@ -53,6 +53,6 @@ export default function QuizQuestion({ question, value, onChange }) {
           {' '}<span className="option-label">{opt}</span>
         </label>
       ))}
-    </div>
+    </fieldset>
   );
 }
