@@ -46,8 +46,33 @@ export default function WorldMap({ selected, onSelect }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const hoveredId = useRef(null);
+  const activeRef = useRef(null);
   const [counts, setCounts] = useState(null);
   const [active, setActive] = useState(() => new Set(STATUSES));
+  activeRef.current = active;
+
+  // Applies whatever's in activeRef right now to the map's layers. Reading
+  // from a ref (rather than closing over `active` from whichever render
+  // scheduled this) means it's always safe to call this the instant a layer
+  // exists — no dependence on the map's one-shot 'load' event having fired
+  // at just the right moment, which is what silently dropped filter updates
+  // before (isStyleLoaded() can go false again well after initial load,
+  // e.g. mid-tile-fetch after a flyTo, and 'load' never fires a second time
+  // to catch up).
+  const applyStatusFilter = (map) => {
+    const currentActive = activeRef.current;
+    const filter = ['in', ['get', 'progressStatus'], ['literal', Array.from(currentActive)]];
+    if (map.getLayer('people-groups-points')) map.setFilter('people-groups-points', filter);
+    if (map.getLayer('people-groups-shadow')) map.setFilter('people-groups-shadow', filter);
+    if (map.getLayer('people-groups-pulse')) {
+      map.setFilter(
+        'people-groups-pulse',
+        currentActive.has('unreached')
+          ? ['==', ['get', 'progressStatus'], 'unreached']
+          : ['==', ['get', 'progressStatus'], '']
+      );
+    }
+  };
 
   useEffect(() => {
     const map = new maplibregl.Map({
@@ -144,6 +169,11 @@ export default function WorldMap({ selected, onSelect }) {
         }
       });
 
+      // Catch up to whatever the legend's filter state is by the time these
+      // layers actually exist (the fetch above may have taken a beat, during
+      // which the visitor could already have toggled a status).
+      applyStatusFilter(map);
+
       // Fade markers in a beat after the shadow/pulse layers land, instead
       // of everything popping in at once.
       requestAnimationFrame(() => {
@@ -202,21 +232,7 @@ export default function WorldMap({ selected, onSelect }) {
   }, [onSelect]);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const applyFilter = () => {
-      const filter = ['in', ['get', 'progressStatus'], ['literal', Array.from(active)]];
-      if (map.getLayer('people-groups-points')) map.setFilter('people-groups-points', filter);
-      if (map.getLayer('people-groups-shadow')) map.setFilter('people-groups-shadow', filter);
-      if (map.getLayer('people-groups-pulse')) {
-        map.setFilter(
-          'people-groups-pulse',
-          active.has('unreached') ? ['==', ['get', 'progressStatus'], 'unreached'] : ['==', ['get', 'progressStatus'], '']
-        );
-      }
-    };
-    if (map.isStyleLoaded()) applyFilter();
-    else map.once('load', applyFilter);
+    if (mapRef.current) applyStatusFilter(mapRef.current);
   }, [active]);
 
   const toggleStatus = (status) => {
