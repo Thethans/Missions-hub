@@ -27,8 +27,8 @@ function HeroHeadline() {
   }, [prefersReduced]);
 
   return (
-    <motion.h1 style={{ fontVariationSettings }}>
-      Get to the field.
+    <motion.h1 className="hero-wordmark" style={{ fontVariationSettings }}>
+      Fielded
     </motion.h1>
   );
 }
@@ -48,6 +48,7 @@ export default function HomePage() {
         >
           <span className="hero-eyebrow">Live map of unreached people groups worldwide</span>
           <HeroHeadline />
+          <p className="hero-tagline">Get to the field.</p>
           <p>Find the people still waiting to hear, the agencies who can send you, and everything in between.</p>
           <Link to="/quiz" className="cta-button">Take the quiz</Link>
         </motion.div>
