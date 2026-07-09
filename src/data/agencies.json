@@ -16,11 +16,12 @@
     "regions": [
       "global / multiple regions"
     ],
-    "roles": [],
+    "roles": [
+      "support care",
+      "mobilization"
+    ],
     "trainingRequired": "Perspectives course + agency orientation",
-    "sourceNotes": {
-      "roles": "not clearly stated"
-    },
+    "sourceNotes": {},
     "sourceUrl": "https://pioneers.org/about"
   },
   {
@@ -149,7 +150,10 @@
     "regions": [
       "Middle East / North Africa",
       "Sub-Saharan Africa",
-      "Asia"
+      "Balkans",
+      "Central Asia",
+      "South Asia",
+      "Southeast Asia"
     ],
     "roles": [],
     "trainingRequired": "Perspectives course + field training",
@@ -157,7 +161,7 @@
       "supportRaising": "not clearly stated",
       "roles": "not clearly stated"
     },
-    "sourceUrl": "https://frontiersusa.org/mission/"
+    "sourceUrl": "https://frontiersusa.org/regions/"
   },
   {
     "name": "Wycliffe Bible Translators",
@@ -225,7 +229,8 @@
       "career/long-term"
     ],
     "regions": [
-      "Asia"
+      "East Asia",
+      "Southeast Asia"
     ],
     "roles": [
       "education/TESOL",
@@ -236,7 +241,7 @@
     "sourceNotes": {
       "familyFriendly": "not clearly stated"
     },
-    "sourceUrl": "https://omf.org/about-us/"
+    "sourceUrl": "https://omf.org/east-asia/"
   },
   {
     "name": "Youth With A Mission (YWAM)",
@@ -285,7 +290,8 @@
       "church planting",
       "relief and development",
       "education/TESOL",
-      "media/creative"
+      "media/creative",
+      "mobilization"
     ],
     "trainingRequired": "agency orientation",
     "sourceNotes": {},
@@ -325,7 +331,7 @@
       "church planting",
       "medical"
     ],
-    "supportRaising": null,
+    "supportRaising": "fully-funded / salaried (agency pays you)",
     "familyFriendly": true,
     "termLengths": [
       "short-term (under 2 years)",
@@ -338,10 +344,9 @@
     "roles": [],
     "trainingRequired": "IMB assessment + active membership in a cooperating Southern Baptist church",
     "sourceNotes": {
-      "supportRaising": "not clearly stated",
       "roles": "not clearly stated"
     },
-    "sourceUrl": "https://www.imb.org/"
+    "sourceUrl": "https://www.imb.org/who-we-are/"
   },
   {
     "name": "Christar",
@@ -359,15 +364,21 @@
       "career/long-term"
     ],
     "regions": [
-      "Asia"
+      "Middle East / North Africa",
+      "Central Asia",
+      "South Asia",
+      "Southeast Asia",
+      "East Asia",
+      "Europe"
     ],
     "roles": [],
     "trainingRequired": "agency assessment",
     "sourceNotes": {
       "familyFriendly": "not clearly stated",
-      "roles": "not clearly stated"
+      "roles": "not clearly stated",
+      "regions": "Europe presence confirmed but not broken out by sub-region on their site"
     },
-    "sourceUrl": "https://christar.org/leastreached-faq"
+    "sourceUrl": "https://www.goservelove.net/meet-agency-christar-2/"
   },
   {
     "name": "ReachGlobal (EFCA)",
@@ -479,16 +490,19 @@
       "career/long-term"
     ],
     "regions": [
-      "Europe"
+      "Western Europe",
+      "Eastern Europe",
+      "Balkans"
     ],
     "roles": [],
     "trainingRequired": "agency orientation",
     "sourceNotes": {
       "supportRaising": "not clearly stated",
       "familyFriendly": "not clearly stated",
-      "roles": "not clearly stated"
+      "roles": "not clearly stated",
+      "regions": "GEM confirms 25+ countries across Europe; sub-region split here inferred from named example countries (e.g. Croatia/Kosovo, Poland/Romania/Ukraine, England/France/Spain), not an official regional breakdown"
     },
-    "sourceUrl": "https://gemission.org/go/"
+    "sourceUrl": "https://gemission.org/go/long-term/"
   },
   {
     "name": "SEND International",
@@ -506,17 +520,18 @@
       "career/long-term"
     ],
     "regions": [
-      "Asia",
-      "Europe"
+      "East Asia",
+      "Eastern Europe"
     ],
     "roles": [],
     "trainingRequired": "agency orientation",
     "sourceNotes": {
       "supportRaising": "not clearly stated",
       "familyFriendly": "not clearly stated",
-      "roles": "not clearly stated"
+      "roles": "not clearly stated",
+      "regions": "SEND's own site describes its work more broadly as \"Asia, Europe, Eurasia, and North America\"; named example fields (Japan, Taiwan, Philippines, Romania) narrowed here to East Asia / Eastern Europe"
     },
-    "sourceUrl": "https://www.send.org/"
+    "sourceUrl": "https://www.send.org/go"
   },
   {
     "name": "Pioneer Bible Translators",

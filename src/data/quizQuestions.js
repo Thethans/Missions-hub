@@ -35,7 +35,11 @@ export const QUESTIONS = [
   {
     key: 'supportRaising',
     text: 'How do you feel about support raising?',
-    options: ['full personal support raising', 'faith-support model']
+    options: [
+      'full personal support raising',
+      'faith-support model',
+      'fully-funded / salaried (agency pays you)'
+    ]
   },
   {
     key: 'region',
@@ -44,9 +48,15 @@ export const QUESTIONS = [
     options: [
       'Sub-Saharan Africa',
       'Middle East / North Africa',
-      'Asia',
+      'Central Asia',
+      'South Asia',
+      'Southeast Asia',
+      'East Asia',
       'Latin America',
-      'Europe',
+      'Western Europe',
+      'Eastern Europe',
+      'Balkans',
+      'Nordic countries',
       'North America',
       'no strong preference'
     ]
@@ -75,6 +85,9 @@ export const QUESTIONS = [
       'media/creative',
       'relief and development',
       'support/admin',
+      'support care',
+      'risk management',
+      'mobilization',
       'aviation/logistics',
       'community development',
       'not sure yet'
@@ -84,6 +97,21 @@ export const QUESTIONS = [
 
 const GLOBAL_REGION = 'global / multiple regions';
 const NEUTRAL_VALUES = new Set(['no strong preference', 'not sure yet']);
+
+// Some agencies are only confirmed at the broader region level (e.g. tagged
+// "Asia" or "Europe" generically, with no source specific enough to split
+// further) — this lets a sub-region answer still match those, instead of
+// treating "not broken out yet" the same as "doesn't serve there".
+const REGION_PARENT = {
+  'Central Asia': 'Asia',
+  'South Asia': 'Asia',
+  'Southeast Asia': 'Asia',
+  'East Asia': 'Asia',
+  'Western Europe': 'Europe',
+  'Eastern Europe': 'Europe',
+  'Balkans': 'Europe',
+  'Nordic countries': 'Europe'
+};
 
 function includesMatch(agencyValue, userAnswer) {
   return Array.isArray(agencyValue) && agencyValue.includes(userAnswer);
@@ -130,7 +158,10 @@ export const DIMENSIONS = [
     weight: 2,
     field: 'regions',
     isEmpty: (v) => !Array.isArray(v) || v.length === 0,
-    compare: (agencyValue, answer) => agencyValue.includes(answer) || agencyValue.includes(GLOBAL_REGION),
+    compare: (agencyValue, answer) =>
+      agencyValue.includes(answer) ||
+      agencyValue.includes(GLOBAL_REGION) ||
+      (REGION_PARENT[answer] != null && agencyValue.includes(REGION_PARENT[answer])),
     matchLabel: (values) => {
       const named = values.filter((v) => v !== GLOBAL_REGION);
       return named.length > 0 ? `Active in ${named.join(', ')}` : 'Active in many regions';
