@@ -5,12 +5,31 @@ export const QUESTIONS = [
   {
     key: 'focus',
     text: 'What kind of ministry pulls you most?',
-    options: ['church planting', 'unreached peoples', 'medical', 'Bible translation', 'creative access']
+    options: [
+      'church planting',
+      'unreached peoples',
+      'medical',
+      'Bible translation',
+      'creative access',
+      'leadership development',
+      'theological education',
+      'relief and development',
+      'community development',
+      'campus ministry',
+      'youth ministry',
+      'aviation/logistics'
+    ]
   },
   {
     key: 'tradition',
     text: 'What theological tradition fits you best?',
-    options: ['broadly evangelical', 'Baptist / conservative evangelical']
+    options: [
+      'broadly evangelical',
+      'Baptist / conservative evangelical',
+      'interdenominational',
+      'Pentecostal/charismatic',
+      'Reformed / Presbyterian'
+    ]
   },
   {
     key: 'supportRaising',
@@ -20,7 +39,15 @@ export const QUESTIONS = [
   {
     key: 'region',
     text: 'Where do you feel drawn to serve?',
-    options: ['Sub-Saharan Africa', 'Middle East / North Africa', 'Asia', 'Latin America', 'no strong preference']
+    options: [
+      'Sub-Saharan Africa',
+      'Middle East / North Africa',
+      'Asia',
+      'Latin America',
+      'Europe',
+      'North America',
+      'no strong preference'
+    ]
   },
   {
     key: 'lifeStage',
@@ -44,6 +71,8 @@ export const QUESTIONS = [
       'media/creative',
       'relief and development',
       'support/admin',
+      'aviation/logistics',
+      'community development',
       'not sure yet'
     ]
   }
