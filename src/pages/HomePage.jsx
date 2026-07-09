@@ -40,6 +40,7 @@ export default function HomePage() {
     <>
       <section className="hero">
         <HeroBackground />
+        <div className="hero-scrim" aria-hidden="true" />
         <motion.div
           className="hero-content"
           initial={{ opacity: 0, y: prefersReduced ? 0 : 12 }}
