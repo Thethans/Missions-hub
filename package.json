@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "fetch-jp": "node scripts/fetch-joshua-project.mjs",
-    "og:image": "node scripts/assets/render-og.mjs"
+    "og:image": "node scripts/assets/render-og.mjs",
+    "icons": "node scripts/assets/render-icons.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.9",

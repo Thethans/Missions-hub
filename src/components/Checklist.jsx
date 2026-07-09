@@ -88,8 +88,14 @@ function ProfileSetup({ initial, onSaved }) {
     setSaving(true);
     setError(null);
     const {
-      data: { user }
+      data: { user },
+      error: userError
     } = await supabase.auth.getUser();
+    if (userError || !user) {
+      setSaving(false);
+      setError(userError?.message || 'Your session expired — please sign in again.');
+      return;
+    }
     const { error: upsertError } = await supabase
       .from('user_checklist_profile')
       .upsert({ user_id: user.id, role_type: roleType, access_level: accessLevel, updated_at: new Date().toISOString() });
@@ -220,7 +226,9 @@ function ChecklistView({ userId, profile, onEditProfile }) {
           </div>
           <span>{completedIds.size} / {visibleItems.length} complete</span>
         </div>
-        <button className="checklist-settings" onClick={onEditProfile} title="Edit profile">⚙ Profile</button>
+        <button className="checklist-settings" onClick={onEditProfile} title="Edit profile">
+          <span aria-hidden="true">⚙</span> Profile
+        </button>
       </div>
 
       {[...grouped.entries()].map(([category, categoryItems]) => {
@@ -228,8 +236,12 @@ function ChecklistView({ userId, profile, onEditProfile }) {
         const doneInCategory = categoryItems.filter((i) => completedIds.has(i.id)).length;
         return (
           <section className="checklist-category" key={category}>
-            <button className="checklist-category-toggle" onClick={() => toggleCategory(category)}>
-              <span>{isOpen ? '▾' : '▸'} {CATEGORY_LABELS[category] || category}</span>
+            <button
+              className="checklist-category-toggle"
+              onClick={() => toggleCategory(category)}
+              aria-expanded={isOpen}
+            >
+              <span><span aria-hidden="true">{isOpen ? '▾' : '▸'}</span> {CATEGORY_LABELS[category] || category}</span>
               <span className="checklist-category-count">{doneInCategory} / {categoryItems.length}</span>
             </button>
             {isOpen && (

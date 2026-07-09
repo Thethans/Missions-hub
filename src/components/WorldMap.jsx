@@ -49,6 +49,7 @@ export default function WorldMap({ selected, onSelect }) {
   const activeRef = useRef(null);
   const [counts, setCounts] = useState(null);
   const [active, setActive] = useState(() => new Set(STATUSES));
+  const [dataError, setDataError] = useState(false);
   activeRef.current = active;
 
   // Applies whatever's in activeRef right now to the map's layers. Reading
@@ -98,6 +99,7 @@ export default function WorldMap({ selected, onSelect }) {
         data = await res.json();
       } catch (e) {
         console.error('Could not load people-groups.geojson — run scripts/fetch-joshua-project.mjs first', e);
+        setDataError(true);
         return;
       }
 
@@ -252,7 +254,13 @@ export default function WorldMap({ selected, onSelect }) {
     <div className="map-wrapper">
       <div id="map-container" ref={mapContainer} />
       <div className="map-vignette" aria-hidden="true" />
-      <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+      {dataError ? (
+        <p className="map-data-error" role="alert">
+          Couldn't load people-group data right now — try refreshing the page.
+        </p>
+      ) : (
+        <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+      )}
       {selected && <MapPopupCard properties={selected} onClose={() => onSelect(null)} />}
     </div>
   );

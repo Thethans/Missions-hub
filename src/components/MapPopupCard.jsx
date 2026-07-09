@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatPopulation } from '../lib/format.js';
 
 const STATUS_LABEL = {
   unreached: 'Unreached',
@@ -15,7 +16,7 @@ export default function MapPopupCard({ properties, onClose }) {
       <dl className="map-popup-stats">
         <div>
           <dt>Population</dt>
-          <dd>{Number(properties.population).toLocaleString()}</dd>
+          <dd>{formatPopulation(properties.population)}</dd>
         </div>
         <div>
           <dt>% Evangelical</dt>

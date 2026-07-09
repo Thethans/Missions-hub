@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatPopulation } from '../lib/format.js';
 
 const STATUS_LABEL = {
   unreached: 'Unreached',
@@ -37,7 +38,7 @@ export default function MapDetailPanel({ selected }) {
       <dl className="map-detail-stats">
         <div>
           <dt>Population</dt>
-          <dd>{Number(population).toLocaleString()}</dd>
+          <dd>{formatPopulation(population)}</dd>
         </div>
         <div>
           <dt>Evangelical</dt>
@@ -54,7 +55,7 @@ export default function MapDetailPanel({ selected }) {
       </dl>
 
       <p className="map-detail-summary">
-        The {name} of {country} number an estimated {Number(population).toLocaleString()} people.
+        The {name} of {country} number an estimated {formatPopulation(population)} people.
         They are {statusSentence}. Their predominant religion is {religion}, and an estimated{' '}
         {pctEvangelical}% identify as evangelical Christian.
       </p>

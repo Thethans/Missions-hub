@@ -22,6 +22,20 @@ body {
 
 input[type='checkbox'], input[type='radio'] { accent-color: var(--voyage-teal); }
 
+/* Standard sr-only pattern: content stays in the accessibility tree (for
+   screen-reader announcements) but is removed from visual layout entirely. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 h1, h2, h3 { font-family: var(--font-display); }
 
 a { color: var(--voyage-teal); }
@@ -559,6 +573,20 @@ a { color: var(--voyage-teal); }
   font-size: 0.85rem;
 }
 
+.map-data-error {
+  position: absolute;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
+  max-width: 360px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.85rem;
+  color: var(--status-unreached);
+}
+
 .map-legend-item {
   display: flex;
   align-items: center;
@@ -657,6 +685,8 @@ a { color: var(--voyage-teal); }
 /* ==== QUIZ ==== */
 
 .matcher { max-width: 640px; margin: 2rem auto; padding: 0 var(--space-6); }
+
+.matcher-hint { color: var(--status-unreached); margin: var(--space-2) 0 0; font-size: 0.9rem; }
 
 .matcher .question {
   background: white;
