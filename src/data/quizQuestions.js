@@ -4,7 +4,8 @@
 export const QUESTIONS = [
   {
     key: 'focus',
-    text: 'What kind of ministry pulls you most?',
+    multi: true,
+    text: 'What kind of ministry pulls you most? (choose all that apply)',
     options: [
       'church planting',
       'unreached peoples',
@@ -38,7 +39,8 @@ export const QUESTIONS = [
   },
   {
     key: 'region',
-    text: 'Where do you feel drawn to serve?',
+    multi: true,
+    text: 'Where do you feel drawn to serve? (choose all that apply)',
     options: [
       'Sub-Saharan Africa',
       'Middle East / North Africa',
@@ -56,12 +58,14 @@ export const QUESTIONS = [
   },
   {
     key: 'termLength',
-    text: 'How long of a commitment are you thinking?',
+    multi: true,
+    text: 'How long of a commitment are you thinking? (choose all that apply)',
     options: ['short-term (under 2 years)', 'mid-term (2-4 years)', 'career/long-term', 'not sure yet']
   },
   {
     key: 'roleType',
-    text: 'What kind of role fits your skills?',
+    multi: true,
+    text: 'What kind of role fits your skills? (choose all that apply)',
     options: [
       'church planting',
       'medical',
@@ -91,12 +95,13 @@ function includesMatch(agencyValue, userAnswer) {
 export const DIMENSIONS = [
   {
     key: 'focus',
+    multi: true,
     weight: 3,
     field: 'focus',
     isEmpty: (v) => !Array.isArray(v) || v.length === 0,
     compare: includesMatch,
-    matchLabel: (answer) => `Focuses on ${answer}`,
-    conflictLabel: (agencyValue, answer) => `Doesn't list ${answer} as a focus area`,
+    matchLabel: (values) => `Focuses on ${values.join(', ')}`,
+    conflictLabel: (agencyValue, values) => `Doesn't list ${values.join(' or ')} as a focus area`,
     unconfirmedLabel: () => 'Ministry focus areas aren’t fully itemized on their site'
   },
   {
@@ -121,14 +126,16 @@ export const DIMENSIONS = [
   },
   {
     key: 'region',
+    multi: true,
     weight: 2,
     field: 'regions',
     isEmpty: (v) => !Array.isArray(v) || v.length === 0,
     compare: (agencyValue, answer) => agencyValue.includes(answer) || agencyValue.includes(GLOBAL_REGION),
-    matchLabel: (answer) => (
-      answer === undefined ? 'Serves globally' : `Active in ${answer === GLOBAL_REGION ? 'many regions' : answer}`
-    ),
-    conflictLabel: (agencyValue, answer) => `Their focus regions don't include ${answer}`,
+    matchLabel: (values) => {
+      const named = values.filter((v) => v !== GLOBAL_REGION);
+      return named.length > 0 ? `Active in ${named.join(', ')}` : 'Active in many regions';
+    },
+    conflictLabel: (agencyValue, values) => `Their focus regions don't include ${values.join(' or ')}`,
     unconfirmedLabel: () => 'Regional focus not clearly stated'
   },
   {
@@ -144,22 +151,24 @@ export const DIMENSIONS = [
   },
   {
     key: 'termLength',
+    multi: true,
     weight: 1,
     field: 'termLengths',
     isEmpty: (v) => !Array.isArray(v) || v.length === 0,
     compare: includesMatch,
-    matchLabel: (answer) => `Offers ${answer} terms`,
-    conflictLabel: (agencyValue, answer) => `Doesn't list ${answer} as an available term length`,
+    matchLabel: (values) => `Offers ${values.join(' or ')} terms`,
+    conflictLabel: (agencyValue, values) => `Doesn't list ${values.join(' or ')} as an available term length`,
     unconfirmedLabel: () => 'Term length options not clearly stated'
   },
   {
     key: 'roleType',
+    multi: true,
     weight: 2,
     field: 'roles',
     isEmpty: (v) => !Array.isArray(v) || v.length === 0,
     compare: includesMatch,
-    matchLabel: (answer) => `Recruits for ${answer} roles`,
-    conflictLabel: (agencyValue, answer) => `Doesn't list ${answer} as a role they recruit for`,
+    matchLabel: (values) => `Recruits for ${values.join(', ')} roles`,
+    conflictLabel: (agencyValue, values) => `Doesn't list ${values.join(' or ')} as a role they recruit for`,
     unconfirmedLabel: () => 'Specific roles recruited aren’t itemized on their site'
   }
 ];
