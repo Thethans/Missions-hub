@@ -589,6 +589,41 @@ a { color: var(--voyage-teal); }
 .matcher label:has(input:checked) { background: rgba(43, 110, 118, 0.1); }
 .option-label::first-letter { text-transform: uppercase; }
 
+.matcher input[type='checkbox'],
+.matcher input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: white;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  cursor: pointer;
+}
+
+.matcher input[type='checkbox']:checked,
+.matcher input[type='radio']:checked {
+  background: var(--voyage-teal);
+  border-color: var(--voyage-teal);
+}
+
+.matcher input[type='checkbox']:checked::after,
+.matcher input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 .matcher .results { margin-top: var(--space-8); }
 .matcher .board-card {
   border: 1px solid var(--line);
