@@ -380,7 +380,40 @@ a { color: var(--voyage-teal); }
 .page-hero--compact p { max-width: 640px; margin: 0 auto; }
 .page-hero--compact a { color: var(--atlas-paper); }
 
-.page-notfound { text-align: center; }
+.page-notfound { position: relative; text-align: center; }
+
+/* A little plane, lost — since there's no page here to fly to. Wanders a
+   loose loop and clips at the field's edges rather than the whole page, so
+   it reads as "off the map" instead of drifting over the link text below. */
+.notfound-plane-field {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.notfound-plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -18px;
+  margin-left: -18px;
+  filter: drop-shadow(0 2px 6px rgba(22, 35, 59, 0.25));
+  animation: notfound-wander 18s ease-in-out infinite;
+}
+
+@keyframes notfound-wander {
+  0%   { transform: translate(-90px, 6px) rotate(-15deg); }
+  20%  { transform: translate(-10px, -38px) rotate(50deg); }
+  40%  { transform: translate(110px, 4px) rotate(140deg); }
+  60%  { transform: translate(70px, 42px) rotate(220deg); }
+  80%  { transform: translate(-60px, 30px) rotate(310deg); }
+  100% { transform: translate(-90px, 6px) rotate(345deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notfound-plane { animation: none; }
+}
 
 .notfound-code {
   font-family: var(--font-mono);
