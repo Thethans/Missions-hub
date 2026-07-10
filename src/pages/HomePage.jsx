@@ -24,7 +24,9 @@ function HeroHeadline() {
       wghtControls.stop();
       opszControls.stop();
     };
-  }, [prefersReduced]);
+    // wght/opsz are framer-motion `useMotionValue` containers — stable
+    // identity across renders (like a ref), safe to list here.
+  }, [prefersReduced, wght, opsz]);
 
   return (
     <motion.h1 className="hero-wordmark" style={{ fontVariationSettings }}>
