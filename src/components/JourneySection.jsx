@@ -1,35 +1,67 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { JOURNEY_STEPS as STEPS } from '../data/journeySteps.js';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import PlaneIcon from './PlaneIcon.jsx';
 
-// Scrollytelling section: no card, no box — just a vertical thread running
-// down the left edge of the steps, filling in as you scroll. The plane rides
-// that fill line straight down (nose-first), with waypoint dots marking
-// each step as it passes them.
+// Scrollytelling section: a wide "flight lane" fills the left gutter — the
+// plane circles continuously (its own idle motion, like a glider riding a
+// thermal) while its overall vertical position descends with scroll, rather
+// than sitting pinned to a thin line. Waypoint markers are numbered circles
+// that fill in solid as the plane passes them.
 export default function JourneySection() {
   const sectionRef = useRef(null);
+  const planeRef = useRef(null);
   const prefersReduced = usePrefersReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start 0.7', 'end 0.9'] });
   const threadHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  const [planeTop, setPlaneTop] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollTopRef = useRef(0);
+
   useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    setPlaneTop(Math.min(1, Math.max(0, v)) * 100);
+    const clamped = Math.min(1, Math.max(0, v));
+    scrollTopRef.current = clamped * 100;
+    setActiveIndex(Math.min(STEPS.length - 1, Math.floor(clamped * STEPS.length)));
   });
+
+  useEffect(() => {
+    if (prefersReduced) return;
+    let raf;
+    let angle = 0;
+    const RX = 34; // circling radius, px — how far it swings across the lane
+    const RY = 12; // vertical wobble, px — a little helix lift as it loops
+    const tick = () => {
+      angle += 0.018;
+      const plane = planeRef.current;
+      if (plane) {
+        const dx = Math.cos(angle) * RX;
+        const dy = Math.sin(angle) * RY;
+        // Heading follows the tangent of the loop it's tracing, so it banks
+        // into the circle instead of floating with a fixed orientation.
+        const heading = (Math.atan2(RY * Math.cos(angle), -RX * Math.sin(angle)) * 180) / Math.PI;
+        plane.style.top = `${scrollTopRef.current}%`;
+        plane.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${heading + 90}deg)`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [prefersReduced]);
 
   return (
     <section className="journey" ref={sectionRef}>
       <div className="journey-steps">
-        <div className="journey-thread">
-          <motion.div className="journey-thread-fill" style={{ height: prefersReduced ? '100%' : threadHeight }} />
+        <div className="journey-flight-lane">
+          <div className="journey-thread">
+            <motion.div className="journey-thread-fill" style={{ height: prefersReduced ? '100%' : threadHeight }} />
+          </div>
           {STEPS.map((step, i) => (
-            <JourneyDot key={step.n} index={i} progress={scrollYProgress} prefersReduced={prefersReduced} />
+            <JourneyDot key={step.n} index={i} label={step.n} progress={scrollYProgress} prefersReduced={prefersReduced} />
           ))}
           {!prefersReduced && (
-            <div className="journey-plane" style={{ top: `${planeTop}%` }}>
-              <PlaneIcon size={20} />
+            <div ref={planeRef} className="journey-plane">
+              <PlaneIcon size={22} />
             </div>
           )}
         </div>
@@ -53,13 +85,20 @@ export default function JourneySection() {
   );
 }
 
-function JourneyDot({ index, progress, prefersReduced }) {
+function JourneyDot({ index, label, progress, prefersReduced }) {
   const threshold = index / (STEPS.length - 1);
-  const opacity = useTransform(progress, [Math.max(0, threshold - 0.04), threshold], [0.25, 1]);
-  const scale = useTransform(progress, [Math.max(0, threshold - 0.04), threshold], [0.7, 1]);
+  const [reached, setReached] = useState(prefersReduced);
 
-  if (prefersReduced) {
-    return <div className="journey-dot" style={{ top: `${threshold * 100}%`, opacity: 1 }} />;
-  }
-  return <motion.div className="journey-dot" style={{ top: `${threshold * 100}%`, opacity, scale }} />;
+  useMotionValueEvent(progress, 'change', (v) => {
+    setReached(v >= threshold - 0.02);
+  });
+
+  return (
+    <div
+      className={`journey-dot${reached ? ' journey-dot--reached' : ''}`}
+      style={{ top: `${threshold * 100}%` }}
+    >
+      {label}
+    </div>
+  );
 }

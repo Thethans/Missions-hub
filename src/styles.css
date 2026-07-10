@@ -296,15 +296,26 @@ a { color: var(--voyage-teal); }
   will-change: transform, opacity;
 }
 
-.journey-steps { position: relative; display: flex; flex-direction: column; padding-left: var(--space-8); }
+.journey-steps { position: relative; display: flex; flex-direction: column; padding-left: 130px; }
 
-.journey-thread {
+/* A wide lane (not a thin slider) — the plane circles within it as it
+   descends, using the space instead of being pinned to a single line. */
+.journey-flight-lane {
   position: absolute;
   top: 0.4em;
   bottom: 0.4em;
   left: 0;
+  width: 110px;
+}
+
+.journey-thread {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
   width: 2px;
   background: var(--line);
+  transform: translateX(-50%);
 }
 
 .journey-thread-fill {
@@ -313,24 +324,44 @@ a { color: var(--voyage-teal); }
   transform-origin: top;
 }
 
+/* Numbered waypoint markers — deliberately bold, not a plain dot, so each
+   of the 4 steps reads clearly as the plane passes it. */
 .journey-dot {
   position: absolute;
   left: 50%;
-  width: 9px;
-  height: 9px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: var(--voyage-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform: translate(-50%, -50%);
+  background: var(--atlas-paper);
+  border: 2px solid var(--line);
+  box-shadow: var(--shadow);
+  color: var(--muted-text);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Rides straight down .journey-thread as you scroll (top% set inline) —
-   nose pointed down, in the direction of travel. */
+.journey-dot--reached {
+  background: var(--voyage-teal);
+  border-color: var(--voyage-teal);
+  color: var(--atlas-paper);
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 0 0 6px rgba(43, 110, 118, 0.25);
+}
+
+/* Circles continuously within .journey-flight-lane (own idle motion) while
+   its overall top% descends with scroll — see JourneySection.jsx, which
+   drives both directly via ref for a smooth 60fps loop. */
 .journey-plane {
   position: absolute;
   left: 50%;
-  filter: drop-shadow(0 2px 4px rgba(22, 35, 59, 0.25));
+  top: 0;
+  filter: drop-shadow(0 2px 4px rgba(22, 35, 59, 0.35));
   pointer-events: none;
-  transform: translate(-50%, -50%) rotate(180deg);
   will-change: transform, top;
 }
 
