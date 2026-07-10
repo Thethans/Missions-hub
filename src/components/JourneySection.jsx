@@ -8,8 +8,8 @@ import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 // needing real randomness.
 const PARTICLES = Array.from({ length: 16 }, (_, i) => ({
   dx: Math.round(Math.sin(i * 2.4) * 32),
-  duration: 3.6 + (i % 5) * 0.7,
-  delay: -(i * 0.85),
+  duration: 6.5 + (i % 5) * 1.3,
+  delay: -(i * 1.5),
   teal: i % 3 !== 0
 }));
 

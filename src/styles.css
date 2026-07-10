@@ -307,7 +307,9 @@ a { color: var(--voyage-teal); }
   bottom: 0.4em;
   left: 0;
   width: 190px;
-  overflow: hidden;
+  /* No overflow:hidden — that was clipping the first/last waypoint beacons,
+     which sit centered exactly on the 0%/100% edges. Particle horizontal
+     sway (±32px) stays well within the lane's width regardless. */
 }
 
 .journey-thread {
@@ -402,7 +404,7 @@ a { color: var(--voyage-teal); }
 
 .journey-step {
   position: relative;
-  min-height: 60vh;
+  min-height: 42vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
