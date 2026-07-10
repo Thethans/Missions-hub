@@ -296,16 +296,18 @@ a { color: var(--voyage-teal); }
   will-change: transform, opacity;
 }
 
-.journey-steps { position: relative; display: flex; flex-direction: column; padding-left: 130px; }
+.journey-steps { position: relative; display: flex; flex-direction: column; padding-left: 220px; }
 
-/* A wide lane (not a thin slider) — the plane circles within it as it
-   descends, using the space instead of being pinned to a single line. */
-.journey-flight-lane {
+/* A wide, filled lane instead of a thin slider — a glowing line down the
+   middle, a constant cascade of falling light particles (alive even before
+   you scroll), and numbered beacons marking each step. */
+.journey-lane {
   position: absolute;
   top: 0.4em;
   bottom: 0.4em;
   left: 0;
-  width: 110px;
+  width: 190px;
+  overflow: hidden;
 }
 
 .journey-thread {
@@ -313,24 +315,58 @@ a { color: var(--voyage-teal); }
   top: 0;
   bottom: 0;
   left: 50%;
-  width: 2px;
-  background: var(--line);
+  width: 5px;
+  border-radius: 3px;
+  background: rgba(43, 110, 118, 0.14);
   transform: translateX(-50%);
 }
 
 .journey-thread-fill {
   width: 100%;
-  background: var(--voyage-teal);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--voyage-teal), #4fa3ac);
+  box-shadow: 0 0 18px 3px rgba(43, 110, 118, 0.55), 0 0 44px 8px rgba(43, 110, 118, 0.22);
   transform-origin: top;
 }
 
-/* Numbered waypoint markers — deliberately bold, not a plain dot, so each
-   of the 4 steps reads clearly as the plane passes it. */
+/* Continuous falling light — pure CSS, runs whether or not the visitor has
+   scrolled yet, so the lane never looks static. */
+.journey-particle {
+  position: absolute;
+  left: 50%;
+  top: -4%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--voyage-teal);
+  box-shadow: 0 0 8px 2px rgba(43, 110, 118, 0.7);
+  animation-name: journey-particle-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.journey-particle--paper {
+  width: 4px;
+  height: 4px;
+  background: var(--atlas-paper);
+  box-shadow: 0 0 6px 2px rgba(250, 247, 240, 0.6);
+}
+
+@keyframes journey-particle-fall {
+  0% { top: -4%; opacity: 0; transform: translateX(calc(var(--dx) * -1)); }
+  10% { opacity: 1; }
+  50% { transform: translateX(var(--dx)); }
+  90% { opacity: 1; }
+  100% { top: 104%; opacity: 0; transform: translateX(calc(var(--dx) * -1)); }
+}
+
+/* Numbered waypoint beacons — bold and lit, not a plain dot, so each of the
+   4 steps reads as a deliberate checkpoint in the cascade. */
 .journey-dot {
   position: absolute;
   left: 50%;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -341,7 +377,8 @@ a { color: var(--voyage-teal); }
   box-shadow: var(--shadow);
   color: var(--muted-text);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
+  z-index: 1;
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -349,20 +386,18 @@ a { color: var(--voyage-teal); }
   background: var(--voyage-teal);
   border-color: var(--voyage-teal);
   color: var(--atlas-paper);
-  transform: translate(-50%, -50%) scale(1.15);
-  box-shadow: 0 0 0 6px rgba(43, 110, 118, 0.25);
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 0 0 8px rgba(43, 110, 118, 0.22), 0 0 24px 4px rgba(43, 110, 118, 0.45);
+  animation: journey-dot-pulse 2.4s ease-in-out infinite;
 }
 
-/* Circles continuously within .journey-flight-lane (own idle motion) while
-   its overall top% descends with scroll — see JourneySection.jsx, which
-   drives both directly via ref for a smooth 60fps loop. */
-.journey-plane {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  filter: drop-shadow(0 2px 4px rgba(22, 35, 59, 0.35));
-  pointer-events: none;
-  will-change: transform, top;
+@keyframes journey-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 8px rgba(43, 110, 118, 0.22), 0 0 24px 4px rgba(43, 110, 118, 0.45); }
+  50% { box-shadow: 0 0 0 12px rgba(43, 110, 118, 0.12), 0 0 32px 8px rgba(43, 110, 118, 0.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-dot--reached { animation: none; }
 }
 
 .journey-step {
@@ -557,7 +592,9 @@ a { color: var(--voyage-teal); }
 }
 
 @media (max-width: 640px) {
-  .journey-steps { padding-left: var(--space-6); }
+  .journey-steps { padding-left: 96px; }
+  .journey-lane { width: 76px; }
+  .journey-dot { width: 34px; height: 34px; font-size: 0.7rem; }
   .journey-step { min-height: 0; padding: var(--space-8) 0; }
   .journey-step-watermark { font-size: 6rem; }
   .capabilities-grid { flex-direction: column; }
