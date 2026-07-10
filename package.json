@@ -17,6 +17,7 @@
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/supabase-js": "^2.45.0",
+    "@vercel/analytics": "^2.0.1",
     "cobe": "^2.0.1",
     "framer-motion": "^12.42.2",
     "maplibre-gl": "^4.5.0",

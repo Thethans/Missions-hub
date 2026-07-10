@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import TopNav from '../components/TopNav.jsx';
 
 const TITLES = {
@@ -36,6 +37,7 @@ export default function RootLayout() {
         </Suspense>
       </main>
       <p className="visually-hidden" role="status" aria-live="polite">{announcement}</p>
+      <Analytics />
     </div>
   );
 }
