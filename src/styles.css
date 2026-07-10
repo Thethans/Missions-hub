@@ -8,11 +8,22 @@ body {
   color: var(--ink-navy);
   background-color: var(--atlas-paper);
   /* two copies of the same contour tile, offset and scaled differently so the terrain
-     never lines up into an obvious repeating grid — density varies where they overlap */
-  background-image: var(--topo-pattern), var(--topo-pattern);
-  background-repeat: repeat, repeat;
-  background-size: 700px 500px, 1160px 830px;
-  background-position: 0 0, 640px -180px;
+     never lines up into an obvious repeating grid — density varies where they overlap —
+     plus two soft, slowly drifting glows so the paper never reads as a flat fill */
+  background-image:
+    radial-gradient(ellipse 55% 45% at 12% 18%, rgba(43, 110, 118, 0.14), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 88% 78%, rgba(217, 164, 65, 0.11), transparent 70%),
+    var(--topo-pattern), var(--topo-pattern);
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-size: 140% 140%, 140% 140%, 700px 500px, 1160px 830px;
+  background-position: 0% 0%, 100% 100%, 0 0, 640px -180px;
+  background-attachment: fixed, fixed, scroll, scroll;
+  animation: paper-glow-drift 55s ease-in-out infinite alternate;
+}
+
+@keyframes paper-glow-drift {
+  0% { background-position: 0% 0%, 100% 100%, 0 0, 640px -180px; }
+  100% { background-position: 18% 12%, 82% 88%, 60px 40px, 700px -140px; }
 }
 
 :is(a, button, input, select, [tabindex]):focus-visible {
@@ -49,17 +60,47 @@ a { color: var(--voyage-teal); }
 /* ==== NAV ==== */
 
 .site-nav {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  background: var(--ink-navy);
+  background:
+    linear-gradient(115deg, rgba(43, 110, 118, 0.28) 0%, transparent 48%),
+    linear-gradient(155deg, #1b2c47 0%, var(--ink-navy) 55%, #0e1826 100%);
   color: var(--atlas-paper);
+  border-bottom: 1px solid rgba(43, 110, 118, 0.4);
+  box-shadow: 0 1px 0 rgba(250, 247, 240, 0.05), 0 16px 28px -20px rgba(0, 0, 0, 0.65);
+}
+
+/* Thin dashed "flight path" tracing the nav's bottom edge — same route-line
+   motif as the hero/journey/404 plane, always in gentle motion. */
+.site-nav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background-image: repeating-linear-gradient(90deg, var(--voyage-teal) 0 14px, transparent 14px 26px);
+  background-size: 52px 2px;
+  opacity: 0.55;
+  animation: site-nav-route 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes site-nav-route {
+  from { background-position: 0 0; }
+  to { background-position: 52px 0; }
 }
 
 .site-nav-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
@@ -68,23 +109,52 @@ a { color: var(--voyage-teal); }
   text-decoration: none;
 }
 
+.site-nav-logo-mark {
+  display: inline-flex;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 0 6px rgba(43, 110, 118, 0.65));
+}
+
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 .site-nav-links a {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
   font-family: var(--font-body);
   font-variation-settings: 'wght' 450;
-  transition: font-variation-settings 0.2s ease;
+  transition: font-variation-settings 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   color: var(--atlas-paper);
   text-decoration: none;
-  border: 1px solid rgba(250, 247, 240, 0.3);
+  border: 1px solid rgba(250, 247, 240, 0.18);
+  background: rgba(250, 247, 240, 0.05);
   padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius);
+  border-radius: 999px;
 }
 
-.site-nav-links a:hover { font-variation-settings: 'wght' 650; }
+.site-nav-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  color: var(--voyage-teal);
+  opacity: 0.9;
+}
 
-.site-nav-links a.active { background: var(--voyage-teal); border-color: var(--voyage-teal); }
+.site-nav-links a:hover {
+  font-variation-settings: 'wght' 650;
+  background: rgba(250, 247, 240, 0.1);
+  border-color: rgba(43, 110, 118, 0.6);
+  transform: translateY(-1px);
+}
+
+.site-nav-links a.active {
+  background: linear-gradient(135deg, var(--voyage-teal), #1f4e54);
+  border-color: var(--voyage-teal);
+  box-shadow: 0 0 0 1px rgba(43, 110, 118, 0.4), 0 4px 16px -4px rgba(43, 110, 118, 0.75);
+}
+
+.site-nav-links a.active .site-nav-tag { color: rgba(250, 247, 240, 0.85); }
 
 .site-nav-underline {
   position: absolute;
@@ -1067,4 +1137,60 @@ a { color: var(--voyage-teal); }
   margin: 0.3rem 0 0 1.6rem;
   color: var(--muted-text);
   font-size: 0.92rem;
+}
+
+/* ==== DYNAMIC BACKGROUNDS ====
+   The flat ink-navy blocks (page headers, nav, footer, FAQ) and the flat
+   atlas-paper panels (stats strip, capabilities) used to be a single solid
+   fill. Same colors, but each now carries two slowly drifting glow blobs so
+   nothing on the site reads as a static color swatch. */
+
+.page-hero,
+.faq,
+.site-footer {
+  background-color: var(--ink-navy);
+  background-image:
+    radial-gradient(ellipse 55% 65% at 10% 20%, rgba(43, 110, 118, 0.4), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 90% 85%, rgba(217, 164, 65, 0.16), transparent 70%);
+  background-repeat: no-repeat, no-repeat;
+  background-size: 160% 160%, 160% 160%;
+  background-position: 0% 0%, 100% 100%;
+  animation: navy-glow-drift 48s ease-in-out infinite alternate;
+}
+
+@keyframes navy-glow-drift {
+  0% { background-position: 0% 0%, 100% 100%; }
+  100% { background-position: 28% 22%, 72% 78%; }
+}
+
+.stats-strip,
+.capabilities {
+  background-color: var(--atlas-paper);
+  background-image:
+    radial-gradient(ellipse 50% 60% at 15% 25%, rgba(43, 110, 118, 0.12), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 85% 80%, rgba(217, 164, 65, 0.1), transparent 70%);
+  background-repeat: no-repeat, no-repeat;
+  background-size: 160% 160%, 160% 160%;
+  background-position: 0% 0%, 100% 100%;
+  animation: paper-glow-drift-panel 48s ease-in-out infinite alternate;
+}
+
+@keyframes paper-glow-drift-panel {
+  0% { background-position: 0% 0%, 100% 100%; }
+  100% { background-position: 25% 20%, 75% 80%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .page-hero,
+  .faq,
+  .site-footer,
+  .stats-strip,
+  .capabilities {
+    animation: none;
+  }
+
+  .site-nav::after {
+    animation: none;
+  }
 }

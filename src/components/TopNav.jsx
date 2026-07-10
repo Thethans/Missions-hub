@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import RouteLine from './RouteLine.jsx';
+import PlaneIcon from './PlaneIcon.jsx';
 
 const LINKS = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/map', label: 'Map' },
-  { to: '/quiz', label: 'Quiz' },
-  { to: '/checklist', label: 'Checklist' },
-  { to: '/about', label: 'About' }
+  { to: '/', label: 'Home', end: true, tag: '01' },
+  { to: '/map', label: 'Map', tag: '02' },
+  { to: '/quiz', label: 'Quiz', tag: '03' },
+  { to: '/checklist', label: 'Checklist', tag: '04' },
+  { to: '/about', label: 'About', tag: '05' }
 ];
 
 export default function TopNav() {
@@ -15,7 +16,12 @@ export default function TopNav() {
 
   return (
     <header className="site-nav">
-      <NavLink to="/" className="site-nav-logo">Fielded</NavLink>
+      <NavLink to="/" className="site-nav-logo">
+        <span className="site-nav-logo-mark" aria-hidden="true">
+          <PlaneIcon size={20} />
+        </span>
+        Fielded
+      </NavLink>
       <nav className="site-nav-links">
         {LINKS.map((link) => (
           <NavLink
@@ -26,6 +32,7 @@ export default function TopNav() {
             onMouseEnter={() => setHovered(link.to)}
             onMouseLeave={() => setHovered(null)}
           >
+            <span className="site-nav-tag">{link.tag}</span>
             {link.label}
             <RouteLine
               variant="hover"
