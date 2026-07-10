@@ -1,34 +1,39 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 // Top-down commercial-jet silhouette (the convention flight trackers use,
 // since it reads correctly at any heading rotation) with gradient shading
 // on the fuselage and wings so it has actual dimension instead of a flat
-// monochrome glyph.
+// monochrome glyph. Gradient ids are per-instance (useId) since this can
+// render more than once on the same page (hero globe + journey flight path).
 export default function PlaneIcon({ size = 30 }) {
+  const uid = useId();
+  const fuselageId = `plane-fuselage-${uid}`;
+  const wingId = `plane-wing-${uid}`;
+
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
       <defs>
-        <linearGradient id="plane-fuselage" x1="0" y1="0" x2="1" y2="0">
+        <linearGradient id={fuselageId} x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#8891a0" />
           <stop offset="42%" stopColor="#f8f6f0" />
           <stop offset="58%" stopColor="#f8f6f0" />
           <stop offset="100%" stopColor="#8891a0" />
         </linearGradient>
-        <linearGradient id="plane-wing" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={wingId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#eeece5" />
           <stop offset="100%" stopColor="#828a97" />
         </linearGradient>
       </defs>
 
-      <path d="M38 84 L13 95 L19.5 97 L44 90 Z" fill="url(#plane-wing)" stroke="#5b6472" strokeWidth="0.5" />
-      <path d="M62 84 L87 95 L80.5 97 L56 90 Z" fill="url(#plane-wing)" stroke="#5b6472" strokeWidth="0.5" />
+      <path d="M38 84 L13 95 L19.5 97 L44 90 Z" fill={`url(#${wingId})`} stroke="#5b6472" strokeWidth="0.5" />
+      <path d="M62 84 L87 95 L80.5 97 L56 90 Z" fill={`url(#${wingId})`} stroke="#5b6472" strokeWidth="0.5" />
 
-      <path d="M50 40 L5 65 L9.5 72 L48.5 57 Z" fill="url(#plane-wing)" stroke="#5b6472" strokeWidth="0.5" />
-      <path d="M50 40 L95 65 L90.5 72 L51.5 57 Z" fill="url(#plane-wing)" stroke="#5b6472" strokeWidth="0.5" />
+      <path d="M50 40 L5 65 L9.5 72 L48.5 57 Z" fill={`url(#${wingId})`} stroke="#5b6472" strokeWidth="0.5" />
+      <path d="M50 40 L95 65 L90.5 72 L51.5 57 Z" fill={`url(#${wingId})`} stroke="#5b6472" strokeWidth="0.5" />
 
       <path
         d="M50 3 C57 3 61 15 61 30 L61 82 C61 90 55 96.5 50 98 C45 96.5 39 90 39 82 L39 30 C39 15 43 3 50 3 Z"
-        fill="url(#plane-fuselage)"
+        fill={`url(#${fuselageId})`}
         stroke="#5b6472"
         strokeWidth="0.6"
       />
