@@ -265,61 +265,14 @@ a { color: var(--voyage-teal); }
 
 /* ==== HOME: JOURNEY (scrollytelling) ==== */
 
+/* No card, no box — just the steps column with a thread running down its
+   left edge. The plane (see .journey-plane) rides that thread straight
+   down as you scroll; a separate boxed diagonal visual here would have
+   read as a duplicate of the hero's globe. */
 .journey {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: var(--space-12);
-  max-width: 1100px;
+  max-width: 700px;
   margin: 0 auto;
   padding: var(--space-16) var(--space-6);
-}
-
-.journey-sticky {
-  position: sticky;
-  top: var(--space-8);
-  align-self: start;
-  height: 78vh;
-}
-
-.journey-panel {
-  position: relative;
-  height: 100%;
-  background: radial-gradient(120% 100% at 30% 15%, #1c2d49 0%, var(--ink-navy) 55%, #101a2c 100%);
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(16, 26, 44, 0.35);
-  padding: var(--space-8);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-
-.journey-panel-glow {
-  position: absolute;
-  inset: -20%;
-  background: radial-gradient(circle at 30% 70%, rgba(43, 110, 118, 0.35), transparent 55%);
-  pointer-events: none;
-}
-
-/* Flat 2D flight path for the journey panel — deliberately different from
-   the hero's 3D globe. A dashed route draws in with scroll, a plane flies
-   along it (positioned via SVGPathElement.getPointAtLength, see
-   JourneySection.jsx), and waypoint dots light up as it passes them. */
-.journey-route-stage {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-}
-
-.journey-panel-route { width: 100%; height: auto; display: block; }
-
-.journey-plane {
-  position: absolute;
-  color: var(--atlas-paper);
-  filter: drop-shadow(0 2px 6px rgba(22, 35, 59, 0.35));
-  pointer-events: none;
-  will-change: transform;
 }
 
 /* Reusable rotating-globe visual (also see Globe.jsx) — sized here to fit
@@ -343,16 +296,6 @@ a { color: var(--voyage-teal); }
   will-change: transform, opacity;
 }
 
-.journey-panel-label {
-  position: relative;
-  margin: var(--space-4) 0 0;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  color: var(--atlas-paper);
-  text-align: center;
-  max-width: 26ch;
-}
-
 .journey-steps { position: relative; display: flex; flex-direction: column; padding-left: var(--space-8); }
 
 .journey-thread {
@@ -368,6 +311,27 @@ a { color: var(--voyage-teal); }
   width: 100%;
   background: var(--voyage-teal);
   transform-origin: top;
+}
+
+.journey-dot {
+  position: absolute;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--voyage-teal);
+  transform: translate(-50%, -50%);
+}
+
+/* Rides straight down .journey-thread as you scroll (top% set inline) —
+   nose pointed down, in the direction of travel. */
+.journey-plane {
+  position: absolute;
+  left: 50%;
+  filter: drop-shadow(0 2px 4px rgba(22, 35, 59, 0.25));
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(180deg);
+  will-change: transform, top;
 }
 
 .journey-step {
@@ -562,8 +526,6 @@ a { color: var(--voyage-teal); }
 }
 
 @media (max-width: 640px) {
-  .journey { grid-template-columns: 1fr; }
-  .journey-sticky { position: static; height: 60vh; margin-bottom: var(--space-8); }
   .journey-steps { padding-left: var(--space-6); }
   .journey-step { min-height: 0; padding: var(--space-8) 0; }
   .journey-step-watermark { font-size: 6rem; }
