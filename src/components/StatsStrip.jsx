@@ -33,14 +33,14 @@ export default function StatsStrip() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/data/people-groups.geojson')
+    // A precomputed summary (written alongside the full geojson by
+    // scripts/fetch-joshua-project.mjs) — the homepage only needs these
+    // three numbers, not the ~16k-feature dataset the map page renders.
+    fetch('/data/stats.json')
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
-        const unreached = data.features.filter((f) => f.properties.progressStatus === 'unreached');
-        const population = unreached.reduce((sum, f) => sum + (f.properties.population || 0), 0);
-        const countries = new Set(unreached.map((f) => f.properties.country));
-        setStats({ groups: unreached.length, population, countries: countries.size });
+        setStats({ groups: data.unreachedGroups, population: data.unreachedPopulation, countries: data.unreachedCountries });
       })
       .catch(() => {});
     return () => {

@@ -18,6 +18,7 @@ if (!API_KEY) {
 
 const BASE = 'https://api.joshuaproject.net/v1/people_groups.json';
 const OUT_PATH = path.resolve('public/data/people-groups.geojson');
+const STATS_PATH = path.resolve('public/data/stats.json');
 
 function progressStatus(pctEvangelical) {
   if (pctEvangelical >= 5) return 'reached';
@@ -25,15 +26,23 @@ function progressStatus(pctEvangelical) {
   return 'unreached';
 }
 
+// The full dataset is ~16,400 people-group-by-country records — comfortably
+// under one request at this limit. If a future refresh ever comes back with
+// exactly LIMIT rows, that's a sign the real count has grown past it and
+// this needs to go up (or turn into real pagination) rather than silently
+// truncating again like the old limit=2000 did.
+const LIMIT = 25000;
+
 async function main() {
-  // limit + fields kept modest for a first pass; expand as needed once
-  // you've confirmed the pipeline works end-to-end
-  const url = `${BASE}?api_key=${API_KEY}&limit=2000`;
+  const url = `${BASE}?api_key=${API_KEY}&limit=${LIMIT}`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Joshua Project API request failed: ${res.status} ${res.statusText}`);
   }
   const rows = await res.json();
+  if (rows.length === LIMIT) {
+    console.warn(`Got exactly LIMIT (${LIMIT}) rows back — the real dataset may be larger than this fetch captured. Raise LIMIT.`);
+  }
 
   const features = rows
     .filter((r) => r.Latitude && r.Longitude)
@@ -55,6 +64,18 @@ async function main() {
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(geojson));
   console.log(`Wrote ${features.length} people groups to ${OUT_PATH}`);
+
+  // The homepage stats strip only needs these three aggregate numbers, not
+  // all ~16k raw features — precompute them here so it can fetch a
+  // kilobyte-sized file instead of parsing the full multi-megabyte geojson.
+  const unreached = features.filter((f) => f.properties.progressStatus === 'unreached');
+  const stats = {
+    unreachedGroups: unreached.length,
+    unreachedPopulation: unreached.reduce((sum, f) => sum + (f.properties.population || 0), 0),
+    unreachedCountries: new Set(unreached.map((f) => f.properties.country)).size
+  };
+  fs.writeFileSync(STATS_PATH, JSON.stringify(stats));
+  console.log(`Wrote stats to ${STATS_PATH}:`, stats);
 }
 
 main().catch((err) => {
