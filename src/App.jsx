@@ -2,13 +2,16 @@ import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout.jsx';
 import HomePage from './pages/HomePage.jsx';
+import { routeImports } from './routeImports.js';
 
 // Code-split everything but the landing page — visiting "/" shouldn't pull
 // in maplibre-gl (Map), the quiz scoring data, or any other route's code.
-const MapPage = lazy(() => import('./pages/MapPage.jsx'));
-const QuizPage = lazy(() => import('./pages/QuizPage.jsx'));
-const ChecklistPage = lazy(() => import('./pages/ChecklistPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
+// The import() functions live in routeImports.js so TopNav can call the
+// same ones to prefetch a chunk on link hover, before the user clicks.
+const MapPage = lazy(routeImports['/map']);
+const QuizPage = lazy(routeImports['/quiz']);
+const ChecklistPage = lazy(routeImports['/checklist']);
+const AboutPage = lazy(routeImports['/about']);
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 export default function App() {

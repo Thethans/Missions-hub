@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import RouteLine from './RouteLine.jsx';
 import PlaneIcon from './PlaneIcon.jsx';
+import { routeImports } from '../routeImports.js';
 
 const LINKS = [
   { to: '/', label: 'Home', end: true, tag: '01' },
@@ -13,6 +14,19 @@ const LINKS = [
 
 export default function TopNav() {
   const [hovered, setHovered] = useState(null);
+  const prefetched = useRef(new Set());
+
+  // Start fetching a route's chunk as soon as intent shows (hover, keyboard
+  // focus, or a mobile tap landing) instead of waiting for the click — by
+  // the time the navigation actually happens the code is often already in
+  // the browser's cache, so the page swap feels instant.
+  const prefetch = (to) => {
+    if (prefetched.current.has(to)) return;
+    const load = routeImports[to];
+    if (!load) return;
+    prefetched.current.add(to);
+    load();
+  };
 
   return (
     <header className="site-nav">
@@ -29,8 +43,10 @@ export default function TopNav() {
             to={link.to}
             end={link.end}
             className={({ isActive }) => (isActive ? 'active' : undefined)}
-            onMouseEnter={() => setHovered(link.to)}
+            onMouseEnter={() => { setHovered(link.to); prefetch(link.to); }}
             onMouseLeave={() => setHovered(null)}
+            onFocus={() => prefetch(link.to)}
+            onTouchStart={() => prefetch(link.to)}
           >
             <span className="site-nav-tag">{link.tag}</span>
             {link.label}

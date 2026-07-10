@@ -2,6 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import TopNav from '../components/TopNav.jsx';
+import RouteLoadingBar from '../components/RouteLoadingBar.jsx';
 
 const TITLES = {
   '/': 'Fielded — Get to the Field',
@@ -32,7 +33,7 @@ export default function RootLayout() {
     <div className="app-shell">
       <TopNav />
       <main ref={mainRef} tabIndex={-1}>
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteLoadingBar />}>
           <Outlet />
         </Suspense>
       </main>
