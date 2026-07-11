@@ -328,7 +328,7 @@ a { color: var(--voyage-teal); }
   justify-content: center;
 }
 
-.hero-globe { width: min(85vh, 900px); opacity: 0.9; }
+.hero-globe { width: min(130vw, 1600px); opacity: 0.9; }
 .hero-globe .globe-stage { width: 100%; }
 .hero-globe .globe-plane { filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45)); }
 
