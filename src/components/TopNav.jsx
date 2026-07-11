@@ -8,8 +8,9 @@ const LINKS = [
   { to: '/', label: 'Home', end: true, tag: '01' },
   { to: '/map', label: 'Map', tag: '02' },
   { to: '/quiz', label: 'Quiz', tag: '03' },
-  { to: '/checklist', label: 'Checklist', tag: '04' },
-  { to: '/about', label: 'About', tag: '05' }
+  { to: '/opportunities', label: 'Opportunities', tag: '04' },
+  { to: '/checklist', label: 'Checklist', tag: '05' },
+  { to: '/about', label: 'About', tag: '06' }
 ];
 
 export default function TopNav() {

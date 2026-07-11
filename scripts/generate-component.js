@@ -1,0 +1,119 @@
+#!/usr/bin/env node
+
+// Reads all opportunities from Supabase and the Fielded design tokens,
+// then generates OpportunitiesExplorer.jsx with real data baked in.
+//
+// Usage:
+//   node scripts/generate-component.js
+
+import 'dotenv/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
+const TOKENS_PATH = path.join(ROOT, 'src/styles/tokens.css');
+const TEMPLATE_PATH = path.join(ROOT, 'scripts/lib/OpportunitiesExplorer.template.jsx');
+const OUTPUT_PATH = path.join(ROOT, 'src/components/OpportunitiesExplorer.jsx');
+
+// ── Supabase client ──────────────────────────────────────────────────
+
+async function fetchOpportunities() {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    console.error('Missing SUPABASE_URL / VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY / VITE_SUPABASE_ANON_KEY');
+    process.exit(1);
+  }
+
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(url, key);
+
+  const { data, error } = await supabase
+    .from('opportunities')
+    .select('id, agency, title, url, location, region, role_type, term_length, description')
+    .eq('active', true)
+    .order('agency', { ascending: true })
+    .order('title', { ascending: true });
+
+  if (error) {
+    console.error('Supabase fetch failed:', error.message);
+    process.exit(1);
+  }
+
+  return data || [];
+}
+
+// ── Design tokens ────────────────────────────────────────────────────
+
+function parseTokens() {
+  const css = fs.readFileSync(TOKENS_PATH, 'utf-8');
+  const tokens = {};
+  for (const match of css.matchAll(/--([\w-]+)\s*:\s*([^;]+)/g)) {
+    if (match[1].startsWith('topo')) continue;
+    tokens[match[1]] = match[2].trim();
+  }
+  return tokens;
+}
+
+// ── Component generation ─────────────────────────────────────────────
+
+function generateComponent(opportunities, tokens) {
+  const agencies = [...new Set(opportunities.map((o) => o.agency))].sort();
+  const regions = [...new Set(opportunities.map((o) => o.region).filter(Boolean))].sort();
+  const roleTypes = [...new Set(opportunities.map((o) => o.role_type).filter(Boolean))].sort();
+  const termLengths = [...new Set(opportunities.map((o) => o.term_length).filter(Boolean))].sort(
+    (a, b) => {
+      const order = ['short-term', 'mid-term', 'career'];
+      const ai = order.findIndex((p) => a.startsWith(p));
+      const bi = order.findIndex((p) => b.startsWith(p));
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    }
+  );
+
+  const safeJson = (val) => JSON.stringify(val, null, 2);
+
+  const tokenComment = Object.entries(tokens)
+    .map(([k, v]) => '//   --' + k + ': ' + v)
+    .join('\n');
+
+  const template = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+
+  return template
+    .replace('/* __TOKEN_COMMENT__ */', tokenComment)
+    .replace("'__GENERATED_DATE__'", JSON.stringify(new Date().toISOString()))
+    .replace("'__OPP_COUNT__'", String(opportunities.length))
+    .replace("'__AGENCY_COUNT__'", String(agencies.length))
+    .replace("'__BAKED_OPPORTUNITIES__'", safeJson(opportunities))
+    .replace("'__REGIONS__'", safeJson(regions))
+    .replace("'__ROLE_TYPES__'", safeJson(roleTypes))
+    .replace("'__TERM_LENGTHS__'", safeJson(termLengths));
+}
+
+// ── Main ─────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('Fetching opportunities from Supabase...');
+  const opportunities = await fetchOpportunities();
+  console.log('  ' + opportunities.length + ' active opportunities across ' + [...new Set(opportunities.map((o) => o.agency))].length + ' agencies');
+
+  if (opportunities.length === 0) {
+    console.error('No opportunities found — run "npm run sync-opportunities" first');
+    process.exit(1);
+  }
+
+  console.log('Reading design tokens from src/styles/tokens.css...');
+  const tokens = parseTokens();
+  console.log('  ' + Object.keys(tokens).length + ' tokens parsed');
+
+  console.log('Generating OpportunitiesExplorer.jsx...');
+  const component = generateComponent(opportunities, tokens);
+
+  fs.writeFileSync(OUTPUT_PATH, component, 'utf-8');
+  console.log('  Written to ' + path.relative(ROOT, OUTPUT_PATH));
+  console.log('Done.');
+}
+
+main();

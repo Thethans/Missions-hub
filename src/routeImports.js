@@ -4,6 +4,9 @@
 export const routeImports = {
   '/map': () => import('./pages/MapPage.jsx'),
   '/quiz': () => import('./pages/QuizPage.jsx'),
+  '/opportunities': () => import('./pages/OpportunitiesPage.jsx'),
   '/checklist': () => import('./pages/ChecklistPage.jsx'),
-  '/about': () => import('./pages/AboutPage.jsx')
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/terms': () => import('./pages/TermsPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx')
 };

@@ -10,8 +10,11 @@ import { routeImports } from './routeImports.js';
 // same ones to prefetch a chunk on link hover, before the user clicks.
 const MapPage = lazy(routeImports['/map']);
 const QuizPage = lazy(routeImports['/quiz']);
+const OpportunitiesPage = lazy(routeImports['/opportunities']);
 const ChecklistPage = lazy(routeImports['/checklist']);
 const AboutPage = lazy(routeImports['/about']);
+const TermsPage = lazy(routeImports['/terms']);
+const PrivacyPage = lazy(routeImports['/privacy']);
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 export default function App() {
@@ -21,8 +24,11 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/opportunities" element={<OpportunitiesPage />} />
         <Route path="/checklist" element={<ChecklistPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

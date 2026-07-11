@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { CheckCircle, Question } from '@phosphor-icons/react';
 import { matchLabel } from '../data/scoreAgency.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
@@ -40,7 +41,12 @@ export default function MatchResultCard({ result, index }) {
           </div>
         )}
 
-        <a href={url} target="_blank" rel="noreferrer">Visit site →</a>
+        <div className="match-result-links">
+          <a href={url} target="_blank" rel="noreferrer">Visit site →</a>
+          <Link to={`/opportunities?agency=${encodeURIComponent(name)}`}>
+            View opportunities →
+          </Link>
+        </div>
       </div>
     </RevealOnScroll>
   );

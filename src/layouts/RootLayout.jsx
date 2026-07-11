@@ -8,8 +8,11 @@ const TITLES = {
   '/': 'Fielded — Get to the Field',
   '/map': 'World Map — Fielded',
   '/quiz': 'Find Your Mission Board — Fielded',
+  '/opportunities': 'Opportunities — Fielded',
   '/checklist': 'Pre-Field Checklist — Fielded',
-  '/about': 'About — Fielded'
+  '/about': 'About — Fielded',
+  '/terms': 'Terms of Service — Fielded',
+  '/privacy': 'Privacy Policy — Fielded'
 };
 
 export default function RootLayout() {
@@ -37,6 +40,15 @@ export default function RootLayout() {
           <Outlet />
         </Suspense>
       </main>
+      <footer className="app-footer">
+        <div className="footer-content">
+          <p>&copy; 2026 Fielded. All rights reserved.</p>
+          <nav className="footer-links">
+            <a href="/terms">Terms of Service</a>
+            <a href="/privacy">Privacy Policy</a>
+          </nav>
+        </div>
+      </footer>
       <p className="visually-hidden" role="status" aria-live="polite">{announcement}</p>
       <Analytics />
     </div>
