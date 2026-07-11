@@ -15,15 +15,15 @@ body {
     radial-gradient(ellipse 45% 40% at 88% 78%, rgba(217, 164, 65, 0.11), transparent 70%),
     var(--topo-pattern), var(--topo-pattern);
   background-repeat: no-repeat, no-repeat, repeat, repeat;
-  background-size: 140% 140%, 140% 140%, 700px 500px, 1160px 830px;
-  background-position: 0% 0%, 100% 100%, 0 0, 640px -180px;
+  background-size: 140% 140%, 140% 140%, 800px 600px, 1280px 960px;
+  background-position: 0% 0%, 100% 100%, 0 0, 580px -160px;
   background-attachment: fixed, fixed, scroll, scroll;
   animation: paper-glow-drift 55s ease-in-out infinite alternate;
 }
 
 @keyframes paper-glow-drift {
-  0% { background-position: 0% 0%, 100% 100%, 0 0, 640px -180px; }
-  100% { background-position: 18% 12%, 82% 88%, 60px 40px, 700px -140px; }
+  0% { background-position: 0% 0%, 100% 100%, 0 0, 580px -160px; }
+  100% { background-position: 18% 12%, 82% 88%, 60px 40px, 640px -120px; }
 }
 
 :is(a, button, input, select, [tabindex]):focus-visible {
