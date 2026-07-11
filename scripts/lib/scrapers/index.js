@@ -5,6 +5,7 @@ import OMFScraper from './omf.js';
 import YWAMScraper from './ywam.js';
 import AIMScraper from './aim.js';
 import WorldTeamScraper from './world-team.js';
+import WycliffeScraper from './wycliffe.js';
 
 export const SCRAPERS = {
   imb:        new IMBScraper(),
@@ -13,7 +14,8 @@ export const SCRAPERS = {
   omf:        new OMFScraper(),
   ywam:       new YWAMScraper(),
   aim:        new AIMScraper(),
-  worldteam:  new WorldTeamScraper()
+  worldteam:  new WorldTeamScraper(),
+  wycliffe:   new WycliffeScraper()
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);

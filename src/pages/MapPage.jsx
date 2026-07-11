@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import WorldMap from '../components/WorldMap.jsx';
 import MapDetailPanel from '../components/MapDetailPanel.jsx';
+import usePageMeta from '../hooks/usePageMeta.js';
 
 export default function MapPage() {
   const [selected, setSelected] = useState(null);
+  usePageMeta({
+    title: 'World Map',
+    description: 'Interactive map of unreached people groups worldwide, with live data from Joshua Project.',
+    path: '/map'
+  });
 
   return (
     <>

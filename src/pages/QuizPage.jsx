@@ -1,8 +1,15 @@
 import React from 'react';
 import MatchQuiz from '../components/MatchQuiz.jsx';
 import Footer from '../components/Footer.jsx';
+import usePageMeta from '../hooks/usePageMeta.js';
 
 export default function QuizPage() {
+  usePageMeta({
+    title: 'Quiz',
+    description: 'Answer a few questions to find mission agencies that match your calling, skills, and preferences.',
+    path: '/quiz'
+  });
+
   return (
     <>
       <section className="page-hero">

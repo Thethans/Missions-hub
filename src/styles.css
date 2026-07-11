@@ -166,6 +166,100 @@ a { color: var(--voyage-teal); }
   color: var(--atlas-paper);
 }
 
+/* Hamburger button — hidden on desktop */
+.site-nav-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid rgba(250, 247, 240, 0.2);
+  border-radius: var(--radius);
+  color: var(--atlas-paper);
+  padding: var(--space-2);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  z-index: 1001;
+}
+
+.site-nav-hamburger:hover {
+  background: rgba(250, 247, 240, 0.1);
+  border-color: rgba(43, 110, 118, 0.6);
+}
+
+/* Overlay behind drawer */
+.site-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 35, 59, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: nav-overlay-in 0.2s ease;
+}
+
+@keyframes nav-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide-out drawer */
+.site-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  background:
+    linear-gradient(175deg, #1b2c47 0%, var(--ink-navy) 60%, #0e1826 100%);
+  padding: calc(var(--space-16) + var(--space-4)) var(--space-6) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 1000;
+  overflow-y: auto;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+  animation: nav-drawer-in 0.25s ease;
+}
+
+@keyframes nav-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.site-nav-drawer a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-family: var(--font-body);
+  font-variation-settings: 'wght' 450;
+  font-size: 1.1rem;
+  color: var(--atlas-paper);
+  text-decoration: none;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.site-nav-drawer a:hover,
+.site-nav-drawer a:focus-visible {
+  background: rgba(250, 247, 240, 0.08);
+  border-color: rgba(43, 110, 118, 0.4);
+}
+
+.site-nav-drawer a.active {
+  background: linear-gradient(135deg, var(--voyage-teal), #1f4e54);
+  border-color: var(--voyage-teal);
+  font-variation-settings: 'wght' 600;
+}
+
+.site-nav-drawer a.active .site-nav-tag { color: rgba(250, 247, 240, 0.85); }
+
+@media (max-width: 768px) {
+  .site-nav-links--desktop { display: none; }
+  .site-nav-hamburger { display: flex; }
+}
+
 /* ==== FOOTER ==== */
 
 .site-footer {

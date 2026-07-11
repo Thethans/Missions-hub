@@ -94,6 +94,24 @@ async function deactivateStale(supabase, agency, freshUrls) {
   return staleIds.length;
 }
 
+// ── Quality filter ───────────────────────────────────────────────────
+
+const NAV_JUNK = /^(home|about|contact|contact us|menu|search|filter|nav|close|open|clear|donate|give|login|sign|subscribe|privacy|terms|cookie|sitemap|thank you!?|thank you|read more|learn more|view more|get started|apply now|submit)$/i;
+
+function filterLowQuality(opps) {
+  return opps.filter(opp => {
+    const t = (opp.title || '').trim();
+    if (t.length < 6) return false;
+    if (t.length > 200) return false;
+    if (NAV_JUNK.test(t)) return false;
+    if (/^filters?$/i.test(t)) return false;
+    if (/^(respond to|pursue |know god|be activated|make him)/.test(t.toLowerCase())) return false;
+    if (!opp.url || opp.url.endsWith('#')) return false;
+    if (/\/(pray|give|donate|about|contact|privacy|terms)\/?$/.test(opp.url)) return false;
+    return true;
+  });
+}
+
 // ── Main ──────────────────────────────────────────────────────────────
 
 async function run() {
@@ -131,7 +149,11 @@ async function run() {
     }
 
     const { opportunities: rawOpps, pages = 1 } = result;
-    const opportunities = dedupeOpportunities(rawOpps);
+    const cleaned = filterLowQuality(rawOpps);
+    const opportunities = dedupeOpportunities(cleaned);
+    if (rawOpps.length !== cleaned.length) {
+      logger.info(`[${key}] Filtered ${rawOpps.length - cleaned.length} low-quality entries`);
+    }
 
     logger.info(`[${key}] Found ${opportunities.length} opportunities across ${pages} page${pages === 1 ? '' : 's'}${rawOpps.length !== opportunities.length ? ` (${rawOpps.length - opportunities.length} duplicates removed)` : ''}`);
     totalScraped += opportunities.length;

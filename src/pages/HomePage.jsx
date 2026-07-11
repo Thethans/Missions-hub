@@ -9,6 +9,7 @@ import Faq from '../components/Faq.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
+import usePageMeta from '../hooks/usePageMeta.js';
 
 function HeroHeadline() {
   const prefersReduced = usePrefersReducedMotion();
@@ -37,6 +38,7 @@ function HeroHeadline() {
 
 export default function HomePage() {
   const prefersReduced = usePrefersReducedMotion();
+  usePageMeta({ path: '/' });
 
   return (
     <>

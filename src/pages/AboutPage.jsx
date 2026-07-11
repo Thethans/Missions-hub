@@ -1,6 +1,7 @@
 import React from 'react';
 import Footer from '../components/Footer.jsx';
 import RevealOnScroll from '../components/RevealOnScroll.jsx';
+import usePageMeta from '../hooks/usePageMeta.js';
 
 const SECTIONS = [
   {
@@ -61,6 +62,12 @@ const SECTIONS = [
 ];
 
 export default function AboutPage() {
+  usePageMeta({
+    title: 'About',
+    description: 'Why Fielded exists, how the data works, and what makes this different from other missions directories.',
+    path: '/about'
+  });
+
   return (
     <>
       <div className="page-about">
