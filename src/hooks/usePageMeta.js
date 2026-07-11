@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const SITE_NAME = 'Fielded';
-const BASE_URL = 'https://fielded.vercel.app';
+const BASE_URL = 'https://missions-hub.vercel.app';
 const DEFAULT_IMAGE = BASE_URL + '/og-image.png';
 
 const DEFAULT_DESC =
