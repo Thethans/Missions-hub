@@ -8,10 +8,10 @@ const FALLBACK_FRACTIONS = STEPS.map((_, i) => i / (STEPS.length - 1));
 // Hand-placed spread (not Math.random on every render) — a sine-based jitter
 // so each particle gets a distinct horizontal drift and timing without
 // needing real randomness.
-const PARTICLES = Array.from({ length: 16 }, (_, i) => ({
-  dx: Math.round(Math.sin(i * 2.4) * 32),
-  duration: 6.5 + (i % 5) * 1.3,
-  delay: -(i * 1.5),
+const PARTICLES = Array.from({ length: 6 }, (_, i) => ({
+  dx: Math.round(Math.sin(i * 2.4) * 24),
+  duration: 7 + (i % 3) * 1.5,
+  delay: -(i * 2.5),
   teal: i % 3 !== 0
 }));
 

@@ -58,7 +58,19 @@ export default function Globe({ progress }) {
   const canvasRef = useRef(null);
   const planeRef = useRef(null);
   const phiRef = useRef(0);
+  const visibleRef = useRef(true);
   const prefersReduced = usePrefersReducedMotion();
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { visibleRef.current = entry.isIntersecting; },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let width = canvasRef.current.offsetWidth;
@@ -66,14 +78,14 @@ export default function Globe({ progress }) {
     let raf;
 
     const globe = createGlobe(canvasRef.current, {
-      devicePixelRatio: 2,
+      devicePixelRatio: Math.min(2, window.devicePixelRatio),
       width: width * 2,
       height: width * 2,
       phi: 0,
       theta: THETA,
       dark: 1,
       diffuse: 1.2,
-      mapSamples: 16000,
+      mapSamples: 12000,
       mapBrightness: 6,
       baseColor: [1, 1, 1],
       markerColor: [1, 1, 1],
@@ -85,6 +97,10 @@ export default function Globe({ progress }) {
     // push new state via globe.update(), and place the plane by hand each
     // tick (imperative DOM writes so 60fps doesn't fight React's render).
     const frame = () => {
+      if (!visibleRef.current) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       if (!prefersReduced) idle += 0.0018;
       const measuredWidth = canvasRef.current ? canvasRef.current.offsetWidth : width;
       if (measuredWidth && measuredWidth !== width) width = measuredWidth;

@@ -326,6 +326,7 @@ a { color: var(--voyage-teal); }
   display: flex;
   align-items: center;
   justify-content: center;
+  contain: layout style paint;
 }
 
 .hero-globe { width: min(85vh, 900px); opacity: 0.9; flex-shrink: 0; }
@@ -465,7 +466,6 @@ a { color: var(--voyage-teal); }
   font-size: clamp(2.5rem, 5vw, 3.5rem);
   font-weight: 600;
   color: var(--atlas-paper);
-  text-shadow: 0 0 30px rgba(43, 110, 118, 0.4);
 }
 
 .stat-label {
@@ -572,17 +572,17 @@ a { color: var(--voyage-teal); }
   height: 5px;
   border-radius: 50%;
   background: var(--voyage-teal);
-  box-shadow: 0 0 8px 2px rgba(43, 110, 118, 0.7);
   animation-name: journey-particle-fall;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  will-change: transform, top, opacity;
+  contain: strict;
 }
 
 .journey-particle--paper {
   width: 4px;
   height: 4px;
   background: var(--atlas-paper);
-  box-shadow: 0 0 6px 2px rgba(250, 247, 240, 0.6);
 }
 
 @keyframes journey-particle-fall {
@@ -745,9 +745,7 @@ a { color: var(--voyage-teal); }
 .capability-card {
   height: 100%;
   text-align: left;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(22, 35, 59, 0.08);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(22, 35, 59, 0.08);
