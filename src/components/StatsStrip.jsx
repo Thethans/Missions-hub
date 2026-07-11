@@ -1,11 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { animate, useInView } from 'framer-motion';
-import RevealOnScroll from './RevealOnScroll.jsx';
+import { motion, animate, useInView } from 'framer-motion';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
-// duol-style scroll-triggered counter: counts up from 0 when the number
-// first scrolls into view. Reduced motion (or re-renders) shows the final
-// value immediately.
 function CountUp({ value }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
@@ -18,8 +14,8 @@ function CountUp({ value }) {
       return;
     }
     const controls = animate(0, value, {
-      duration: 1.6,
-      ease: 'easeOut',
+      duration: 2,
+      ease: [0.16, 1, 0.3, 1],
       onUpdate: (v) => setDisplay(Math.round(v))
     });
     return () => controls.stop();
@@ -28,14 +24,13 @@ function CountUp({ value }) {
   return <span ref={ref}>{display.toLocaleString()}</span>;
 }
 
+const EASE = [0.16, 1, 0.3, 1];
+
 export default function StatsStrip() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    // A precomputed summary (written alongside the full geojson by
-    // scripts/fetch-joshua-project.mjs) — the homepage only needs these
-    // three numbers, not the ~16k-feature dataset the map page renders.
     fetch('/data/stats.json')
       .then((res) => res.json())
       .then((data) => {
@@ -43,27 +38,35 @@ export default function StatsStrip() {
         setStats({ groups: data.unreachedGroups, population: data.unreachedPopulation, countries: data.unreachedCountries });
       })
       .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   if (!stats) return null;
 
   const items = [
-    { number: stats.groups, label: 'Unreached people groups' },
-    { number: stats.population, label: 'People still waiting to hear' },
-    { number: stats.countries, label: 'Countries represented' }
+    { number: stats.groups, label: 'Unreached people groups', context: 'with little to no gospel access' },
+    { number: stats.population, label: 'People still waiting to hear', context: 'across every continent' },
+    { number: stats.countries, label: 'Countries represented', context: 'in Joshua Project data' }
   ];
 
   return (
     <section className="stats-strip">
-      {items.map((item, i) => (
-        <RevealOnScroll key={item.label} index={i} className="stat">
-          <span className="stat-number"><CountUp value={item.number} /></span>
-          <span className="stat-label">{item.label}</span>
-        </RevealOnScroll>
-      ))}
+      <div className="stats-strip-inner">
+        {items.map((item, i) => (
+          <motion.div
+            key={item.label}
+            className="stat"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.7, delay: i * 0.15, ease: EASE }}
+          >
+            <span className="stat-number"><CountUp value={item.number} /></span>
+            <span className="stat-label">{item.label}</span>
+            <span className="stat-context">{item.context}</span>
+          </motion.div>
+        ))}
+      </div>
     </section>
   );
 }
