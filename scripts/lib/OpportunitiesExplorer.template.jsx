@@ -18,7 +18,7 @@ const REGIONS = '__REGIONS__';
 const ROLE_TYPES = '__ROLE_TYPES__';
 const TERM_LENGTHS = '__TERM_LENGTHS__';
 
-function FilterChip({ label, active, onClick }) {
+function FilterChip({ label, active, count, onClick }) {
   return (
     <button
       type="button"
@@ -26,6 +26,7 @@ function FilterChip({ label, active, onClick }) {
       onClick={onClick}
     >
       {label}
+      {count > 0 && <span className="opp-filter-chip-count">{count}</span>}
     </button>
   );
 }
@@ -163,13 +164,24 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [opportunities, setOpportunities] = useState(BAKED_OPPORTUNITIES);
   const [loading, setLoading] = useState(false);
 
-  // Filters
+  // Filters — Sets for multi-select (union/OR within a category, intersection/AND across categories)
   const [search, setSearch] = useState('');
-  const [selectedAgency, setSelectedAgency] = useState(agencyFilter || '');
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
-  const [selectedTerm, setSelectedTerm] = useState('');
+  const [selectedAgencies, setSelectedAgencies] = useState(() =>
+    agencyFilter ? new Set([agencyFilter]) : new Set()
+  );
+  const [selectedRegions, setSelectedRegions] = useState(new Set());
+  const [selectedRoles, setSelectedRoles] = useState(new Set());
+  const [selectedTerms, setSelectedTerms] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
+
+  function toggleFilter(setter, value) {
+    setter(prev => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
 
   // Saved + inquiry
   const [savedIds, setSavedIds] = useState(() => {
@@ -185,14 +197,24 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     let cancelled = false;
     async function refresh() {
       setLoading(true);
-      const { data } = await supabase
-        .from('opportunities')
-        .select('id, agency, title, url, location, region, role_type, term_length, description')
-        .eq('active', true)
-        .order('agency', { ascending: true })
-        .order('title', { ascending: true });
-      if (!cancelled && data && data.length > 0) {
-        setOpportunities(data);
+      const allRows = [];
+      const PAGE_SIZE = 1000;
+      let from = 0;
+      while (true) {
+        const { data } = await supabase
+          .from('opportunities')
+          .select('id, agency, title, url, location, region, role_type, term_length, description')
+          .eq('active', true)
+          .order('agency', { ascending: true })
+          .order('title', { ascending: true })
+          .range(from, from + PAGE_SIZE - 1);
+        if (cancelled) return;
+        allRows.push(...(data || []));
+        if (!data || data.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      if (!cancelled && allRows.length > 0) {
+        setOpportunities(allRows);
       }
       setLoading(false);
     }
@@ -224,13 +246,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         (o.location || '').toLowerCase().includes(q)
       );
     }
-    if (selectedAgency) list = list.filter((o) => o.agency === selectedAgency);
-    if (selectedRegion) list = list.filter((o) => o.region === selectedRegion);
-    if (selectedRole) list = list.filter((o) => o.role_type === selectedRole);
-    if (selectedTerm) list = list.filter((o) => o.term_length === selectedTerm);
+    if (selectedAgencies.size > 0) list = list.filter((o) => selectedAgencies.has(o.agency));
+    if (selectedRegions.size > 0) list = list.filter((o) => selectedRegions.has(o.region));
+    if (selectedRoles.size > 0) list = list.filter((o) => selectedRoles.has(o.role_type));
+    if (selectedTerms.size > 0) list = list.filter((o) => selectedTerms.has(o.term_length));
 
     return list;
-  }, [opportunities, search, selectedAgency, selectedRegion, selectedRole, selectedTerm, showSavedOnly, savedIds]);
+  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]);
 
   function toggleSave(id) {
     setSavedIds((prev) => {
@@ -243,14 +265,15 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
   function clearFilters() {
     setSearch('');
-    setSelectedAgency('');
-    setSelectedRegion('');
-    setSelectedRole('');
-    setSelectedTerm('');
+    setSelectedAgencies(new Set());
+    setSelectedRegions(new Set());
+    setSelectedRoles(new Set());
+    setSelectedTerms(new Set());
     setShowSavedOnly(false);
   }
 
-  const hasActiveFilters = search || selectedAgency || selectedRegion || selectedRole || selectedTerm || showSavedOnly;
+  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size;
+  const hasActiveFilters = search || activeFilterCount > 0 || showSavedOnly;
 
   return (
     <div className="opp-explorer">
@@ -273,7 +296,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         >
           <Funnel size={16} weight="bold" />
           Filters
-          {hasActiveFilters && <span className="opp-filter-badge" />}
+          {activeFilterCount > 0 && <span className="opp-filter-badge">{activeFilterCount}</span>}
           <CaretDown size={14} className={`opp-caret${showFilters ? ' opp-caret--open' : ''}`} />
         </button>
         <button
@@ -291,42 +314,56 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       {showFilters && (
         <div className="opp-filters">
           <div className="opp-filter-group">
-            <span className="opp-filter-label">Agency</span>
-            <select value={selectedAgency} onChange={(e) => setSelectedAgency(e.target.value)}>
-              <option value="">All agencies</option>
-              {agencies.map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
+            <span className="opp-filter-label">
+              Agency
+              {selectedAgencies.size > 0 && <span className="opp-filter-label-count">{selectedAgencies.size}</span>}
+            </span>
+            <div className="opp-chip-row">
+              {agencies.map((a) => (
+                <FilterChip key={a} label={a} active={selectedAgencies.has(a)}
+                  onClick={() => toggleFilter(setSelectedAgencies, a)} />
+              ))}
+            </div>
           </div>
           <div className="opp-filter-group">
-            <span className="opp-filter-label">Region</span>
+            <span className="opp-filter-label">
+              Region
+              {selectedRegions.size > 0 && <span className="opp-filter-label-count">{selectedRegions.size}</span>}
+            </span>
             <div className="opp-chip-row">
               {REGIONS.map((r) => (
-                <FilterChip key={r} label={r} active={selectedRegion === r}
-                  onClick={() => setSelectedRegion(selectedRegion === r ? '' : r)} />
+                <FilterChip key={r} label={r} active={selectedRegions.has(r)}
+                  onClick={() => toggleFilter(setSelectedRegions, r)} />
               ))}
             </div>
           </div>
           <div className="opp-filter-group">
-            <span className="opp-filter-label">Role type</span>
+            <span className="opp-filter-label">
+              Role type
+              {selectedRoles.size > 0 && <span className="opp-filter-label-count">{selectedRoles.size}</span>}
+            </span>
             <div className="opp-chip-row">
               {ROLE_TYPES.map((r) => (
-                <FilterChip key={r} label={r} active={selectedRole === r}
-                  onClick={() => setSelectedRole(selectedRole === r ? '' : r)} />
+                <FilterChip key={r} label={r} active={selectedRoles.has(r)}
+                  onClick={() => toggleFilter(setSelectedRoles, r)} />
               ))}
             </div>
           </div>
           <div className="opp-filter-group">
-            <span className="opp-filter-label">Term length</span>
+            <span className="opp-filter-label">
+              Term length
+              {selectedTerms.size > 0 && <span className="opp-filter-label-count">{selectedTerms.size}</span>}
+            </span>
             <div className="opp-chip-row">
               {TERM_LENGTHS.map((t) => (
-                <FilterChip key={t} label={t} active={selectedTerm === t}
-                  onClick={() => setSelectedTerm(selectedTerm === t ? '' : t)} />
+                <FilterChip key={t} label={t} active={selectedTerms.has(t)}
+                  onClick={() => toggleFilter(setSelectedTerms, t)} />
               ))}
             </div>
           </div>
           {hasActiveFilters && (
             <button type="button" className="opp-clear-filters" onClick={clearFilters}>
-              Clear all filters
+              Clear all filters {activeFilterCount > 0 && `(${activeFilterCount})`}
             </button>
           )}
         </div>

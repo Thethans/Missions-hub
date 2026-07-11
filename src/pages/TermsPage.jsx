@@ -1,7 +1,14 @@
 import React from 'react';
+import usePageMeta from '../hooks/usePageMeta.js';
 import './LegalPages.css';
 
 export default function TermsPage() {
+  usePageMeta({
+    title: 'Terms of Service',
+    description: 'Terms of Service for Fielded — the missions-matching platform.',
+    path: '/terms',
+  });
+
   return (
     <div className="legal-page">
       <div className="legal-content">

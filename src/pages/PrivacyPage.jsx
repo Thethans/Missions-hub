@@ -1,7 +1,14 @@
 import React from 'react';
+import usePageMeta from '../hooks/usePageMeta.js';
 import './LegalPages.css';
 
 export default function PrivacyPage() {
+  usePageMeta({
+    title: 'Privacy Policy',
+    description: 'Privacy Policy for Fielded — how we collect, use, and protect your data.',
+    path: '/privacy',
+  });
+
   return (
     <div className="legal-page">
       <div className="legal-content">

@@ -31,19 +31,30 @@ async function fetchOpportunities() {
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(url, key);
 
-  const { data, error } = await supabase
-    .from('opportunities')
-    .select('id, agency, title, url, location, region, role_type, term_length, description')
-    .eq('active', true)
-    .order('agency', { ascending: true })
-    .order('title', { ascending: true });
+  const allRows = [];
+  const PAGE_SIZE = 1000;
+  let from = 0;
 
-  if (error) {
-    console.error('Supabase fetch failed:', error.message);
-    process.exit(1);
+  while (true) {
+    const { data, error } = await supabase
+      .from('opportunities')
+      .select('id, agency, title, url, location, region, role_type, term_length, description')
+      .eq('active', true)
+      .order('agency', { ascending: true })
+      .order('title', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.error('Supabase fetch failed:', error.message);
+      process.exit(1);
+    }
+
+    allRows.push(...(data || []));
+    if (!data || data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
 
-  return data || [];
+  return allRows;
 }
 
 // ── Design tokens ────────────────────────────────────────────────────

@@ -6,16 +6,42 @@ import YWAMScraper from './ywam.js';
 import AIMScraper from './aim.js';
 import WorldTeamScraper from './world-team.js';
 import WycliffeScraper from './wycliffe.js';
+import ABWEScraper from './abwe.js';
+import SIMScraper from './sim.js';
+import MTWScraper from './mtw.js';
+import TEAMScraper from './team.js';
+import CrossworldScraper from './crossworld.js';
+import ChristarScraper from './christar.js';
+import CruScraper from './cru.js';
+import WorldVentureScraper from './worldventure.js';
+import AvantScraper from './avant.js';
+import ReachGlobalScraper from './reachglobal.js';
+import ReachBeyondScraper from './reachbeyond.js';
+import GlobalPartnersScraper from './globalpartners.js';
+import SergeScraper from './serge.js';
 
 export const SCRAPERS = {
-  imb:        new IMBScraper(),
-  pioneers:   new PioneersScraper(),
-  ethnos360:  new Ethnos360Scraper(),
-  omf:        new OMFScraper(),
-  ywam:       new YWAMScraper(),
-  aim:        new AIMScraper(),
-  worldteam:  new WorldTeamScraper(),
-  wycliffe:   new WycliffeScraper()
+  imb:            new IMBScraper(),
+  pioneers:       new PioneersScraper(),
+  ethnos360:      new Ethnos360Scraper(),
+  omf:            new OMFScraper(),
+  ywam:           new YWAMScraper(),
+  aim:            new AIMScraper(),
+  worldteam:      new WorldTeamScraper(),
+  wycliffe:       new WycliffeScraper(),
+  abwe:           new ABWEScraper(),
+  sim:            new SIMScraper(),
+  mtw:            new MTWScraper(),
+  team:           new TEAMScraper(),
+  crossworld:     new CrossworldScraper(),
+  christar:       new ChristarScraper(),
+  cru:            new CruScraper(),
+  worldventure:   new WorldVentureScraper(),
+  avant:          new AvantScraper(),
+  reachglobal:    new ReachGlobalScraper(),
+  reachbeyond:    new ReachBeyondScraper(),
+  globalpartners: new GlobalPartnersScraper(),
+  serge:          new SergeScraper(),
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);
