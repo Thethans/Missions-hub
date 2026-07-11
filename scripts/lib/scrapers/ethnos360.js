@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import { fetchRenderedHTML, sleep } from './browser.js';
 import { BaseScraper } from './base.js';
 
 const BASE = 'https://ethnos360.org';
@@ -30,7 +29,7 @@ export default class Ethnos360Scraper extends BaseScraper {
 
       let html;
       try {
-        html = await fetchRenderedHTML(url, { timeout: 45000 });
+        html = await this.fetchPage(url);
         totalPages++;
       } catch (err) {
         console.warn(`Ethnos360: page ${page} failed — ${err.message}`);
@@ -88,7 +87,6 @@ export default class Ethnos360Scraper extends BaseScraper {
 
       console.log(`Ethnos360: page ${page} → ${foundOnPage} listings`);
       if (foundOnPage === 0 && page > 1) break;
-      if (page < MAX_PAGES) await sleep(2000);
     }
 
     for (const trip of SHORT_TERM_TRIPS) {

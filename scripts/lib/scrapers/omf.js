@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import { fetchRenderedHTML, sleep } from './browser.js';
 import { BaseScraper } from './base.js';
 
 const BASE = 'https://opportunities.omf.org';
@@ -22,7 +21,7 @@ export default class OMFScraper extends BaseScraper {
       console.log(`OMF: loading ${type} page…`);
       let html;
       try {
-        html = await fetchRenderedHTML(url, { timeout: 45000 });
+        html = await this.fetchPage(url);
         totalPages++;
       } catch (err) {
         console.warn(`OMF: could not load ${url} — ${err.message}`);
@@ -32,7 +31,6 @@ export default class OMFScraper extends BaseScraper {
       const $ = cheerio.load(html);
       if (type === 'role') this.extractRoles($, opportunities);
       if (type === 'location') this.extractLocations($, opportunities);
-      await sleep(2000);
     }
 
     const deduped = this.dedup(opportunities);

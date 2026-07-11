@@ -10,12 +10,21 @@
 //   node scripts/sync-opportunities.js --all --force      # re-scrape even if recent
 
 import 'dotenv/config';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import winston from 'winston';
-import { SCRAPERS, SCRAPER_KEYS } from './lib/scrapers/index.js';
+import { SCRAPERS, SCRAPER_KEYS, BROWSER_SCRAPERS } from './lib/scrapers/index.js';
 import { dedupeOpportunities } from './lib/scrapers/base.js';
 import { closeBrowser } from './lib/scrapers/browser.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const CACHE_PATH = join(__dirname, '.scraper-cache.json');
+const FRESHNESS_HOURS = 24;
+const STATIC_CONCURRENCY = 6;
+const BROWSER_CONCURRENCY = 2;
 
 // ── Logger ────────────────────────────────────────────────────────────
 
@@ -62,6 +71,28 @@ const argv = yargs(hideBin(process.argv))
   .strict()
   .help()
   .parse();
+
+// ── Freshness cache ──────────────────────────────────────────────────
+
+function loadCache() {
+  try {
+    return JSON.parse(readFileSync(CACHE_PATH, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function saveCache(cache) {
+  mkdirSync(dirname(CACHE_PATH), { recursive: true });
+  writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2));
+}
+
+function isFresh(cache, key) {
+  const entry = cache[key];
+  if (!entry) return false;
+  const age = (Date.now() - entry.ts) / (1000 * 60 * 60);
+  return age < FRESHNESS_HOURS;
+}
 
 // ── Supabase (lazy — skipped in dry-run if env vars missing) ──────────
 
@@ -112,11 +143,95 @@ function filterLowQuality(opps) {
   });
 }
 
+// ── Concurrency pool ─────────────────────────────────────────────────
+
+async function runPool(tasks, concurrency) {
+  const results = [];
+  let i = 0;
+
+  async function worker() {
+    while (i < tasks.length) {
+      const idx = i++;
+      results[idx] = await tasks[idx]();
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+// ── Scrape one agency ────────────────────────────────────────────────
+
+async function scrapeOne(key, supabase, dryRun, cache) {
+  const scraper = SCRAPERS[key];
+  const t0 = Date.now();
+  logger.info(`[${key}] Scraping ${scraper.agency}…`);
+
+  let result;
+  try {
+    result = await scraper.scrape();
+  } catch (err) {
+    logger.error(`[${key}] Scrape failed: ${err.message}`);
+    return { key, error: true, scraped: 0, upserted: 0, deactivated: 0 };
+  }
+
+  const { opportunities: rawOpps, pages = 1 } = result;
+  const cleaned = filterLowQuality(rawOpps);
+  const opportunities = dedupeOpportunities(cleaned);
+  if (rawOpps.length !== cleaned.length) {
+    logger.info(`[${key}] Filtered ${rawOpps.length - cleaned.length} low-quality entries`);
+  }
+
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  logger.info(`[${key}] Found ${opportunities.length} opportunities across ${pages} page${pages === 1 ? '' : 's'} in ${elapsed}s`);
+
+  cache[key] = { ts: Date.now(), count: opportunities.length };
+
+  if (dryRun) {
+    for (const opp of opportunities) {
+      logger.info(`  [dry] ${opp.title} — ${opp.url}`);
+    }
+    return { key, error: false, scraped: opportunities.length, upserted: 0, deactivated: 0 };
+  }
+
+  if (opportunities.length === 0) {
+    return { key, error: false, scraped: 0, upserted: 0, deactivated: 0 };
+  }
+
+  const rows = opportunities.map((opp) => ({
+    ...opp,
+    scraped_at: new Date().toISOString(),
+    active: true
+  }));
+
+  const { error } = await supabase
+    .from('opportunities')
+    .upsert(rows, { onConflict: 'url', ignoreDuplicates: false });
+
+  if (error) {
+    logger.error(`[${key}] Supabase upsert error: ${error.message}`);
+    return { key, error: true, scraped: opportunities.length, upserted: 0, deactivated: 0 };
+  }
+
+  const deactivated = await deactivateStale(
+    supabase,
+    scraper.agency,
+    opportunities.map((o) => o.url)
+  );
+  if (deactivated > 0) {
+    logger.info(`[${key}] Deactivated ${deactivated} stale opportunities`);
+  }
+
+  return { key, error: false, scraped: opportunities.length, upserted: rows.length, deactivated };
+}
+
 // ── Main ──────────────────────────────────────────────────────────────
 
 async function run() {
   const keys = argv.all ? SCRAPER_KEYS : [argv.agency];
   const dryRun = argv.dryRun;
+  const force = argv.force;
   let supabase = null;
 
   if (!dryRun) {
@@ -128,83 +243,55 @@ async function run() {
     }
   }
 
-  logger.info(`Starting sync — agencies: ${keys.join(', ')}${dryRun ? ' (DRY RUN)' : ''}`);
+  const cache = loadCache();
 
-  let totalScraped = 0;
-  let totalUpserted = 0;
-  let totalDeactivated = 0;
-  let totalErrors = 0;
-
-  for (const key of keys) {
-    const scraper = SCRAPERS[key];
-    logger.info(`[${key}] Scraping ${scraper.agency}...`);
-
-    let result;
-    try {
-      result = await scraper.scrape();
-    } catch (err) {
-      logger.error(`[${key}] Scrape failed: ${err.message}`);
-      totalErrors++;
-      continue;
+  const toRun = keys.filter(key => {
+    if (force) return true;
+    if (isFresh(cache, key)) {
+      logger.info(`[${key}] Skipping — scraped ${((Date.now() - cache[key].ts) / (1000 * 60 * 60)).toFixed(1)}h ago (${cache[key].count} opps). Use --force to override.`);
+      return false;
     }
+    return true;
+  });
 
-    const { opportunities: rawOpps, pages = 1 } = result;
-    const cleaned = filterLowQuality(rawOpps);
-    const opportunities = dedupeOpportunities(cleaned);
-    if (rawOpps.length !== cleaned.length) {
-      logger.info(`[${key}] Filtered ${rawOpps.length - cleaned.length} low-quality entries`);
-    }
-
-    logger.info(`[${key}] Found ${opportunities.length} opportunities across ${pages} page${pages === 1 ? '' : 's'}${rawOpps.length !== opportunities.length ? ` (${rawOpps.length - opportunities.length} duplicates removed)` : ''}`);
-    totalScraped += opportunities.length;
-
-    if (dryRun) {
-      for (const opp of opportunities) {
-        logger.info(`  [dry] ${opp.title} — ${opp.url}`);
-      }
-      continue;
-    }
-
-    if (opportunities.length === 0) continue;
-
-    // Upsert (on URL conflict, update fields)
-    const rows = opportunities.map((opp) => ({
-      ...opp,
-      scraped_at: new Date().toISOString(),
-      active: true
-    }));
-
-    const { error } = await supabase
-      .from('opportunities')
-      .upsert(rows, { onConflict: 'url', ignoreDuplicates: false });
-
-    if (error) {
-      logger.error(`[${key}] Supabase upsert error: ${error.message}`);
-      totalErrors++;
-      continue;
-    }
-
-    totalUpserted += rows.length;
-
-    // Deactivate opportunities that disappeared from the listing
-    const deactivated = await deactivateStale(
-      supabase,
-      scraper.agency,
-      opportunities.map((o) => o.url)
-    );
-    totalDeactivated += deactivated;
-    if (deactivated > 0) {
-      logger.info(`[${key}] Deactivated ${deactivated} stale opportunities`);
-    }
+  if (toRun.length === 0) {
+    logger.info('All agencies are fresh. Nothing to do.');
+    return;
   }
+
+  const staticKeys = toRun.filter(k => !BROWSER_SCRAPERS.has(k));
+  const browserKeys = toRun.filter(k => BROWSER_SCRAPERS.has(k));
+
+  logger.info(`Starting sync — ${staticKeys.length} static + ${browserKeys.length} browser scrapers${dryRun ? ' (DRY RUN)' : ''}`);
+  const t0 = Date.now();
+
+  const staticTasks = staticKeys.map(key => () => scrapeOne(key, supabase, dryRun, cache));
+  const browserTasks = browserKeys.map(key => () => scrapeOne(key, supabase, dryRun, cache));
+
+  const [staticResults, browserResults] = await Promise.all([
+    runPool(staticTasks, STATIC_CONCURRENCY),
+    runPool(browserTasks, BROWSER_CONCURRENCY),
+  ]);
+
+  const allResults = [...staticResults, ...browserResults];
+
+  saveCache(cache);
+
+  const totalScraped = allResults.reduce((s, r) => s + r.scraped, 0);
+  const totalUpserted = allResults.reduce((s, r) => s + r.upserted, 0);
+  const totalDeactivated = allResults.reduce((s, r) => s + r.deactivated, 0);
+  const totalErrors = allResults.filter(r => r.error).length;
+  const totalElapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
   logger.info('');
   logger.info('─── Summary ───');
-  logger.info(`  Scraped:     ${totalScraped}`);
+  logger.info(`  Scraped:     ${totalScraped} opportunities`);
   if (!dryRun) {
     logger.info(`  Upserted:    ${totalUpserted}`);
     logger.info(`  Deactivated: ${totalDeactivated}`);
   }
+  logger.info(`  Skipped:     ${keys.length - toRun.length} (fresh)`);
+  logger.info(`  Time:        ${totalElapsed}s`);
   if (totalErrors > 0) {
     logger.warn(`  Errors:      ${totalErrors}`);
   }

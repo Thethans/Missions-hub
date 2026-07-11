@@ -45,3 +45,7 @@ export const SCRAPERS = {
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);
+
+export const BROWSER_SCRAPERS = new Set([
+  'imb', 'pioneers', 'ywam', 'worldventure', 'reachglobal',
+]);

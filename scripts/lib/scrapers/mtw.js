@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import { fetchRenderedHTML, paginateAndCollectHTML } from './browser.js';
 import { BaseScraper } from './base.js';
 
 const BASE = 'https://mtw.org';
@@ -15,21 +14,18 @@ export default class MTWScraper extends BaseScraper {
     const opportunities = [];
     let totalPages = 0;
 
-    console.log('MTW: scraping opportunities (JS-rendered)…');
-    try {
-      const htmlPages = await paginateAndCollectHTML(LISTING_URL, { maxPages: MAX_PAGES });
-      for (const html of htmlPages) {
-        totalPages++;
-        this.extractCards(cheerio.load(html), opportunities);
-      }
-    } catch (err) {
-      console.warn(`MTW: pagination failed — ${err.message}`);
+    console.log('MTW: scraping opportunities…');
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const url = page === 1 ? LISTING_URL : `${LISTING_URL}?page=${page}`;
       try {
-        const html = await fetchRenderedHTML(LISTING_URL, { timeout: 30000 });
-        totalPages = 1;
+        const html = await this.fetchPage(url);
+        totalPages++;
+        const before = opportunities.length;
         this.extractCards(cheerio.load(html), opportunities);
-      } catch (fallbackErr) {
-        console.warn(`MTW: fallback failed — ${fallbackErr.message}`);
+        if (opportunities.length === before && page > 1) break;
+      } catch (err) {
+        if (page === 1) console.warn(`MTW: listing failed — ${err.message}`);
+        break;
       }
     }
 
