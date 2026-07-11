@@ -328,7 +328,26 @@ a { color: var(--voyage-teal); }
   justify-content: center;
 }
 
-.hero-globe { width: min(130vw, 1600px); opacity: 0.9; }
+.hero-globe { width: min(85vh, 900px); opacity: 0.9; flex-shrink: 0; }
+
+.hero-dots {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  opacity: 0.7;
+  animation: hero-dots-fade 2s ease-out both;
+}
+.hero-dots--left { mask-image: linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%); }
+.hero-dots--right { mask-image: linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%); }
+
+@keyframes hero-dots-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .hero-dots { display: none; }
+}
 .hero-globe .globe-stage { width: 100%; }
 .hero-globe .globe-plane { filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45)); }
 
