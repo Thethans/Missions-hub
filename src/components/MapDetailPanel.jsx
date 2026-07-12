@@ -102,6 +102,11 @@ export default function MapDetailPanel({ selected }) {
           <span>Formative · {FORMATIVE_THRESHOLD}%</span>
           <span>Reached · {REACHED_THRESHOLD}%</span>
         </div>
+        <p className="map-detail-meter-note">
+          The share of this people group who are evangelical Christians. On Joshua Project’s
+          scale, under {FORMATIVE_THRESHOLD}% is unreached, {FORMATIVE_THRESHOLD}%+ marks a
+          formative presence, and {REACHED_THRESHOLD}%+ a self-sustaining (reached) church.
+        </p>
       </div>
 
       <dl className="map-detail-stats">

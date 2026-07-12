@@ -1130,6 +1130,13 @@ a { color: var(--voyage-teal); }
   color: var(--muted-text);
 }
 
+.map-detail-meter-note {
+  margin: var(--space-3) 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--muted-text);
+}
+
 .map-detail-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
