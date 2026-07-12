@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import RouteLine from './RouteLine.jsx';
-import PlaneIcon from './PlaneIcon.jsx';
+import CompassIcon from './CompassIcon.jsx';
 import { routeImports } from '../routeImports.js';
 import { List, X } from '@phosphor-icons/react';
 
@@ -79,7 +79,7 @@ export default function TopNav() {
     <header className="site-nav">
       <NavLink to="/" className="site-nav-logo">
         <span className="site-nav-logo-mark" aria-hidden="true">
-          <PlaneIcon size={20} />
+          <CompassIcon size={20} />
         </span>
         Fielded
       </NavLink>

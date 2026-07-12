@@ -75,25 +75,16 @@ a { color: var(--voyage-teal); }
   box-shadow: 0 1px 0 rgba(250, 247, 240, 0.05), 0 16px 28px -20px rgba(0, 0, 0, 0.65);
 }
 
-/* Thin dashed "flight path" tracing the nav's bottom edge — same route-line
-   motif as the hero/journey/404 plane, always in gentle motion. */
+/* Solid line tracing the nav's bottom edge */
 .site-nav::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: -1px;
-  height: 2px;
-  background-image: repeating-linear-gradient(90deg, var(--voyage-teal) 0 14px, transparent 14px 26px);
-  background-size: 52px 2px;
-  opacity: 0.55;
-  animation: site-nav-route 6s linear infinite;
+  height: 1px;
+  background-color: rgba(43, 110, 118, 0.4);
   pointer-events: none;
-}
-
-@keyframes site-nav-route {
-  from { background-position: 0 0; }
-  to { background-position: 52px 0; }
 }
 
 .site-nav-logo {
