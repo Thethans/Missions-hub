@@ -37,10 +37,11 @@ export default class ChristarScraper extends BaseScraper {
         const $ = cheerio.load(html);
         const before = opportunities.length;
 
+        const pageItems = [];
         $(`a[href*="${section.pathPrefix}"]`).each((_, el) => {
           const $el = $(el);
           const href = $el.attr('href') || '';
-          const url = this.resolveUrl(href);
+          const detailUrl = this.resolveUrl(href);
 
           const title = this.normalizeWhitespace(
             $el.find('h2, h3, h4, h5').first().text() || $el.text()
@@ -53,10 +54,10 @@ export default class ChristarScraper extends BaseScraper {
             $el.find('p').first().text()
           ) || null;
 
-          opportunities.push({
+          pageItems.push({
             agency: this.agency,
             title,
-            url,
+            url: detailUrl,
             location,
             region: this.inferRegion(location || title),
             role_type: this.inferRole(title, description || ''),
@@ -67,7 +68,23 @@ export default class ChristarScraper extends BaseScraper {
           });
         });
 
-        if (opportunities.length === before) break;
+        const needsDetail = pageItems.filter(item => !item.description || item.description.length < 50).slice(0, 8);
+        const detailResults = await Promise.all(
+          needsDetail.map(async (item) => {
+            const desc = await this.fetchDetailDescription(item.url, '.tpl-body p, .tpl-main-content-main p, main p, article p');
+            return { url: item.url, desc };
+          })
+        );
+        const detailMap = new Map(detailResults.map(r => [r.url, r.desc]));
+
+        for (const item of pageItems) {
+          if (detailMap.has(item.url) && detailMap.get(item.url)) {
+            item.description = detailMap.get(item.url);
+          }
+          opportunities.push(item);
+        }
+
+        if (pageItems.length === 0) break;
         const hasNext = $('a:contains("Next"), [class*="next"], a[rel="next"]').length > 0;
         if (!hasNext) break;
         page++;

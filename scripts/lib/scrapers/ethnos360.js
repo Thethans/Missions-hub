@@ -40,6 +40,7 @@ export default class Ethnos360Scraper extends BaseScraper {
       const $ = cheerio.load(html);
       let foundOnPage = 0;
 
+      const pageItems = [];
       $('h3').each((_, el) => {
         const $h3 = $(el);
         const title = this.normalizeWhitespace($h3.text());
@@ -70,7 +71,7 @@ export default class Ethnos360Scraper extends BaseScraper {
         const $desc = $card.find('p').first();
         const description = this.normalizeWhitespace($desc.text()) || null;
 
-        opportunities.push({
+        pageItems.push({
           agency: this.agency,
           title,
           url: detailUrl,
@@ -84,6 +85,25 @@ export default class Ethnos360Scraper extends BaseScraper {
         });
         foundOnPage++;
       });
+
+      const detailFetches = pageItems
+        .filter(item => item.url !== FIND_URL && item.url.includes('/go/opportunity/'))
+        .slice(0, 10);
+
+      const detailResults = await Promise.all(
+        detailFetches.map(async (item) => {
+          const desc = await this.fetchDetailDescription(item.url, '.tpl-job-row p, .tpl-job-row, .job-description p, main p, article p');
+          return { url: item.url, desc };
+        })
+      );
+      const detailMap = new Map(detailResults.map(r => [r.url, r.desc]));
+
+      for (const item of pageItems) {
+        if (detailMap.has(item.url) && detailMap.get(item.url)) {
+          item.description = detailMap.get(item.url);
+        }
+        opportunities.push(item);
+      }
 
       console.log(`Ethnos360: page ${page} → ${foundOnPage} listings`);
       if (foundOnPage === 0 && page > 1) break;

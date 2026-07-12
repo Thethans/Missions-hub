@@ -44,6 +44,23 @@ export class BaseScraper {
     return resolved !== currentUrl ? resolved : null;
   }
 
+  async fetchDetailDescription(url, selectors = 'main p, article p, .content p, section p, .entry-content p') {
+    try {
+      const html = await this.fetchPage(url);
+      const $ = cheerio.load(html);
+      const paragraphs = [];
+      $(selectors).each((_, el) => {
+        const text = this.normalizeWhitespace($(el).text());
+        if (text.length > 30 && !/cookie|privacy|subscribe|sign up|newsletter/i.test(text)) {
+          paragraphs.push(text);
+        }
+      });
+      return paragraphs.slice(0, 3).join(' ').slice(0, 1000) || null;
+    } catch {
+      return null;
+    }
+  }
+
   async scrape() {
     throw new Error(`${this.agency}: scrape() not implemented`);
   }

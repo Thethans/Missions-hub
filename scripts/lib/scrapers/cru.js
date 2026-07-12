@@ -12,6 +12,16 @@ const OPPORTUNITY_PAGES = [
   { url: `${BASE}/us/en/opportunities/events.html`, category: 'Events', term: 'short-term (under 2 years)', role: 'evangelism/discipleship' },
 ];
 
+const EXPLORE_SUBPAGES = [
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/africa-bibles.html`, title: 'Africa Bibles', role: 'evangelism/discipleship', region: 'Sub-Saharan Africa' },
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/church-planting.html`, title: 'Church Planting', role: 'church planting', region: null },
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/closed-country-evangelism.html`, title: 'Closed Country Evangelism', role: 'evangelism/discipleship', region: null },
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/frontline-staff.html`, title: 'Frontline Staff Support', role: 'member care', region: null },
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/port-cities.html`, title: 'Port Cities Ministry', role: 'evangelism/discipleship', region: null },
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/vulnerable-women.html`, title: 'Vulnerable Women Ministry', role: 'relief and development', region: null },
+  { url: `${BASE}/us/en/opportunities/explore-your-interests/give-dev/water.html`, title: 'Clean Water Projects', role: 'relief and development', region: null },
+];
+
 const MINISTRY_AREAS = [
   { title: 'Campus Ministry', role: 'evangelism/discipleship', desc: 'Reach college students with the gospel through campus outreach, Bible studies, and discipleship.' },
   { title: 'Athletes in Action', role: 'sports ministry', desc: 'Sports ministry reaching athletes and coaches through the platform of sport.' },
@@ -74,6 +84,45 @@ export default class CruScraper extends BaseScraper {
         date_posted: null,
         raw_html: null,
       });
+    }
+
+    for (const sub of EXPLORE_SUBPAGES) {
+      console.log(`Cru: fetching explore subpage ${sub.title}…`);
+      try {
+        const html = await this.fetchPage(sub.url);
+        totalPages++;
+        const $ = cheerio.load(html);
+        const desc = this.normalizeWhitespace($('main p, .content p, article p').first().text());
+
+        opportunities.push({
+          agency: this.agency,
+          title: `${sub.title} — Cru`,
+          url: sub.url,
+          location: null,
+          region: sub.region,
+          role_type: sub.role,
+          term_length: null,
+          description: desc || `Support ${sub.title.toLowerCase()} through Cru.`,
+          date_posted: null,
+          raw_html: null,
+        });
+
+        this.extractLinks($, opportunities, { role: sub.role, term: null });
+      } catch (err) {
+        console.warn(`Cru: ${sub.title} subpage failed — ${err.message}`);
+        opportunities.push({
+          agency: this.agency,
+          title: `${sub.title} — Cru`,
+          url: sub.url,
+          location: null,
+          region: sub.region,
+          role_type: sub.role,
+          term_length: null,
+          description: `Support ${sub.title.toLowerCase()} through Cru.`,
+          date_posted: null,
+          raw_html: null,
+        });
+      }
     }
 
     const deduped = this.dedup(opportunities);
