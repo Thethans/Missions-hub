@@ -27,8 +27,10 @@ export default function RootLayout() {
     window.scrollTo(0, 0);
     // SPA route changes are otherwise silent for screen-reader/keyboard
     // users — move focus to the new page's content and announce its title,
-    // same as a full page load would.
-    mainRef.current?.focus();
+    // same as a full page load would. preventScroll is essential: without
+    // it, focusing <main> scrolls it flush to the viewport top, pushing the
+    // sticky nav out of view so every page loaded slightly scrolled down.
+    mainRef.current?.focus({ preventScroll: true });
     setAnnouncement(title);
   }, [pathname]);
 

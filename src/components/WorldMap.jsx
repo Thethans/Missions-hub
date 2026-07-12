@@ -205,7 +205,7 @@ export default function WorldMap({ selected, onSelect }) {
 
       map.on('click', 'people-groups-points', (e) => {
         const feature = e.features[0];
-        onSelect(feature.properties);
+        onSelect({ ...feature.properties, coordinates: feature.geometry.coordinates });
         map.flyTo({ center: feature.geometry.coordinates, zoom: Math.max(map.getZoom(), 3.5), speed: 0.8 });
       });
 

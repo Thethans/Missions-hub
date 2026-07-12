@@ -13,6 +13,22 @@ const STATUS_SENTENCE = {
   reached: 'considered reached — an established, self-sustaining evangelical presence exists among them'
 };
 
+// Factual engagement prompts, not statistics — safe to show alongside the data.
+const STATUS_ENGAGEMENT = {
+  unreached:
+    'With little to no access to the gospel in their heart language, they are among the peoples the Great Commission has yet to reach. Pray for laborers, for Scripture in their own language, and for the first lasting churches among them.',
+  formative:
+    'A gospel presence has begun here, but it is young and not yet self-sustaining. Pray for it to take root, mature, and grow strong enough to reach the rest of the community on its own.',
+  reached:
+    'An established, self-sustaining church exists among them. Pray for it to keep growing in depth and to send workers of its own to peoples still waiting to hear.'
+};
+
+// Progress toward a self-sustaining evangelical presence. Joshua Project's
+// thresholds: ≥2% evangelical = formative, ≥5% = reached. The meter shows how
+// far a group sits along that same scale.
+const FORMATIVE_THRESHOLD = 2;
+const REACHED_THRESHOLD = 5;
+
 export default function MapDetailPanel({ selected }) {
   if (!selected) {
     return (
@@ -22,18 +38,66 @@ export default function MapDetailPanel({ selected }) {
     );
   }
 
-  const { name, country, population, pctEvangelical, religion, progressStatus } = selected;
+  const {
+    name,
+    country,
+    population,
+    pctEvangelical,
+    religion,
+    progressStatus,
+    coordinates,
+    // Optional richer fields — shown only when present in the data, so the
+    // panel gains detail automatically the next time the dataset is refreshed
+    // with them (see scripts/fetch-joshua-project.mjs).
+    language,
+    bibleStatus,
+    pctChristian
+  } = selected;
+
   const statusLabel = STATUS_LABEL[progressStatus] || progressStatus;
   const statusSentence = STATUS_SENTENCE[progressStatus] || '';
+  const engagement = STATUS_ENGAGEMENT[progressStatus] || '';
+
+  // Honest derivations from the fields we already have.
+  const meterFill = Math.max(0, Math.min(100, (pctEvangelical / REACHED_THRESHOLD) * 100));
+  const withoutEvangelical = Math.round(population * (1 - (pctEvangelical || 0) / 100));
+
+  const lat = Array.isArray(coordinates) ? coordinates[1] : null;
+  const lon = Array.isArray(coordinates) ? coordinates[0] : null;
+  // The 10/40 Window is the latitude band (10°N–40°N) holding most of the
+  // world's least-reached peoples — a real geographic classification, derived
+  // here straight from the point's own coordinates.
+  const inWindow = lat != null ? lat >= 10 && lat <= 40 : null;
+  const formatCoord = (v, pos, neg) => `${Math.abs(v).toFixed(1)}° ${v >= 0 ? pos : neg}`;
 
   return (
     <section className="map-detail">
       <div className="map-detail-header">
         <span className={`map-detail-status-dot status-${progressStatus}`} />
-        <span className="map-detail-status-label">{statusLabel}</span>
+        <span className="map-detail-status-label">{statusLabel} people group</span>
       </div>
       <h2 className="map-detail-name">{name}</h2>
       <p className="map-detail-meta">{country} · {religion}</p>
+
+      {/* Progress-to-reached meter */}
+      <div className="map-detail-meter" aria-hidden="true">
+        <div className="map-detail-meter-head">
+          <span>Evangelical presence</span>
+          <span className="map-detail-meter-value">{pctEvangelical}%</span>
+        </div>
+        <div className={`map-detail-meter-track status-${progressStatus}`}>
+          <div className="map-detail-meter-fill" style={{ width: `${meterFill}%` }} />
+          <span
+            className="map-detail-meter-mark"
+            style={{ left: `${(FORMATIVE_THRESHOLD / REACHED_THRESHOLD) * 100}%` }}
+          />
+        </div>
+        <div className="map-detail-meter-scale">
+          <span>0%</span>
+          <span>Formative · {FORMATIVE_THRESHOLD}%</span>
+          <span>Reached · {REACHED_THRESHOLD}%</span>
+        </div>
+      </div>
 
       <dl className="map-detail-stats">
         <div>
@@ -44,15 +108,48 @@ export default function MapDetailPanel({ selected }) {
           <dt>Evangelical</dt>
           <dd>{pctEvangelical}%</dd>
         </div>
+        {pctChristian != null && (
+          <div>
+            <dt>Christian</dt>
+            <dd>{pctChristian}%</dd>
+          </div>
+        )}
         <div>
           <dt>Primary religion</dt>
           <dd>{religion}</dd>
         </div>
-        <div>
-          <dt>Country</dt>
-          <dd>{country}</dd>
-        </div>
+        {language && (
+          <div>
+            <dt>Primary language</dt>
+            <dd>{language}</dd>
+          </div>
+        )}
+        {bibleStatus && (
+          <div>
+            <dt>Scripture</dt>
+            <dd>{bibleStatus}</dd>
+          </div>
+        )}
+        {inWindow != null && (
+          <div>
+            <dt>10/40 Window</dt>
+            <dd>{inWindow ? 'Within' : 'Outside'}</dd>
+          </div>
+        )}
+        {lat != null && (
+          <div>
+            <dt>Location</dt>
+            <dd>{formatCoord(lat, 'N', 'S')}, {formatCoord(lon, 'E', 'W')}</dd>
+          </div>
+        )}
       </dl>
+
+      <div className="map-detail-callout">
+        <span className="map-detail-callout-figure">{formatPopulation(withoutEvangelical)}</span>
+        <span className="map-detail-callout-label">
+          people here are estimated to be without an evangelical Christian community
+        </span>
+      </div>
 
       <p className="map-detail-summary">
         The {name} of {country} number an estimated {formatPopulation(population)} people.
@@ -60,9 +157,15 @@ export default function MapDetailPanel({ selected }) {
         {pctEvangelical}% identify as evangelical Christian.
       </p>
 
+      <div className="map-detail-insight">
+        <h3>What “{statusLabel}” means here</h3>
+        <p>{engagement}</p>
+      </div>
+
       <p className="map-detail-source">
         Data from{' '}
         <a href="https://joshuaproject.net" target="_blank" rel="noreferrer">Joshua Project</a>.
+        Population without an evangelical community and 10/40 Window placement are derived from these figures.
       </p>
     </section>
   );

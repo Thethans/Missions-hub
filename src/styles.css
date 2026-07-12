@@ -1076,12 +1076,63 @@ a { color: var(--voyage-teal); }
   color: var(--muted-text);
 }
 
-.map-detail-name { margin: 0 0 var(--space-1); }
+.map-detail-name { margin: 0 0 var(--space-1); font-size: clamp(1.6rem, 3.5vw, 2.2rem); }
 .map-detail-meta { margin: 0 0 var(--space-6); color: var(--muted-text); }
+
+/* Progress-to-reached meter */
+.map-detail-meter { margin: 0 0 var(--space-6); }
+
+.map-detail-meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-2);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.map-detail-meter-value { font-family: var(--font-mono); font-size: 1rem; color: var(--ink-navy); }
+
+.map-detail-meter-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(22, 35, 59, 0.08);
+}
+
+.map-detail-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--voyage-teal);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.map-detail-meter-track.status-unreached .map-detail-meter-fill { background: var(--status-unreached); }
+.map-detail-meter-track.status-formative .map-detail-meter-fill { background: var(--status-formative); }
+.map-detail-meter-track.status-reached .map-detail-meter-fill { background: var(--status-reached); }
+
+.map-detail-meter-mark {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 16px;
+  background: rgba(22, 35, 59, 0.35);
+  transform: translateX(-50%);
+}
+
+.map-detail-meter-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: 0.7rem;
+  color: var(--muted-text);
+}
 
 .map-detail-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: var(--space-4);
   padding: var(--space-4) 0;
   margin: 0 0 var(--space-6);
@@ -1092,12 +1143,39 @@ a { color: var(--voyage-teal); }
 .map-detail-stats dt { font-size: 0.75rem; color: var(--muted-text); margin: 0 0 var(--space-1); }
 .map-detail-stats dd { font-family: var(--font-mono); margin: 0; }
 
-.map-detail-summary { color: var(--ink-navy); line-height: 1.6; margin: 0 0 var(--space-4); }
-.map-detail-source { color: var(--muted-text); font-size: 0.85rem; margin: 0; }
-
-@media (max-width: 640px) {
-  .map-detail-stats { grid-template-columns: repeat(2, 1fr); }
+/* Derived "still waiting" figure — liquid-glass callout */
+.map-detail-callout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-6);
+  margin: 0 0 var(--space-6);
+  border-radius: 16px;
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
+
+.map-detail-callout-figure {
+  font-family: var(--font-mono);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink-navy);
+}
+
+.map-detail-callout-label { color: var(--muted-text); font-size: 0.95rem; line-height: 1.5; }
+
+.map-detail-summary { color: var(--ink-navy); line-height: 1.6; margin: 0 0 var(--space-6); }
+
+.map-detail-insight { margin: 0 0 var(--space-6); }
+.map-detail-insight h3 { margin: 0 0 var(--space-2); font-size: 1.05rem; }
+.map-detail-insight p { margin: 0; color: var(--muted-text); line-height: 1.6; }
+
+.map-detail-source { color: var(--muted-text); font-size: 0.85rem; margin: 0; line-height: 1.5; }
 
 /* ==== QUIZ ==== */
 

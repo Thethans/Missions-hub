@@ -50,6 +50,10 @@ async function main() {
     console.warn(`Got exactly LIMIT (${LIMIT}) rows back — the real dataset may be larger than this fetch captured. Raise LIMIT.`);
   }
 
+  // Optional numeric field: undefined (not 0) when the API omits it, so the
+  // map profile can hide the row rather than showing a misleading "0%".
+  const optionalNum = (v) => (v === undefined || v === null || v === '' ? undefined : Number(v));
+
   const features = rows
     .filter((r) => r.Latitude && r.Longitude)
     .map((r) => ({
@@ -61,7 +65,12 @@ async function main() {
         population: Number(r.Population) || 0,
         pctEvangelical: Number(r.PercentEvangelical) || 0,
         religion: r.PrimaryReligion,
-        progressStatus: progressStatus(Number(r.PercentEvangelical) || 0)
+        progressStatus: progressStatus(Number(r.PercentEvangelical) || 0),
+        // Extra detail surfaced in the map profile panel. Keys whose value is
+        // undefined are dropped by JSON.stringify, so absent fields cost
+        // nothing and simply don't render.
+        language: r.PrimaryLanguageName || undefined,
+        pctChristian: optionalNum(r.PercentChristianPC)
       }
     }));
 

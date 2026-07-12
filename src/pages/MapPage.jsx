@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import WorldMap from '../components/WorldMap.jsx';
 import MapDetailPanel from '../components/MapDetailPanel.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
 
 export default function MapPage() {
   const [selected, setSelected] = useState(null);
+  const detailRef = useRef(null);
   usePageMeta({
     title: 'World Map',
     description: 'Interactive map of unreached people groups worldwide, with live data from Joshua Project.',
     path: '/map'
   });
+
+  // When a point is clicked, glide the page down to the profile below so the
+  // report is front and center — offsetting for the sticky nav so its header
+  // isn't tucked underneath. Only on select (not on close).
+  useEffect(() => {
+    if (!selected || !detailRef.current) return;
+    const nav = document.querySelector('.site-nav');
+    const navHeight = nav ? nav.offsetHeight : 0;
+    const top = detailRef.current.getBoundingClientRect().top + window.scrollY - navHeight - 16;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [selected]);
 
   return (
     <>
@@ -25,7 +37,9 @@ export default function MapPage() {
       <div className="page-map">
         <WorldMap selected={selected} onSelect={setSelected} />
       </div>
-      <MapDetailPanel selected={selected} />
+      <div ref={detailRef}>
+        <MapDetailPanel selected={selected} />
+      </div>
     </>
   );
 }
