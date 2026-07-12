@@ -69,16 +69,12 @@ a { color: var(--voyage-teal); }
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  /* Frosted glass bar: a translucent navy tint over a heavy blur so the
-     hero/page content refracts through it as you scroll under. */
   background:
-    linear-gradient(115deg, rgba(43, 110, 118, 0.22) 0%, transparent 48%),
-    linear-gradient(155deg, rgba(27, 44, 71, 0.72) 0%, rgba(22, 35, 59, 0.72) 55%, rgba(14, 24, 38, 0.72) 100%);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+    linear-gradient(115deg, rgba(43, 110, 118, 0.28) 0%, transparent 48%),
+    linear-gradient(155deg, #1b2c47 0%, var(--ink-navy) 55%, #0e1826 100%);
   color: var(--atlas-paper);
   border-bottom: 1px solid rgba(43, 110, 118, 0.4);
-  box-shadow: var(--glass-dark-sheen), 0 16px 28px -20px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 1px 0 rgba(250, 247, 240, 0.05), 0 16px 28px -20px rgba(0, 0, 0, 0.65);
 }
 
 /* Solid line tracing the nav's bottom edge */
@@ -482,8 +478,8 @@ a { color: var(--voyage-teal); }
   justify-content: flex-start;
   text-align: center;
   flex: 1 1 0;
-  min-width: 220px;
-  padding: var(--space-2) var(--space-12);
+  min-width: 0;
+  padding: var(--space-2) var(--space-6);
 }
 
 /* Hairline divider between adjacent stats — reads as a clean data strip
@@ -494,11 +490,12 @@ a { color: var(--voyage-teal); }
 
 .stat-number {
   font-family: var(--font-mono);
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-size: clamp(1.5rem, 3.4vw, 2.25rem);
   font-weight: 600;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--atlas-paper);
+  max-width: 100%;
 }
 
 .stat-label {
@@ -517,6 +514,20 @@ a { color: var(--voyage-teal); }
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* The figures can't wrap (long comma-grouped numbers), so below the width
+   where three fit side by side they stack into a single column with a
+   horizontal divider instead of the vertical one. */
+@media (max-width: 720px) {
+  .stats-strip-inner { flex-direction: column; }
+  .stat { padding: 0; }
+  .stat + .stat {
+    border-left: none;
+    border-top: 1px solid rgba(250, 247, 240, 0.14);
+    margin-top: var(--space-8);
+    padding-top: var(--space-8);
+  }
 }
 
 /* ==== HOME: JOURNEY (scrollytelling) ==== */
@@ -564,7 +575,7 @@ a { color: var(--voyage-teal); }
   will-change: transform, opacity;
 }
 
-.journey-steps { position: relative; display: flex; flex-direction: column; padding-left: 220px; }
+.journey-steps { position: relative; display: flex; flex-direction: column; gap: var(--space-8); padding-left: 220px; }
 
 /* A wide, filled lane instead of a thin slider — a glowing line down the
    middle, a constant cascade of falling light particles (alive even before
@@ -670,46 +681,37 @@ a { color: var(--voyage-teal); }
   .journey-dot--reached { animation: none; }
 }
 
+/* Each step is a frosted liquid-glass card. overflow:hidden + the rounded
+   corners clip the oversized watermark number so it stays inside the card
+   as a faint accent instead of spilling into the section around it. */
 .journey-step {
   position: relative;
-  min-height: 42vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: var(--space-8) var(--space-8) var(--space-8) var(--space-12);
-  isolation: isolate;
-}
-
-/* Liquid-glass card behind each step's text. It's a frosted panel that the
-   giant watermark number (below it, z-index -1) refracts through — the
-   number reads sharp where it spills past the card edge and softly blurred
-   where it sits behind the glass. */
-.journey-step::before {
-  content: '';
-  position: absolute;
-  inset: var(--space-4) 0;
+  padding: var(--space-8);
   border-radius: 20px;
   background: var(--glass-light-bg);
   border: 1px solid var(--glass-light-border);
   box-shadow: var(--glass-light-sheen), var(--glass-shadow);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  z-index: -1;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .journey-step-watermark {
   position: absolute;
-  left: -0.06em;
-  top: 50%;
-  transform: translateY(-50%);
+  right: -0.08em;
+  bottom: -0.28em;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11rem;
+  font-size: 12rem;
   line-height: 1;
   color: var(--ink-navy);
-  opacity: 0.07;
+  opacity: 0.06;
   pointer-events: none;
-  z-index: -2;
+  z-index: 0;
   user-select: none;
 }
 
@@ -909,8 +911,8 @@ a { color: var(--voyage-teal); }
   .journey-steps { padding-left: 96px; }
   .journey-lane { width: 76px; }
   .journey-dot { width: 34px; height: 34px; font-size: 0.7rem; }
-  .journey-step { min-height: 0; padding: var(--space-8) 0; }
-  .journey-step-watermark { font-size: 6rem; }
+  .journey-step { padding: var(--space-6); }
+  .journey-step-watermark { font-size: 7rem; }
   .capabilities-grid { flex-direction: column; }
 }
 
