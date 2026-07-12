@@ -1142,6 +1142,7 @@ a { color: var(--voyage-teal); }
 
 .map-detail-stats dt { font-size: 0.75rem; color: var(--muted-text); margin: 0 0 var(--space-1); }
 .map-detail-stats dd { font-family: var(--font-mono); margin: 0; }
+.map-detail-stat-sub { color: var(--muted-text); font-size: 0.85em; }
 
 /* Derived "still waiting" figure — liquid-glass callout */
 .map-detail-callout {

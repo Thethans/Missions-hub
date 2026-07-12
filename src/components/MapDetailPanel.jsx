@@ -58,9 +58,14 @@ export default function MapDetailPanel({ selected }) {
   const statusSentence = STATUS_SENTENCE[progressStatus] || '';
   const engagement = STATUS_ENGAGEMENT[progressStatus] || '';
 
-  // Honest derivations from the fields we already have.
+  // Honest derivations from the fields we already have. Turning the bare
+  // percentages into head-counts (out of this group's own population) is what
+  // makes them intuitive: "~18 evangelical Christians" reads far more clearly
+  // than "1.5%".
   const meterFill = Math.max(0, Math.min(100, (pctEvangelical / REACHED_THRESHOLD) * 100));
-  const withoutEvangelical = Math.round(population * (1 - (pctEvangelical || 0) / 100));
+  const evangelicalCount = Math.round(population * (pctEvangelical || 0) / 100);
+  const christianCount = pctChristian != null ? Math.round(population * pctChristian / 100) : null;
+  const withoutEvangelical = Math.max(0, population - evangelicalCount);
 
   const lat = Array.isArray(coordinates) ? coordinates[1] : null;
   const lon = Array.isArray(coordinates) ? coordinates[0] : null;
@@ -101,23 +106,19 @@ export default function MapDetailPanel({ selected }) {
 
       <dl className="map-detail-stats">
         <div>
-          <dt>Population</dt>
+          <dt>Total population</dt>
           <dd>{formatPopulation(population)}</dd>
         </div>
         <div>
-          <dt>Evangelical</dt>
-          <dd>{pctEvangelical}%</dd>
+          <dt>Evangelical Christians</dt>
+          <dd>~{formatPopulation(evangelicalCount)} <span className="map-detail-stat-sub">({pctEvangelical}%)</span></dd>
         </div>
-        {pctChristian != null && (
+        {christianCount != null && (
           <div>
-            <dt>Christian</dt>
-            <dd>{pctChristian}%</dd>
+            <dt>Christians of any kind</dt>
+            <dd>~{formatPopulation(christianCount)} <span className="map-detail-stat-sub">({pctChristian}%)</span></dd>
           </div>
         )}
-        <div>
-          <dt>Primary religion</dt>
-          <dd>{religion}</dd>
-        </div>
         {language && (
           <div>
             <dt>Primary language</dt>
@@ -126,7 +127,7 @@ export default function MapDetailPanel({ selected }) {
         )}
         {bibleStatus && (
           <div>
-            <dt>Scripture</dt>
+            <dt>Scripture access</dt>
             <dd>{bibleStatus}</dd>
           </div>
         )}
@@ -138,7 +139,7 @@ export default function MapDetailPanel({ selected }) {
         )}
         {lat != null && (
           <div>
-            <dt>Location</dt>
+            <dt>Coordinates</dt>
             <dd>{formatCoord(lat, 'N', 'S')}, {formatCoord(lon, 'E', 'W')}</dd>
           </div>
         )}
