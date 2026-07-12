@@ -30,6 +30,19 @@
   --radius: 8px;
   --shadow: 0 2px 12px rgba(22, 35, 59, 0.12);
 
+  /* liquid glass — frosted, translucent surfaces used across the site.
+     "light" sits on the paper background, "dark" on the navy sections.
+     The blur+saturate is what gives the glass its liquid, refractive read;
+     the inset highlight is the sheen along the top edge. */
+  --glass-blur: blur(16px) saturate(1.5);
+  --glass-light-bg: rgba(255, 255, 255, 0.45);
+  --glass-light-border: rgba(255, 255, 255, 0.7);
+  --glass-light-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-dark-bg: rgba(250, 247, 240, 0.06);
+  --glass-dark-border: rgba(250, 247, 240, 0.16);
+  --glass-dark-sheen: inset 0 1px 0 rgba(250, 247, 240, 0.14);
+  --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18);
+
   /* focus ring */
   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal);
 

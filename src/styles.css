@@ -60,19 +60,25 @@ a { color: var(--voyage-teal); }
 /* ==== NAV ==== */
 
 .site-nav {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
+  /* Frosted glass bar: a translucent navy tint over a heavy blur so the
+     hero/page content refracts through it as you scroll under. */
   background:
-    linear-gradient(115deg, rgba(43, 110, 118, 0.28) 0%, transparent 48%),
-    linear-gradient(155deg, #1b2c47 0%, var(--ink-navy) 55%, #0e1826 100%);
+    linear-gradient(115deg, rgba(43, 110, 118, 0.22) 0%, transparent 48%),
+    linear-gradient(155deg, rgba(27, 44, 71, 0.72) 0%, rgba(22, 35, 59, 0.72) 55%, rgba(14, 24, 38, 0.72) 100%);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--atlas-paper);
   border-bottom: 1px solid rgba(43, 110, 118, 0.4);
-  box-shadow: 0 1px 0 rgba(250, 247, 240, 0.05), 0 16px 28px -20px rgba(0, 0, 0, 0.65);
+  box-shadow: var(--glass-dark-sheen), 0 16px 28px -20px rgba(0, 0, 0, 0.65);
 }
 
 /* Solid line tracing the nav's bottom edge */
@@ -102,8 +108,7 @@ a { color: var(--voyage-teal); }
 
 .site-nav-logo-mark {
   display: inline-flex;
-  transform: rotate(-8deg);
-  filter: drop-shadow(0 0 6px rgba(43, 110, 118, 0.65));
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
@@ -364,11 +369,14 @@ a { color: var(--voyage-teal); }
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--atlas-paper);
-  background: rgba(43, 110, 118, 0.25);
+  background: rgba(43, 110, 118, 0.22);
   border: 1px solid rgba(43, 110, 118, 0.6);
   border-radius: 999px;
   padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-6);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-dark-sheen);
 }
 
 .hero-wordmark {
@@ -419,7 +427,7 @@ a { color: var(--voyage-teal); }
 
 .stats-strip {
   background: linear-gradient(135deg, var(--ink-navy) 0%, #1a3148 50%, #1e3a52 100%);
-  padding: var(--space-16) var(--space-6);
+  padding: calc(var(--space-16) + var(--space-8)) var(--space-6) calc(var(--space-16) + var(--space-16));
   position: relative;
   overflow: hidden;
 }
@@ -433,44 +441,82 @@ a { color: var(--voyage-teal); }
   pointer-events: none;
 }
 
+/* Eloquent hand-off into the light "Your journey" section below: the dark
+   navy dissolves into the paper background over the strip's lower edge,
+   so there's no hard seam between the two sections. */
+.stats-strip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 160px;
+  background: linear-gradient(180deg, transparent 0%, var(--atlas-paper) 100%);
+  pointer-events: none;
+}
+
 .stats-strip-inner {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-16);
+  align-items: stretch;
+  gap: 0;
   position: relative;
-  max-width: 960px;
+  max-width: 1040px;
   margin: 0 auto;
+  /* Liquid-glass panel holding the three figures — the navy gradient and
+     teal glow behind it refract through the frosted surface. */
+  padding: var(--space-12) var(--space-6);
+  background: var(--glass-dark-bg);
+  border: 1px solid var(--glass-dark-border);
+  border-radius: 24px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-dark-sheen), var(--glass-shadow);
 }
 
 .stat {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   text-align: center;
-  flex: 1;
-  min-width: 200px;
+  flex: 1 1 0;
+  min-width: 220px;
+  padding: var(--space-2) var(--space-12);
+}
+
+/* Hairline divider between adjacent stats — reads as a clean data strip
+   rather than three floating clusters. Drops away once they wrap (mobile). */
+.stat + .stat {
+  border-left: 1px solid rgba(250, 247, 240, 0.14);
 }
 
 .stat-number {
   font-family: var(--font-mono);
   font-size: clamp(2.5rem, 5vw, 3.5rem);
   font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--atlas-paper);
 }
 
 .stat-label {
-  margin-top: var(--space-2);
-  color: rgba(250, 247, 240, 0.85);
-  font-size: 0.95rem;
+  margin-top: var(--space-4);
+  color: rgba(250, 247, 240, 0.9);
+  font-size: 1rem;
   font-weight: 500;
+  line-height: 1.35;
+  max-width: 22ch;
 }
 
 .stat-context {
-  margin-top: var(--space-1);
-  color: rgba(250, 247, 240, 0.45);
-  font-size: 0.8rem;
-  font-style: italic;
+  margin-top: var(--space-2);
+  color: rgba(250, 247, 240, 0.5);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* ==== HOME: JOURNEY (scrollytelling) ==== */
@@ -486,15 +532,15 @@ a { color: var(--voyage-teal); }
   position: relative;
 }
 
-.journey::before {
-  content: 'Your journey';
+.journey-heading {
   display: block;
   text-align: center;
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 700;
+  letter-spacing: 0.01em;
   color: var(--ink-navy);
-  margin-bottom: var(--space-8);
+  margin: 0 0 var(--space-12);
 }
 
 /* Reusable rotating-globe visual (also see Globe.jsx) — sized here to fit
@@ -630,6 +676,25 @@ a { color: var(--voyage-teal); }
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: var(--space-8) var(--space-8) var(--space-8) var(--space-12);
+  isolation: isolate;
+}
+
+/* Liquid-glass card behind each step's text. It's a frosted panel that the
+   giant watermark number (below it, z-index -1) refracts through — the
+   number reads sharp where it spills past the card edge and softly blurred
+   where it sits behind the glass. */
+.journey-step::before {
+  content: '';
+  position: absolute;
+  inset: var(--space-4) 0;
+  border-radius: 20px;
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: -1;
 }
 
 .journey-step-watermark {
@@ -642,21 +707,22 @@ a { color: var(--voyage-teal); }
   font-size: 11rem;
   line-height: 1;
   color: var(--ink-navy);
-  opacity: 0.05;
+  opacity: 0.07;
   pointer-events: none;
-  z-index: 0;
+  z-index: -2;
   user-select: none;
 }
 
 .journey-step-number {
   position: relative;
+  z-index: 1;
   font-family: var(--font-mono);
   color: var(--voyage-teal);
   font-size: 1.1rem;
 }
 
-.journey-step h3 { position: relative; margin: var(--space-2) 0; font-size: 1.5rem; }
-.journey-step p { position: relative; margin: 0; color: var(--muted-text); max-width: 42ch; }
+.journey-step h3 { position: relative; z-index: 1; margin: var(--space-2) 0; font-size: 1.5rem; }
+.journey-step p { position: relative; z-index: 1; margin: 0; color: var(--muted-text); max-width: 42ch; }
 
 /* ==== ABOUT / NOT FOUND / PAGE VARIANTS ==== */
 
@@ -736,18 +802,20 @@ a { color: var(--voyage-teal); }
 .capability-card {
   height: 100%;
   text-align: left;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(22, 35, 59, 0.08);
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(22, 35, 59, 0.08);
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   padding: var(--space-8);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
 .capability-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 32px rgba(22, 35, 59, 0.14);
-  border-color: rgba(43, 110, 118, 0.25);
+  box-shadow: var(--glass-light-sheen), 0 18px 42px rgba(22, 35, 59, 0.2);
+  border-color: rgba(43, 110, 118, 0.35);
 }
 
 .capability-icon {
@@ -790,10 +858,19 @@ a { color: var(--voyage-teal); }
 .faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-3); }
 
 .faq-item {
-  border: 1px solid rgba(250, 247, 240, 0.15);
-  border-radius: var(--radius);
-  background: rgba(250, 247, 240, 0.03);
+  border: 1px solid var(--glass-dark-border);
+  border-radius: 14px;
+  background: var(--glass-dark-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-dark-sheen);
   overflow: hidden;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(43, 110, 118, 0.45);
+  background: rgba(250, 247, 240, 0.08);
 }
 
 .faq-question {
@@ -853,9 +930,12 @@ a { color: var(--voyage-teal); }
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   padding: var(--space-4);
   max-width: 280px;
 }
@@ -895,9 +975,12 @@ a { color: var(--voyage-teal); }
   position: absolute;
   bottom: var(--space-4);
   left: var(--space-4);
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   padding: var(--space-3) var(--space-4);
   display: flex;
   flex-direction: column;

@@ -25,11 +25,21 @@ const EASE_DRAMATIC = [0.16, 1, 0.3, 1];
 export default function JourneySection() {
   const sectionRef = useRef(null);
   const laneRef = useRef(null);
+  const headingRef = useRef(null);
   const stepRefs = useRef([]);
   const [dotFractions, setDotFractions] = useState(FALLBACK_FRACTIONS);
   const prefersReduced = usePrefersReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start 0.7', 'end 0.9'] });
   const threadHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
+  // Scroll-linked parallax for the section title: it drifts up as the whole
+  // journey scrolls past, giving the hand-off into this section real depth
+  // rather than a section that just snaps into place.
+  const { scrollYProgress: headingScroll } = useScroll({
+    target: headingRef,
+    offset: ['start end', 'end start']
+  });
+  const headingY = useTransform(headingScroll, [0, 1], prefersReduced ? [0, 0] : [70, -70]);
 
   // Dots are placed to line up with each step's actual rendered center rather
   // than an even 0..1 spread — step heights vary (wrapped text, breakpoints),
@@ -60,6 +70,17 @@ export default function JourneySection() {
 
   return (
     <section className="journey" ref={sectionRef}>
+      <motion.h2
+        ref={headingRef}
+        className="journey-heading"
+        style={{ y: headingY }}
+        initial={prefersReduced ? false : { opacity: 0, scale: 0.94, letterSpacing: '0.3em', filter: 'blur(6px)' }}
+        whileInView={{ opacity: 1, scale: 1, letterSpacing: '0.01em', filter: 'blur(0px)' }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ duration: 1.2, ease: EASE_DRAMATIC }}
+      >
+        Your journey
+      </motion.h2>
       <div className="journey-steps">
         <div className="journey-lane" ref={laneRef}>
           <div className="journey-thread">
@@ -92,10 +113,14 @@ export default function JourneySection() {
             key={step.n}
             className="journey-step"
             ref={(el) => (stepRefs.current[i] = el)}
-            initial={prefersReduced ? false : { opacity: 0, y: 60, scale: 0.94, filter: 'blur(6px)' }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.8, ease: EASE_DRAMATIC }}
+            initial={
+              prefersReduced
+                ? false
+                : { opacity: 0, x: i % 2 === 0 ? -80 : 80, y: 40, scale: 0.9, rotate: i % 2 === 0 ? -2 : 2, filter: 'blur(8px)' }
+            }
+            whileInView={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.95, ease: EASE_DRAMATIC }}
           >
             <span className="journey-step-watermark">{step.n}</span>
             <motion.span
