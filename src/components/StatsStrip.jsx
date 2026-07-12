@@ -56,10 +56,10 @@ export default function StatsStrip() {
           <motion.div
             key={item.label}
             className="stat"
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.7, delay: i * 0.15, ease: EASE }}
+            transition={{ duration: 0.6, delay: i * 0.1, ease: 'easeOut' }}
           >
             <span className="stat-number"><CountUp value={item.number} /></span>
             <span className="stat-label">{item.label}</span>

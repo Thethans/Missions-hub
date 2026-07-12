@@ -79,7 +79,7 @@ export default function TopNav() {
     <header className="site-nav">
       <NavLink to="/" className="site-nav-logo">
         <span className="site-nav-logo-mark" aria-hidden="true">
-          <CompassIcon size={20} />
+          <CompassIcon size={28} />
         </span>
         Fielded
       </NavLink>
