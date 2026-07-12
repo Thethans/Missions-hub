@@ -161,11 +161,14 @@ export default class WycliffeScraper extends BaseScraper {
   }
 
   dedup(opps) {
-    const seen = new Set();
+    const seenTitle = new Set();
+    const seenUrl = new Set();
     return opps.filter(o => {
-      const key = o.title.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
+      const titleKey = o.title.toLowerCase();
+      const urlKey = o.url.toLowerCase();
+      if (seenTitle.has(titleKey) || seenUrl.has(urlKey)) return false;
+      seenTitle.add(titleKey);
+      seenUrl.add(urlKey);
       return true;
     });
   }
