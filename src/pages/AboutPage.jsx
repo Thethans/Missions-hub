@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Footer from '../components/Footer.jsx';
 import RevealOnScroll from '../components/RevealOnScroll.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
@@ -46,6 +47,37 @@ const SECTIONS = [
         than guessing — you'll see it listed under "worth asking about," never asserted as a
         fact the agency never published.
       </p>
+    )
+  },
+  {
+    title: 'Prayer map (prototype)',
+    body: (
+      <>
+        <p>
+          The{' '}
+          <Link to="/prayer-map">missionary prayer map</Link>{' '}
+          is an early prototype exploring a different side of missions: not finding a field, but
+          staying connected to the people already on one. It's a working demo, not a live product —
+          every missionary, budget, prayer request, and donation on it is mock data, and nothing it
+          shows touches a real payment, login, or mailing list.
+        </p>
+        <p>
+          The idea is a single interactive map a sending church could gather around: pins for each
+          missionary they support, opening to that person's ministry overview, latest updates,
+          prayer requests, and monthly support budget. A visitor could tap "I'm praying," give a
+          one-time or recurring gift, or subscribe to a missionary's newsletter — while verified
+          church members sign in to see sensitive requests kept off the public page, protected by a
+          session that times out for safety.
+        </p>
+        <p>
+          Made real, the demo's mocks map onto ordinary building blocks: missionary records and
+          budgets in an admin-editable database, giving through Stripe or a platform like Planning
+          Center Giving, member access through the church's own directory (so confidential requests
+          are gated on the server and never sent to a guest's browser), newsletters handed off to an
+          email tool, and prayer counts driven by real activity rather than a static number. For now
+          it stands as a look at what that could feel like.
+        </p>
+      </>
     )
   },
   {
