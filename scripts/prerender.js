@@ -3,6 +3,15 @@
 // Post-build prerender: serves dist/, visits each route with Puppeteer,
 // and saves the fully-rendered HTML so crawlers/social bots see real
 // per-page <title>, meta description, and OG tags without executing JS.
+//
+// Invoked as Vercel's buildCommand (see vercel.json: "npm run build:prerender").
+// This relies on Vercel's routing order — static filesystem matches (e.g.
+// dist/map/index.html for a request to /map) are served BEFORE the SPA
+// catch-all `rewrites` rule runs, so real visitors/crawlers hitting a route
+// directly get this prerendered HTML, while in-app client-side navigation
+// (React Router) is completely unaffected either way. If a route is ever
+// added to src/App.jsx, add it to ROUTES below too, or it silently falls
+// back to the generic index.html <title>/meta for direct hits and crawlers.
 
 import { createServer } from 'http';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
@@ -16,6 +25,7 @@ const DIST = join(__dirname, '..', 'dist');
 const ROUTES = [
   '/',
   '/map',
+  '/prayer-map',
   '/quiz',
   '/opportunities',
   '/checklist',
