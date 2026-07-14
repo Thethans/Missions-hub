@@ -1,4 +1,18 @@
 import type { Missionary } from './types';
+import smithGathering from '../assets/updates/smith-gathering.jpg';
+import smithWell from '../assets/updates/smith-well.jpg';
+import smithBibleStudy from '../assets/updates/smith-bible-study.jpg';
+import chenClinic from '../assets/updates/chen-clinic.jpg';
+import chenMentoring from '../assets/updates/chen-mentoring.jpg';
+import rodriguezRetreat from '../assets/updates/rodriguez-retreat.jpg';
+import rodriguezChurch from '../assets/updates/rodriguez-church.jpg';
+import rodriguezYouthCamp from '../assets/updates/rodriguez-youthcamp.jpg';
+import johnsonFire from '../assets/updates/johnson-fire.jpg';
+import johnsonReading from '../assets/updates/johnson-reading.jpg';
+import johnsonMothers from '../assets/updates/johnson-mothers.jpg';
+import torresBible from '../assets/updates/torres-bible.jpg';
+import torresRecording from '../assets/updates/torres-recording.jpg';
+import { buildGradientPhoto } from './gradientPhoto';
 
 // Hardcoded mock data — the 5 missionaries from fielded-prototype-reference.html.
 // Nothing here is fetched or stored.
@@ -11,6 +25,10 @@ import type { Missionary } from './types';
 //
 // `monthlyNeed` and `raised` are intentionally NOT stored here — they're derived
 // from `budget` + `supportGoal` via deriveBudget.ts so they can't drift.
+//
+// Update photos are illustrative stock photography (public domain / CC BY),
+// not real photos of these fictional missionaries or events — see
+// assets/updates/CREDITS.md for source and license per image.
 
 export const missionaries: Missionary[] = [
   {
@@ -44,22 +62,19 @@ export const missionaries: Missionary[] = [
         date: '2 days ago',
         title: '47 at our new gathering',
         text: 'This weekend we had 47 people visit our new worship gathering. Pray for wisdom as we disciple these new believers and help them understand the Gospel.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g1a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23e67e22'/%3E%3Cstop offset='1' stop-color='%23c0392b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g1a)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E⛪%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3ESunday worship gathering%3C/text%3E%3C/svg%3E"
+        photo: smithGathering
       },
       {
         date: '1 week ago',
         title: 'Well project complete',
         text: 'The village well is finished! Clean water for 200 families, and every day it opens doors for Gospel conversations with those who come to draw water.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g1b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%233498db'/%3E%3Cstop offset='1' stop-color='%232980b9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g1b)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E💧%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EThe new village well%3C/text%3E%3C/svg%3E"
+        photo: smithWell
       },
       {
         date: '3 weeks ago',
         title: 'Language milestone',
         text: 'Sarah preached her first full lesson in Moore this week. Two years of study bearing fruit. The women wept to hear Scripture in their heart language.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g1c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f39c12'/%3E%3Cstop offset='1' stop-color='%23d35400'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g1c)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E📖%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EWomen's Bible study%3C/text%3E%3C/svg%3E"
+        photo: smithBibleStudy
       }
     ]
   },
@@ -94,15 +109,13 @@ export const missionaries: Missionary[] = [
         date: '5 days ago',
         title: '284 patients this week',
         text: 'Conducted a mobile clinic in three villages. Treated 284 patients and shared the Gospel with each family. Many asked for prayer over their sick children.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g2a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2316a085'/%3E%3Cstop offset='1' stop-color='%231abc9c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g2a)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🩺%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EMobile clinic day%3C/text%3E%3C/svg%3E"
+        photo: chenClinic
       },
       {
         date: '2 weeks ago',
         title: 'A doctor comes to faith',
         text: "A local doctor I've mentored for a year professed faith in Christ. He now wants to reach his own people. Pray for his boldness.",
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g2b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%238e44ad'/%3E%3Cstop offset='1' stop-color='%239b59b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g2b)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🤝%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EMentoring local staff%3C/text%3E%3C/svg%3E"
+        photo: chenMentoring
       }
     ]
   },
@@ -138,22 +151,19 @@ export const missionaries: Missionary[] = [
         date: '1 day ago',
         title: '15 pastors trained',
         text: "Trained 15 pastors from remote mountain communities this month. We're seeing spiritual multiplication happen. Please pray for sustainable discipleship.",
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g3a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%232c3e50'/%3E%3Cstop offset='1' stop-color='%2334495e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g3a)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🏔%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EMountain pastors' retreat%3C/text%3E%3C/svg%3E"
+        photo: rodriguezRetreat
       },
       {
         date: '10 days ago',
         title: 'New church in Yungay',
         text: 'The believers in Yungay have organized into a self-governing church with their own elders. Our fourth church plant to reach this milestone!',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g3b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2327ae60'/%3E%3Cstop offset='1' stop-color='%23229954'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g3b)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E⛪%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EYungay congregation%3C/text%3E%3C/svg%3E"
+        photo: rodriguezChurch
       },
       {
         date: '1 month ago',
         title: 'Youth camp',
         text: 'Over 80 teenagers attended our first regional youth camp. Twelve made decisions to follow Christ and several sense a call to ministry.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g3c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23e74c3c'/%3E%3Cstop offset='1' stop-color='%23c0392b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g3c)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🔥%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3ERegional youth camp%3C/text%3E%3C/svg%3E"
+        photo: rodriguezYouthCamp
       }
     ]
   },
@@ -198,22 +208,19 @@ export const missionaries: Missionary[] = [
         date: '8 hours ago',
         title: 'Fire in the schoolroom',
         text: "Please pray. An electrical fire damaged our schoolroom Tuesday night. No one was hurt, praise God, but the roof and most of our books are gone. We're determined to rebuild quickly so the children don't lose momentum.",
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g4c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c0392b'/%3E%3Cstop offset='1' stop-color='%237b241c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g4c)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🔥%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EThe damaged classroom%3C/text%3E%3C/svg%3E"
+        photo: johnsonFire
       },
       {
         date: '3 days ago',
         title: '60 children reading',
         text: "Started a literacy program for 60 children. Our prayer is that they'll encounter Jesus through God's Word as they learn to read.",
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g4a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23d35400'/%3E%3Cstop offset='1' stop-color='%23e67e22'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g4a)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E📚%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3ELiteracy class%3C/text%3E%3C/svg%3E"
+        photo: johnsonReading
       },
       {
         date: '2 weeks ago',
         title: "Mothers' discipleship group",
         text: 'The mothers of my students asked to start a weekly Bible study. Fifteen women now gather every Thursday. God is at work in whole families.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g4b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c0392b'/%3E%3Cstop offset='1' stop-color='%23a93226'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g4b)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🤝%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EThursday women's group%3C/text%3E%3C/svg%3E"
+        photo: johnsonMothers
       }
     ]
   },
@@ -248,16 +255,77 @@ export const missionaries: Missionary[] = [
         date: '6 hours ago',
         title: 'New Testament complete!',
         text: 'We finished the Kamano New Testament translation today! The community gathered to see God’s Word in their heart language for the very first time. Tears everywhere.',
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g5a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%232980b9'/%3E%3Cstop offset='1' stop-color='%231f618d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g5a)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E📖%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3ENT dedication celebration%3C/text%3E%3C/svg%3E"
+        photo: torresBible
       },
       {
         date: '3 weeks ago',
         title: 'Recording the Gospels',
         text: "We've begun audio recording the Gospels for the many who cannot yet read. Pray for clear recordings and willing local voices.",
-        photo:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Cdefs%3E%3ClinearGradient id='g5b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2316a085'/%3E%3Cstop offset='1' stop-color='%23138d75'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='240' fill='url(%23g5b)'/%3E%3Ccircle cx='330' cy='55' r='28' fill='%23ffffff' opacity='0.85'/%3E%3Cpath d='M0 190 Q100 150 200 175 T400 165 V240 H0 Z' fill='%23ffffff' opacity='0.15'/%3E%3Cpath d='M0 205 Q120 175 240 195 T400 185 V240 H0 Z' fill='%23000000' opacity='0.12'/%3E%3Ctext x='200' y='125' font-family='sans-serif' font-size='46' text-anchor='middle'%3E🎙%3C/text%3E%3Ctext x='200' y='225' font-family='sans-serif' font-size='13' fill='%23ffffff' text-anchor='middle' opacity='0.9'%3EAudio recording session%3C/text%3E%3C/svg%3E"
+        photo: torresRecording
       }
     ]
+  },
+  {
+    id: 'creative-access-middle-east',
+    // Pseudonyms, per standard creative-access security practice — real names
+    // are never published for workers in restricted countries.
+    name: 'Karim & Noor',
+    nameNote: 'Names changed for security',
+    location: 'Middle East',
+    // Deliberately a generalized point in a sparsely populated interior area,
+    // not tied to any real (fictional) city — see Missionary.locationSensitive.
+    // The map renders this as a soft area, never a precise pin.
+    lat: 27,
+    lng: 44,
+    role: 'Business as Mission (Creative Access)',
+    ministry:
+      'Karim and Noor live and work in a nation where open Christian ministry is restricted by law. Under the cover of a legitimate small business, they build relationships, disciple a handful of new believers in their home, and quietly support a small network of local house churches. Because of the risk to the national believers they serve, we withhold their city, their business, and any detail that could identify the people around them.',
+    prayerCount: 612,
+    supportGoal: 81,
+    budget: [
+      { item: 'Housing & utilities', purpose: "Rent for the family's home, which also serves as a meeting space", amount: 700 },
+      { item: 'Business operating costs', purpose: 'Covers the small business that provides legal residency and community access', amount: 900 },
+      { item: 'Food & living', purpose: 'Daily needs for the family', amount: 500 },
+      { item: 'Security & travel', purpose: 'Secure communications, travel, and periodic rest outside the country', amount: 450 },
+      { item: 'Local believer support', purpose: 'Discreet support for national believers facing family or economic pressure', amount: 300 },
+      { item: "Children's education", purpose: 'International schooling costs', amount: 400 },
+      { item: 'Medical & insurance', purpose: 'Overseas health coverage', amount: 350 },
+      { item: 'Sending agency & security review', purpose: 'Field oversight, security vetting, and member care', amount: 300 }
+    ],
+    prayerRequests: [
+      { text: 'Wisdom and discernment in day-to-day interactions', type: 'sticky' },
+      { text: 'Continued favor for their business and residency status', type: 'auto' },
+      {
+        text: 'A local believer is currently facing pressure from their family over their new faith. Please pray for courage and protection — details are kept off the public page for their safety.',
+        type: 'urgent'
+      }
+    ],
+    sensitive: [
+      {
+        text: 'They serve among a specific unreached people group in the wider Gulf region. For the safety of national believers, the people group name and exact country are shared only with our missions committee, not on this platform. Please don’t discuss specifics outside official channels.'
+      }
+    ],
+    updates: [
+      {
+        date: '4 days ago',
+        title: 'A quiet gathering',
+        text: 'Six friends met in our home again this week to talk through the Scriptures together. Please pray for eyes to see and hearts to soften — and for our continued cover as we go about ordinary life.',
+        // Illustrated, not photographed — see gradientPhoto.ts.
+        photo: buildGradientPhoto({ from: '#4a5c6a', to: '#2c3e50', emoji: '🕯️', caption: 'A quiet gathering' })
+      },
+      {
+        date: '3 weeks ago',
+        title: 'Answered prayer on paperwork',
+        text: 'A residency renewal that had been stuck for months finally went through this week. Thank you for praying — please continue to pray for favor with local officials.',
+        photo: buildGradientPhoto({ from: '#8a6d3a', to: '#5c4720', emoji: '🔑', caption: 'Answered prayer' })
+      },
+      {
+        date: '2 months ago',
+        title: 'New season, same mission',
+        text: 'The business is steady, our cover remains solid, and the small group of believers we walk with keeps growing in faith, even amid real risk. Thank you for standing with us in prayer, even without knowing our names.',
+        photo: buildGradientPhoto({ from: '#3d6b52', to: '#264a38', emoji: '🌱', caption: 'Steady growth' })
+      }
+    ],
+    locationSensitive: true
   }
 ];

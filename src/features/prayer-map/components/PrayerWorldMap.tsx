@@ -6,7 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // than introducing a second map style. It's plain JS; allowJs lets TS infer it.
 import basemapStyle from '../../../map/basemapStyle.js';
 import { missionaries } from '../data/missionaries';
-import { createMissionaryPinElement } from './MissionaryPin';
+import { createMissionaryPinElement, createApproximatePinElement } from './MissionaryPin';
 
 interface PrayerWorldMapProps {
   /** Called with a missionary id when its pin is clicked. */
@@ -40,8 +40,15 @@ export default function PrayerWorldMap({ onSelect, selectedId }: PrayerWorldMapP
     // inside 'load'. (Gating on 'load' meant that if the external tile source
     // was slow or unreachable, the pins never appeared.)
     for (const m of missionaries) {
-      const el = createMissionaryPinElement(m, (id) => onSelectRef.current(id));
+      const el = m.locationSensitive
+        ? createApproximatePinElement(m, (id) => onSelectRef.current(id))
+        : createMissionaryPinElement(m, (id) => onSelectRef.current(id));
+      // MapLibre's Marker.addTo() unconditionally overwrites aria-label with
+      // its own generic "Map marker" string, clobbering the descriptive label
+      // set by the pin factory — reapply it after addTo() runs.
+      const ariaLabel = el.getAttribute('aria-label');
       new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([m.lng, m.lat]).addTo(map);
+      if (ariaLabel) el.setAttribute('aria-label', ariaLabel);
     }
 
     // The container may not be at its final size the instant the map mounts
@@ -58,13 +65,20 @@ export default function PrayerWorldMap({ onSelect, selectedId }: PrayerWorldMapP
     };
   }, []);
 
-  // Glide to the selected pin when one opens (not on close).
+  // Glide to the selected pin when one opens (not on close). Creative-access
+  // missionaries stay more zoomed out — flying in tight would still visually
+  // read as "pinpointing" a location, even though the coordinate itself is a
+  // deliberately generalized decoy point rather than a real one.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !selectedId) return;
     const m = missionaries.find((x) => x.id === selectedId);
     if (!m) return;
-    map.flyTo({ center: [m.lng, m.lat], zoom: Math.max(map.getZoom(), 3.2), speed: 0.8 });
+    // Sensitive missionaries cap the zoom (never zoom in past it, even if the
+    // visitor was already closer from a previous selection); everyone else
+    // zooms in to at least the normal target.
+    const zoom = m.locationSensitive ? Math.min(map.getZoom(), 2.4) : Math.max(map.getZoom(), 3.2);
+    map.flyTo({ center: [m.lng, m.lat], zoom, speed: 0.8 });
   }, [selectedId]);
 
   return (

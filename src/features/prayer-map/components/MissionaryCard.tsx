@@ -1,5 +1,6 @@
 import type { MissionaryWithBudget } from '../data/types';
 import { formatMoney } from '../data/format';
+import SecurityNotice from './SecurityNotice';
 import MinistrySection from './MinistrySection';
 import PrayerRequests from './PrayerRequests';
 import SensitiveBlock from './SensitiveBlock';
@@ -48,6 +49,7 @@ export default function MissionaryCard({
         </button>
         <p className="pm-card__eyebrow">{missionary.role}</p>
         <h2 className="pm-card__name">{missionary.name}</h2>
+        {missionary.nameNote && <p className="pm-card__name-note">{missionary.nameNote}</p>}
         <p className="pm-card__location">{missionary.location}</p>
         <p className="pm-card__praying">
           🙏 <b>{prayerCount.toLocaleString('en-US')}</b> praying
@@ -55,6 +57,7 @@ export default function MissionaryCard({
       </header>
 
       <div className="pm-card__body">
+        {missionary.locationSensitive && <SecurityNotice />}
         <MinistrySection ministry={missionary.ministry} />
         <PrayerRequests requests={missionary.prayerRequests} />
         <SensitiveBlock sensitive={missionary.sensitive} isMember={isMember} onSignIn={onSignIn} />
