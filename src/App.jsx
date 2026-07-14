@@ -9,6 +9,7 @@ import { routeImports } from './routeImports.js';
 // The import() functions live in routeImports.js so TopNav can call the
 // same ones to prefetch a chunk on link hover, before the user clicks.
 const MapPage = lazy(routeImports['/map']);
+const PrayerMapPage = lazy(routeImports['/prayer-map']);
 const QuizPage = lazy(routeImports['/quiz']);
 const OpportunitiesPage = lazy(routeImports['/opportunities']);
 const ChecklistPage = lazy(routeImports['/checklist']);
@@ -23,6 +24,7 @@ export default function App() {
       <Route element={<RootLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/prayer-map" element={<PrayerMapPage />} />
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/opportunities" element={<OpportunitiesPage />} />
         <Route path="/checklist" element={<ChecklistPage />} />

@@ -3,6 +3,7 @@
 // link hover/focus to start the chunk fetch before the user actually clicks.
 export const routeImports = {
   '/map': () => import('./pages/MapPage.jsx'),
+  '/prayer-map': () => import('./features/prayer-map/PrayerMapPage.tsx'),
   '/quiz': () => import('./pages/QuizPage.jsx'),
   '/opportunities': () => import('./pages/OpportunitiesPage.jsx'),
   '/checklist': () => import('./pages/ChecklistPage.jsx'),
