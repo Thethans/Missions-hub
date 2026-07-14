@@ -1,0 +1,32 @@
+{
+  // Scoped TypeScript config. The repo is otherwise plain JS/JSX; this exists
+  // only to type-check the isolated prayer-map feature (see src/features/prayer-map).
+  // Vite/esbuild transpiles .tsx directly and ignores this file — it's for the
+  // `npm run typecheck` gate and editor tooling only (noEmit).
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    // strict, no `any` — the feature's mandate
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    // Let TS resolve imports into the existing .js repo modules (e.g.
+    // usePageMeta.js) without type-checking those files themselves.
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["src/features/prayer-map"]
+}
