@@ -17366,6 +17366,7 @@ function InquiryModal({ opportunity, onClose }) {
 export default function OpportunitiesExplorer({ agencyFilter }) {
   const [opportunities, setOpportunities] = useState(BAKED_OPPORTUNITIES);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   // Filters — Sets for multi-select (union/OR within a category, intersection/AND across categories)
   const [search, setSearch] = useState('');
@@ -17400,26 +17401,39 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     let cancelled = false;
     async function refresh() {
       setLoading(true);
+      setLoadError(false);
       const allRows = [];
       const PAGE_SIZE = 1000;
       let from = 0;
-      while (true) {
-        const { data } = await supabase
-          .from('opportunities')
-          .select('id, agency, title, url, location, region, role_type, term_length, description')
-          .eq('active', true)
-          .order('agency', { ascending: true })
-          .order('title', { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
+      try {
+        while (true) {
+          const { data, error } = await supabase
+            .from('opportunities')
+            .select('id, agency, title, url, location, region, role_type, term_length, description')
+            .eq('active', true)
+            .order('agency', { ascending: true })
+            .order('title', { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+          if (cancelled) return;
+          if (error) throw error;
+          allRows.push(...(data || []));
+          if (!data || data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        if (!cancelled && allRows.length > 0) {
+          setOpportunities(allRows);
+        }
+      } catch (err) {
         if (cancelled) return;
-        allRows.push(...(data || []));
-        if (!data || data.length < PAGE_SIZE) break;
-        from += PAGE_SIZE;
+        // Network hiccup or RLS misconfig — keep showing the baked-in
+        // snapshot (already the initial state) rather than an empty list,
+        // but surface it so a stale-data banner can render and so this
+        // shows up in error monitoring instead of failing silently.
+        console.error('Failed to load live opportunities, showing cached snapshot:', err);
+        setLoadError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      if (!cancelled && allRows.length > 0) {
-        setOpportunities(allRows);
-      }
-      setLoading(false);
     }
     refresh();
     return () => { cancelled = true; };
@@ -17573,6 +17587,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       )}
 
       {/* Results */}
+      {loadError && (
+        <p className="opp-error opp-error--inline" role="status">
+          Couldn't reach live listings right now — showing a recent saved snapshot instead.
+        </p>
+      )}
       <div className="opp-results-header">
         <p className="opp-results-count">
           {filtered.length} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
