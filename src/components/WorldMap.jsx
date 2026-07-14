@@ -42,15 +42,18 @@ function buildGraticule() {
   return { type: 'FeatureCollection', features };
 }
 
-export default function WorldMap({ selected, onSelect }) {
+export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const hoveredId = useRef(null);
+  const selectedIdRef = useRef(null);
   const activeRef = useRef(null);
+  const onDataLoadedRef = useRef(onDataLoaded);
   const [counts, setCounts] = useState(null);
   const [active, setActive] = useState(() => new Set(STATUSES));
   const [dataError, setDataError] = useState(false);
   activeRef.current = active;
+  onDataLoadedRef.current = onDataLoaded;
 
   // Applies whatever's in activeRef right now to the map's layers. Reading
   // from a ref (rather than closing over `active` from whichever render
@@ -109,6 +112,14 @@ export default function WorldMap({ selected, onSelect }) {
       });
       setCounts(tally);
 
+      // Share the loaded features with the parent (MapAccessibleSearch) so a
+      // keyboard-only visitor has a way to find and select a people group
+      // without needing to click a point on the canvas — MapLibre's canvas
+      // layer has no native keyboard path. `generateId: true` below assigns
+      // each feature's internal id by its position in this exact array, so
+      // the array index doubles as the id needed for setFeatureState.
+      onDataLoadedRef.current?.(data.features);
+
       map.addSource('graticule', { type: 'geojson', data: buildGraticule() });
       map.addLayer(
         {
@@ -159,15 +170,25 @@ export default function WorldMap({ selected, onSelect }) {
         paint: {
           'circle-radius': [
             'case',
-            ['boolean', ['feature-state', 'hover'], false],
+            ['any', ['boolean', ['feature-state', 'hover'], false], ['boolean', ['feature-state', 'select'], false]],
             ['+', CIRCLE_RADIUS, 4],
             CIRCLE_RADIUS
           ],
           'circle-color': CIRCLE_COLOR,
           'circle-opacity': 0,
           'circle-opacity-transition': { duration: 900 },
-          'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 2, 1],
-          'circle-stroke-color': '#faf7f0'
+          'circle-stroke-width': [
+            'case',
+            ['any', ['boolean', ['feature-state', 'hover'], false], ['boolean', ['feature-state', 'select'], false]],
+            2,
+            1
+          ],
+          'circle-stroke-color': [
+            'case',
+            ['boolean', ['feature-state', 'select'], false],
+            '#2b6e76',
+            '#faf7f0'
+          ]
         }
       });
 
@@ -205,8 +226,10 @@ export default function WorldMap({ selected, onSelect }) {
 
       map.on('click', 'people-groups-points', (e) => {
         const feature = e.features[0];
-        onSelect({ ...feature.properties, coordinates: feature.geometry.coordinates });
-        map.flyTo({ center: feature.geometry.coordinates, zoom: Math.max(map.getZoom(), 3.5), speed: 0.8 });
+        // flyTo + highlight both happen in the `selected`-driven effect below,
+        // so a click and a keyboard-search selection (which also just calls
+        // onSelect) end up with identical map behavior from one code path.
+        onSelect({ ...feature.properties, coordinates: feature.geometry.coordinates, id: feature.id });
       });
 
       map.on('mousemove', 'people-groups-points', (e) => {
@@ -236,6 +259,26 @@ export default function WorldMap({ selected, onSelect }) {
   useEffect(() => {
     if (mapRef.current) applyStatusFilter(mapRef.current);
   }, [active]);
+
+  // Flies to and highlights whichever point is selected, regardless of
+  // whether the selection came from a canvas click or from
+  // MapAccessibleSearch — the single path keeps both entry points visually
+  // identical instead of duplicating flyTo/highlight logic per trigger.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (selectedIdRef.current !== null) {
+      map.setFeatureState({ source: 'people-groups', id: selectedIdRef.current }, { select: false });
+      selectedIdRef.current = null;
+    }
+
+    if (!selected || selected.id == null || !map.getSource('people-groups')) return;
+
+    selectedIdRef.current = selected.id;
+    map.setFeatureState({ source: 'people-groups', id: selected.id }, { select: true });
+    map.flyTo({ center: selected.coordinates, zoom: Math.max(map.getZoom(), 3.5), speed: 0.8 });
+  }, [selected]);
 
   const toggleStatus = (status) => {
     setActive((prev) => {

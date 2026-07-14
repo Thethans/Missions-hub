@@ -1036,6 +1036,101 @@ a { color: var(--voyage-teal); }
   color: var(--muted-text);
 }
 
+/* Keyboard-operable alternative to clicking a canvas point (see
+   MapAccessibleSearch.jsx) — sits in the dark .page-hero, so unlike the
+   light glass overlays above, the input itself needs light-on-dark styling;
+   the results dropdown below it switches to the paper surface every other
+   dropdown/card in the app uses. */
+.map-search {
+  max-width: 420px;
+  margin: var(--space-6) auto 0;
+  text-align: left;
+  position: relative;
+}
+
+.map-search-label {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(250, 247, 240, 0.75);
+  margin-bottom: var(--space-2);
+}
+
+.map-search-input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-dark-border);
+  background: var(--glass-dark-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--atlas-paper);
+}
+
+.map-search-input::placeholder { color: rgba(250, 247, 240, 0.5); }
+.map-search-input:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.map-search-results {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-2);
+  background: var(--atlas-paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-height: 320px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.map-search-empty {
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.map-search-list { list-style: none; margin: 0; padding: var(--space-2) 0; }
+
+.map-search-result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  color: var(--ink-navy);
+}
+
+.map-search-result:hover,
+.map-search-result:focus-visible {
+  background: rgba(22, 35, 59, 0.06);
+  outline: none;
+}
+
+.map-search-result-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.map-search-result-name { font-weight: 600; }
+
+.map-search-result-country {
+  margin-left: auto;
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
 /* Radial dimming toward the map's edges — reads as depth/focus without any
    3D, and keeps attention on the middle of the world. */
 .map-vignette {
@@ -1544,6 +1639,20 @@ a { color: var(--voyage-teal); }
 }
 
 .opp-error { max-width: 480px; margin: 0 auto; }
+
+/* Non-blocking variant: sits above a still-populated (cached) results grid,
+   rather than the full-page centered state used when there's nothing to show. */
+.opp-error--inline {
+  text-align: left;
+  max-width: none;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(217, 164, 65, 0.12);
+  border: 1px solid rgba(217, 164, 65, 0.4);
+  border-radius: var(--radius);
+  color: var(--ink-navy);
+  font-size: 0.9rem;
+}
 
 /* Toolbar: search + filter toggle + saved toggle */
 .opp-toolbar {
