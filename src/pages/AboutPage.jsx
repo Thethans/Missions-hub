@@ -50,12 +50,12 @@ const SECTIONS = [
     )
   },
   {
-    title: 'Prayer map (prototype)',
+    title: 'Support map (prototype)',
     body: (
       <>
         <p>
           The{' '}
-          <Link to="/prayer-map">missionary prayer map</Link>{' '}
+          <Link to="/prayer-map">missionary support map</Link>{' '}
           is an early prototype exploring a different side of missions: not finding a field, but
           staying connected to the people already on one. It's a working demo, not a live product —
           every missionary, budget, prayer request, and donation on it is mock data, and nothing it

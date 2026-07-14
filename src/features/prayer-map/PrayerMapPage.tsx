@@ -21,7 +21,7 @@ export default function PrayerMapPage() {
   const prayer = usePrayerState();
 
   usePageMeta({
-    title: 'Missionary Prayer Map',
+    title: 'Missionary Support Map',
     description:
       'Pray for and support missionaries around the world. Tap a pin to see their ministry, prayer requests, and monthly support needs.',
     path: '/prayer-map'
@@ -60,7 +60,7 @@ export default function PrayerMapPage() {
       />
 
       <section className="page-hero page-hero--compact">
-        <h1>Missionary prayer map</h1>
+        <h1>Missionary support map</h1>
         <p>
           Every pin is a missionary serving overseas. Tap one to read their ministry, pray over
           their requests, and — if you feel led — support their monthly needs.
