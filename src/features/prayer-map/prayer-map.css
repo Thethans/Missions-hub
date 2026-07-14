@@ -141,6 +141,93 @@
   }
 }
 
+/* ---- Creative-access area marker ------------------------------------------
+   Deliberately NOT a pin: a large, soft, blurred zone with no name label, so
+   the map only ever communicates "somewhere in this broad area" for a
+   security-sensitive missionary. See MissionaryPin.createApproximatePinElement
+   and Missionary.locationSensitive. */
+
+.pm-pin-area {
+  /* Same "don't set position" caveat as .pm-pin — MapLibre needs its own
+     `position: absolute` on the marker element to stay aligned through
+     zoom/pan; see the comment on .pm-pin above. */
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pm-pin-area__halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(43, 110, 118, 0.5) 0%, rgba(43, 110, 118, 0.18) 55%, rgba(43, 110, 118, 0) 78%);
+  filter: blur(2px);
+  z-index: 1;
+  animation: pm-area-breathe 4.5s ease-in-out infinite;
+}
+
+.pm-pin-area__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1.5px dashed rgba(250, 247, 240, 0.65);
+  z-index: 2;
+}
+
+.pm-pin-area__icon {
+  position: relative;
+  z-index: 3;
+  font-size: 15px;
+  filter: drop-shadow(0 1px 2px rgba(6, 15, 28, 0.6));
+}
+
+.pm-pin-area:hover .pm-pin-area__halo,
+.pm-pin-area:focus-visible .pm-pin-area__halo {
+  filter: blur(2px) brightness(1.15);
+}
+.pm-pin-area:focus-visible {
+  outline: none;
+}
+.pm-pin-area:focus-visible .pm-pin-area__ring {
+  border-color: var(--atlas-paper);
+  box-shadow: var(--focus-ring);
+}
+
+.pm-pin-area--urgent .pm-pin-area__halo {
+  background: radial-gradient(circle, rgba(181, 72, 47, 0.5) 0%, rgba(181, 72, 47, 0.18) 55%, rgba(181, 72, 47, 0) 78%);
+}
+
+@keyframes pm-area-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-pin-area__halo {
+    animation: none;
+  }
+}
+
 /* ---- Card overlay -------------------------------------------------------- */
 
 .pm-overlay {
@@ -213,6 +300,13 @@
   color: var(--atlas-paper);
 }
 
+.pm-card__name-note {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: rgba(250, 247, 240, 0.65);
+  margin: -2px 0 var(--space-2);
+}
+
 .pm-card__location {
   font-size: 0.9rem;
   color: rgba(250, 247, 240, 0.8);
@@ -252,6 +346,35 @@
 .pm-sec-label--lock {
   color: var(--ink-navy);
   margin-top: var(--space-4);
+}
+
+/* ---- Security notice (creative-access missionaries) ----------------------- */
+
+.pm-security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: rgba(22, 35, 59, 0.06);
+  border: 1px solid rgba(22, 35, 59, 0.15);
+  border-radius: 8px;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.pm-security-notice__icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pm-security-notice__text {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted-text);
+  margin: 0;
+}
+.pm-security-notice__text strong {
+  color: var(--ink-navy);
 }
 
 /* ---- Ministry ------------------------------------------------------------ */
@@ -430,7 +553,11 @@
   border: 1px solid rgba(181, 72, 47, 0.4);
   border-radius: 8px;
   padding: var(--space-3);
-  margin-bottom: var(--space-2);
+  /* Pull the red box outward by its own padding (and cancel the base 100%
+     width) so its inner image lines up with the un-bordered updates above/
+     below it, instead of being inset by the padding. */
+  width: auto;
+  margin: 0 calc(-1 * var(--space-3) - 1px) var(--space-2);
 }
 .pm-update__photo {
   width: 84px;
@@ -520,7 +647,7 @@
   border-radius: var(--radius) var(--radius) 0 0;
 }
 .pm-update-lightbox__body {
-  padding: var(--space-5) var(--space-6) var(--space-6);
+  padding: var(--space-6) var(--space-8) var(--space-8);
 }
 .pm-update-lightbox__head {
   display: flex;
