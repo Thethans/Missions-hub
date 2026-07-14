@@ -12,7 +12,9 @@ import johnsonReading from '../assets/updates/johnson-reading.jpg';
 import johnsonMothers from '../assets/updates/johnson-mothers.jpg';
 import torresBible from '../assets/updates/torres-bible.jpg';
 import torresRecording from '../assets/updates/torres-recording.jpg';
-import { buildGradientPhoto } from './gradientPhoto';
+import karimGathering from '../assets/updates/karim-gathering.jpg';
+import karimPaperwork from '../assets/updates/karim-paperwork.jpg';
+import karimSeason from '../assets/updates/karim-season.jpg';
 
 // Hardcoded mock data — the 5 missionaries from fielded-prototype-reference.html.
 // Nothing here is fetched or stored.
@@ -28,7 +30,10 @@ import { buildGradientPhoto } from './gradientPhoto';
 //
 // Update photos are illustrative stock photography (public domain / CC BY),
 // not real photos of these fictional missionaries or events — see
-// assets/updates/CREDITS.md for source and license per image.
+// assets/updates/CREDITS.md for source and license per image. Exception:
+// Karim & Noor's three photos are user-supplied (not sourced/licensed via the
+// same pipeline) — deliberately chosen because none show identifiable faces
+// or a traceable specific location, consistent with locationSensitive.
 
 export const missionaries: Missionary[] = [
   {
@@ -310,20 +315,19 @@ export const missionaries: Missionary[] = [
         date: '4 days ago',
         title: 'A quiet gathering',
         text: 'Six friends met in our home again this week to talk through the Scriptures together. Please pray for eyes to see and hearts to soften — and for our continued cover as we go about ordinary life.',
-        // Illustrated, not photographed — see gradientPhoto.ts.
-        photo: buildGradientPhoto({ from: '#4a5c6a', to: '#2c3e50', emoji: '🕯️', caption: 'A quiet gathering' })
+        photo: karimGathering
       },
       {
         date: '3 weeks ago',
         title: 'Answered prayer on paperwork',
         text: 'A residency renewal that had been stuck for months finally went through this week. Thank you for praying — please continue to pray for favor with local officials.',
-        photo: buildGradientPhoto({ from: '#8a6d3a', to: '#5c4720', emoji: '🔑', caption: 'Answered prayer' })
+        photo: karimPaperwork
       },
       {
         date: '2 months ago',
         title: 'New season, same mission',
         text: 'The business is steady, our cover remains solid, and the small group of believers we walk with keeps growing in faith, even amid real risk. Thank you for standing with us in prayer, even without knowing our names.',
-        photo: buildGradientPhoto({ from: '#3d6b52', to: '#264a38', emoji: '🌱', caption: 'Steady growth' })
+        photo: karimSeason
       }
     ],
     locationSensitive: true

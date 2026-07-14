@@ -25,3 +25,12 @@ calls (per SPEC — no live image hosting).
 
 CC BY 2.0: https://creativecommons.org/licenses/by/2.0/
 Public Domain Mark 1.0: https://creativecommons.org/publicdomain/mark/1.0/
+
+## Karim & Noor (creative-access missionary)
+
+karim-gathering.jpg, karim-paperwork.jpg, and karim-season.jpg are user-supplied
+images (provided directly for this project), not sourced through the pipeline
+above — no license/attribution metadata is tracked for them the way it is for
+the rest of this table. They were deliberately chosen because none shows an
+identifiable face or a specific traceable location, consistent with this
+missionary's `locationSensitive` treatment (see data/types.ts).

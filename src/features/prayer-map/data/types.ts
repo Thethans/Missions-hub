@@ -77,8 +77,9 @@ export interface Missionary {
    *  - the map renders a soft, deliberately imprecise area instead of a pin
    *    (see MissionaryPin.createApproximatePinElement) — `lat`/`lng` hold a
    *    generalized point, not the real (fictional) location;
-   *  - the card shows a security notice and keeps names/photos withheld or
-   *    illustrated rather than photographed.
+   *  - the card shows a security notice, uses a pseudonymous name (see
+   *    `nameNote`), and only uses update photos with no identifiable faces
+   *    or traceable specific location.
    * TODO(real): this flag would gate server-side redaction too — an exact
    * location must never reach the client for a creative-access worker.
    */
