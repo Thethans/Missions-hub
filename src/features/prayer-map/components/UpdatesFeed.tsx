@@ -4,6 +4,8 @@ import type { MissionaryUpdate, PrayerRequest } from '../data/types';
 interface UpdatesFeedProps {
   updates: MissionaryUpdate[];
   prayerRequests: PrayerRequest[];
+  /** Used to build descriptive alt text, e.g. "Rebecca Johnson: 60 children reading". */
+  missionaryName: string;
 }
 
 /**
@@ -19,7 +21,7 @@ function isUrgentUpdate(update: MissionaryUpdate, index: number, prayerRequests:
   );
 }
 
-export default function UpdatesFeed({ updates, prayerRequests }: UpdatesFeedProps) {
+export default function UpdatesFeed({ updates, prayerRequests, missionaryName }: UpdatesFeedProps) {
   // The update currently expanded into the lightbox, or null.
   const [expanded, setExpanded] = useState<MissionaryUpdate | null>(null);
 
@@ -48,8 +50,14 @@ export default function UpdatesFeed({ updates, prayerRequests }: UpdatesFeedProp
           onClick={() => setExpanded(u)}
           aria-label={`View update: ${u.title}`}
         >
-          {/* Mock photo: inline SVG-gradient data URI (no external hosting). */}
-          <img className="pm-update__photo" src={u.photo} alt="" />
+          <img
+            className="pm-update__photo"
+            src={u.photo}
+            alt={`${missionaryName}: ${u.title}`}
+            width={u.photoWidth}
+            height={u.photoHeight}
+            loading="lazy"
+          />
           <div className="pm-update__content">
             <div className="pm-update__head">
               <span className="pm-update__title">{u.title}</span>
@@ -80,7 +88,13 @@ export default function UpdatesFeed({ updates, prayerRequests }: UpdatesFeedProp
             >
               ✕
             </button>
-            <img className="pm-update-lightbox__photo" src={expanded.photo} alt="" />
+            <img
+              className="pm-update-lightbox__photo"
+              src={expanded.photo}
+              alt={`${missionaryName}: ${expanded.title}`}
+              width={expanded.photoWidth}
+              height={expanded.photoHeight}
+            />
             <div className="pm-update-lightbox__body">
               <div className="pm-update-lightbox__head">
                 <h4 className="pm-update-lightbox__title">{expanded.title}</h4>
