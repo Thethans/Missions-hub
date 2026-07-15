@@ -172,37 +172,37 @@ create policy "Only verified members can read sensitive prayer requests"
 
 alter table verified_members enable row level security;
 
+-- A policy on verified_members that subqueries verified_members itself (to
+-- check "is this requester an admin?") makes Postgres re-apply that same
+-- policy to evaluate the subquery, which recurses forever (error 42P17,
+-- "infinite recursion detected in policy"). A security-definer function
+-- runs as its owner (bypassing RLS, same as link_verified_member() above),
+-- so the admin check inside it doesn't re-trigger the policy that calls it.
+create or replace function is_active_verified_admin(check_user_id uuid) returns boolean as $$
+  select exists (
+    select 1 from verified_members
+    where user_id = check_user_id and is_admin and revoked_at is null
+  );
+$$ language sql security definer set search_path = public;
+
 -- Everyone can see their own row (for "pending verification" UI) or, if
 -- they're an active admin, every row (for the admin UI's member list).
 create policy "Own row, or every row if you're an active admin"
   on verified_members for select
   using (
     user_id = auth.uid()
-    or exists (
-      select 1 from verified_members vm
-      where vm.user_id = auth.uid() and vm.is_admin and vm.revoked_at is null
-    )
+    or is_active_verified_admin(auth.uid())
   );
 
 -- Only active admins can add or revoke members — never the client
 -- directly on its own say-so.
 create policy "Active admins can add verified members"
   on verified_members for insert
-  with check (
-    exists (
-      select 1 from verified_members vm
-      where vm.user_id = auth.uid() and vm.is_admin and vm.revoked_at is null
-    )
-  );
+  with check (is_active_verified_admin(auth.uid()));
 
 create policy "Active admins can revoke/update verified members"
   on verified_members for update
-  using (
-    exists (
-      select 1 from verified_members vm
-      where vm.user_id = auth.uid() and vm.is_admin and vm.revoked_at is null
-    )
-  );
+  using (is_active_verified_admin(auth.uid()));
 
 -- Bootstrapping: the insert policy above requires an *existing* admin, so
 -- the very first admin row must be inserted manually once, via the
