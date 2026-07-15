@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import OpportunitiesExplorer from './OpportunitiesExplorer.jsx';
 
@@ -17,6 +17,35 @@ function makeSupabaseMock(pages) {
   return { from: vi.fn(() => builder) };
 }
 
+const FALLBACK_SAMPLE = [
+  {
+    id: 'fallback-1',
+    agency: 'Fallback Agency',
+    title: 'Cached Fallback Opportunity',
+    url: 'https://example.org/fallback',
+    location: null,
+    region: null,
+    role_type: null,
+    term_length: null,
+    description: null
+  }
+];
+
+// Opportunities data now ships as a static asset (public/data/opportunities-
+// fallback.json) fetched at runtime — see OpportunitiesExplorer.template.jsx
+// — rather than a JS literal baked into the component, so every test needs a
+// fetch() mock for it.
+function mockFallbackFetch(data = FALLBACK_SAMPLE, ok = true) {
+  global.fetch = vi.fn(() =>
+    Promise.resolve({
+      ok,
+      status: ok ? 200 : 500,
+      statusText: ok ? 'OK' : 'Internal Server Error',
+      json: () => Promise.resolve(data)
+    })
+  );
+}
+
 let mockSupabase = null;
 vi.mock('../supabaseClient.js', () => ({
   get supabase() {
@@ -24,19 +53,31 @@ vi.mock('../supabaseClient.js', () => ({
   }
 }));
 
-// OpportunitiesExplorer.jsx is auto-generated with ~16k lines of baked-in
-// fallback data (see generate-component.js) — parsing/rendering it is
-// noticeably slower than a normal component, so the default 5s timeout is
-// too tight on a loaded or CI-slow machine. 15s gives real headroom without
-// masking an actual hang (which would still exceed it).
-const SLOW_TIMEOUT = 15000;
+const TIMEOUT = 10000;
 
 describe('OpportunitiesExplorer', () => {
   beforeEach(() => {
     mockSupabase = null;
+    mockFallbackFetch();
   });
 
-  it('replaces the baked-in snapshot with live data on a successful fetch', async () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('shows a loading state, then the fallback snapshot, before any live fetch resolves', async () => {
+    mockSupabase = null; // fallback fetch is the only data source
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+
+    expect(screen.getByText(/loading opportunities/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Cached Fallback Opportunity')).toBeInTheDocument();
+    });
+  }, TIMEOUT);
+
+  it('replaces the fallback snapshot with live data on a successful fetch', async () => {
     mockSupabase = makeSupabaseMock([
       {
         data: [
@@ -62,9 +103,9 @@ describe('OpportunitiesExplorer', () => {
       expect(screen.getByText('Freshly Fetched Opportunity')).toBeInTheDocument();
     });
     expect(screen.queryByText(/couldn't reach live listings/i)).not.toBeInTheDocument();
-  }, SLOW_TIMEOUT);
+  }, TIMEOUT);
 
-  it('keeps showing the baked-in snapshot and surfaces an inline notice when the fetch errors', async () => {
+  it('keeps showing the fallback snapshot and surfaces an inline notice when the live fetch errors', async () => {
     mockSupabase = makeSupabaseMock([{ data: null, error: { message: 'RLS policy violation' } }]);
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -73,20 +114,33 @@ describe('OpportunitiesExplorer', () => {
     await waitFor(() => {
       expect(screen.getByText(/couldn't reach live listings/i)).toBeInTheDocument();
     });
-    // Baked fallback data (present from initial state) is still rendered —
-    // the error path must never leave the list empty.
-    expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThan(0);
+    // Fallback data (loaded via fetch) is still rendered — the live-fetch
+    // error path must never leave the list empty.
+    expect(screen.getByText('Cached Fallback Opportunity')).toBeInTheDocument();
     expect(consoleError).toHaveBeenCalled();
+  }, TIMEOUT);
 
-    consoleError.mockRestore();
-  }, SLOW_TIMEOUT);
-
-  it('renders the baked-in snapshot with no network configured (no Supabase client)', () => {
+  it('renders the fallback snapshot with no Supabase client configured', async () => {
     mockSupabase = null;
 
     render(<OpportunitiesExplorer agencyFilter="" />);
 
-    expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getByText('Cached Fallback Opportunity')).toBeInTheDocument();
+    });
     expect(screen.queryByText(/couldn't reach live listings/i)).not.toBeInTheDocument();
-  }, SLOW_TIMEOUT);
+  }, TIMEOUT);
+
+  it('shows an error state when even the fallback snapshot fails to load', async () => {
+    mockSupabase = null;
+    mockFallbackFetch(null, false); // fetch resolves but !res.ok
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/couldn't load opportunities/i);
+    });
+    expect(consoleError).toHaveBeenCalled();
+  }, TIMEOUT);
 });

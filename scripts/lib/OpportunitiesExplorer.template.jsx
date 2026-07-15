@@ -12,7 +12,14 @@ import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Cloc
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
 
-const BAKED_OPPORTUNITIES = '__BAKED_OPPORTUNITIES__';
+// The full opportunities list used to be inlined here as a literal — with
+// 1500+ records that made this one file (and its route chunk) ~650KB before
+// gzip, dwarfing every other route. It's now a static JSON asset fetched at
+// runtime instead, matching the pattern already used for the world map's
+// people-groups data (see WorldMap.jsx) — same-origin, CDN-cached, and still
+// resilient to Supabase specifically being unreachable, which is what this
+// fallback is actually for.
+const FALLBACK_URL = '/data/opportunities-fallback.json';
 
 const REGIONS = '__REGIONS__';
 const ROLE_TYPES = '__ROLE_TYPES__';
@@ -161,9 +168,12 @@ function InquiryModal({ opportunity, onClose }) {
 }
 
 export default function OpportunitiesExplorer({ agencyFilter }) {
-  const [opportunities, setOpportunities] = useState(BAKED_OPPORTUNITIES);
+  // null = not loaded yet (distinct from "loaded, zero results" so the
+  // empty-filters copy doesn't flash for a normal loading heartbeat).
+  const [opportunities, setOpportunities] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
 
   // Filters — Sets for multi-select (union/OR within a category, intersection/AND across categories)
   const [search, setSearch] = useState('');
@@ -192,6 +202,28 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   });
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [inquiryOpp, setInquiryOpp] = useState(null);
+
+  // Loads the static fallback snapshot once on mount. Only applies it if
+  // nothing has been set yet — if the live Supabase fetch below already won
+  // the race, this must never clobber fresher data with the stale snapshot.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(FALLBACK_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setOpportunities((prev) => (prev === null ? data : prev));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Failed to load the opportunities fallback snapshot:', err);
+        setFallbackError(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -222,10 +254,10 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         }
       } catch (err) {
         if (cancelled) return;
-        // Network hiccup or RLS misconfig — keep showing the baked-in
-        // snapshot (already the initial state) rather than an empty list,
-        // but surface it so a stale-data banner can render and so this
-        // shows up in error monitoring instead of failing silently.
+        // Network hiccup or RLS misconfig — leave whatever the fallback
+        // effect already loaded (or will load) in place rather than an
+        // empty list, but surface it so a stale-data banner can render and
+        // so this shows up in error monitoring instead of failing silently.
         console.error('Failed to load live opportunities, showing cached snapshot:', err);
         setLoadError(true);
       } finally {
@@ -241,12 +273,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   }, [savedIds]);
 
   const agencies = useMemo(
-    () => [...new Set(opportunities.map((o) => o.agency))].sort(),
+    () => [...new Set((opportunities || []).map((o) => o.agency))].sort(),
     [opportunities]
   );
 
   const filtered = useMemo(() => {
-    let list = opportunities;
+    let list = opportunities || [];
 
     if (showSavedOnly) {
       list = list.filter((o) => savedIds.has(o.id));
@@ -384,40 +416,54 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       )}
 
       {/* Results */}
-      {loadError && (
-        <p className="opp-error opp-error--inline" role="status">
-          Couldn't reach live listings right now — showing a recent saved snapshot instead.
-        </p>
-      )}
-      <div className="opp-results-header">
-        <p className="opp-results-count">
-          {filtered.length} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
-          {hasActiveFilters ? ' matching your filters' : ''}
-          {loading ? ' (refreshing…)' : ''}
-        </p>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="opp-empty">
-          <p>No opportunities match your current filters.</p>
-          {hasActiveFilters && (
-            <button type="button" className="cta-button" onClick={clearFilters}>
-              Clear filters
-            </button>
-          )}
-        </div>
+      {opportunities === null ? (
+        fallbackError ? (
+          <div className="opp-error" role="alert">
+            <p>Couldn't load opportunities right now — try refreshing the page.</p>
+          </div>
+        ) : (
+          <div className="opp-loading" role="status">
+            <p>Loading opportunities…</p>
+          </div>
+        )
       ) : (
-        <div className="opp-grid">
-          {filtered.map((opp) => (
-            <OpportunityCard
-              key={opp.id}
-              opp={opp}
-              saved={savedIds.has(opp.id)}
-              onToggleSave={toggleSave}
-              onInquire={setInquiryOpp}
-            />
-          ))}
-        </div>
+        <>
+          {loadError && (
+            <p className="opp-error opp-error--inline" role="status">
+              Couldn't reach live listings right now — showing a recent saved snapshot instead.
+            </p>
+          )}
+          <div className="opp-results-header">
+            <p className="opp-results-count">
+              {filtered.length} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
+              {hasActiveFilters ? ' matching your filters' : ''}
+              {loading ? ' (refreshing…)' : ''}
+            </p>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="opp-empty">
+              <p>No opportunities match your current filters.</p>
+              {hasActiveFilters && (
+                <button type="button" className="cta-button" onClick={clearFilters}>
+                  Clear filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="opp-grid">
+              {filtered.map((opp) => (
+                <OpportunityCard
+                  key={opp.id}
+                  opp={opp}
+                  saved={savedIds.has(opp.id)}
+                  onToggleSave={toggleSave}
+                  onInquire={setInquiryOpp}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <InquiryModal opportunity={inquiryOpp} onClose={() => setInquiryOpp(null)} />

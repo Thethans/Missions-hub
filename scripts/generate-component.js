@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 
-// Reads all opportunities from Supabase and the Fielded design tokens,
-// then generates OpportunitiesExplorer.jsx with real data baked in.
+// Reads all opportunities from Supabase and the Fielded design tokens, then
+// generates OpportunitiesExplorer.jsx and a static fallback data file the
+// component fetches at runtime.
+//
+// The opportunities list used to be inlined into OpportunitiesExplorer.jsx
+// as a JS literal — with 1500+ records that made it ~650KB before gzip, by
+// far the largest route chunk in the app, mostly for data that's only ever
+// used as a fallback when Supabase itself is unreachable. It's now written
+// to public/data/opportunities-fallback.json instead and fetched at
+// runtime (same pattern as the world map's people-groups data), so the
+// route's JS chunk stays small regardless of how large the dataset grows.
 //
 // Usage:
 //   node scripts/generate-component.js
@@ -16,6 +25,7 @@ const ROOT = path.resolve(__dirname, '..');
 const TOKENS_PATH = path.join(ROOT, 'src/styles/tokens.css');
 const TEMPLATE_PATH = path.join(ROOT, 'scripts/lib/OpportunitiesExplorer.template.jsx');
 const OUTPUT_PATH = path.join(ROOT, 'src/components/OpportunitiesExplorer.jsx');
+const FALLBACK_DATA_PATH = path.join(ROOT, 'public/data/opportunities-fallback.json');
 
 // ── Supabase client ──────────────────────────────────────────────────
 
@@ -97,7 +107,6 @@ function generateComponent(opportunities, tokens) {
     .replace("'__GENERATED_DATE__'", JSON.stringify(new Date().toISOString()))
     .replace("'__OPP_COUNT__'", String(opportunities.length))
     .replace("'__AGENCY_COUNT__'", String(agencies.length))
-    .replace("'__BAKED_OPPORTUNITIES__'", safeJson(opportunities))
     .replace("'__REGIONS__'", safeJson(regions))
     .replace("'__ROLE_TYPES__'", safeJson(roleTypes))
     .replace("'__TERM_LENGTHS__'", safeJson(termLengths));
@@ -124,6 +133,12 @@ async function main() {
 
   fs.writeFileSync(OUTPUT_PATH, component, 'utf-8');
   console.log('  Written to ' + path.relative(ROOT, OUTPUT_PATH));
+
+  // Compact (no pretty-printing) — this ships to the browser as-is.
+  fs.writeFileSync(FALLBACK_DATA_PATH, JSON.stringify(opportunities), 'utf-8');
+  console.log('  Written to ' + path.relative(ROOT, FALLBACK_DATA_PATH) +
+    ' (' + (fs.statSync(FALLBACK_DATA_PATH).size / 1024).toFixed(1) + ' KB)');
+
   console.log('Done.');
 }
 
