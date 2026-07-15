@@ -4,6 +4,7 @@
 export const routeImports = {
   '/map': () => import('./pages/MapPage.jsx'),
   '/prayer-map': () => import('./features/prayer-map/PrayerMapPage.tsx'),
+  '/prayer-map/admin': () => import('./features/prayer-map/AdminPage.tsx'),
   '/quiz': () => import('./pages/QuizPage.jsx'),
   '/opportunities': () => import('./pages/OpportunitiesPage.jsx'),
   '/checklist': () => import('./pages/ChecklistPage.jsx'),

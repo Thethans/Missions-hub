@@ -963,6 +963,11 @@
   color: var(--atlas-paper);
   border: 1px solid rgba(250, 247, 240, 0.25);
 }
+.pm-status--pending {
+  background: var(--status-formative);
+  color: var(--ink-navy);
+  border: 1px solid rgba(22, 35, 59, 0.15);
+}
 .pm-status__label {
   display: inline-flex;
   align-items: center;
@@ -1139,6 +1144,16 @@
   line-height: 1.45;
   color: var(--muted-text);
   margin: var(--space-2) 0 var(--space-4);
+}
+.pm-login-sent {
+  text-align: center;
+}
+.pm-login-sent p {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--status-reached);
+  line-height: 1.5;
+  margin: 0 0 var(--space-4);
 }
 .pm-login-btn {
   width: 100%;
@@ -1348,4 +1363,87 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* ---- Admin page (/prayer-map/admin) --------------------------------------- */
+
+.pm-admin-body {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-16);
+  width: 100%;
+}
+
+.pm-admin-signin {
+  display: block;
+  margin: 0 auto;
+}
+
+.pm-admin-add {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.pm-admin-add input {
+  flex: 1;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-navy);
+}
+.pm-admin-add input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.pm-admin-add button {
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: var(--space-3) var(--space-4);
+  white-space: nowrap;
+}
+.pm-admin-add button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pm-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.pm-admin-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+.pm-admin-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-navy);
+}
+.pm-admin-revoke {
+  border: 1px solid var(--status-unreached);
+  cursor: pointer;
+  background: transparent;
+  color: var(--status-unreached);
+  border-radius: 6px;
+  padding: 4px var(--space-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pm-admin-revoke:hover {
+  background: rgba(181, 72, 47, 0.08);
 }

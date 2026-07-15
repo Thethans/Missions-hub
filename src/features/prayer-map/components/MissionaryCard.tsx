@@ -1,4 +1,5 @@
 import type { MissionaryWithBudget } from '../data/types';
+import type { AuthState } from '../hooks/useMemberSession';
 import { formatMoney } from '../data/format';
 import SecurityNotice from './SecurityNotice';
 import MinistrySection from './MinistrySection';
@@ -11,8 +12,8 @@ import NewsletterSignup from './NewsletterSignup';
 interface MissionaryCardProps {
   missionary: MissionaryWithBudget;
   onClose: () => void;
-  /** Signed-in member? Drives the sensitive-block reveal. */
-  isMember: boolean;
+  /** Drives the sensitive-block reveal — 'verified' is the only state that fetches confidential text. */
+  authState: AuthState;
   /** Opens the member login sheet. */
   onSignIn: () => void;
   /** Prayer toggle. */
@@ -32,7 +33,7 @@ interface MissionaryCardProps {
 export default function MissionaryCard({
   missionary,
   onClose,
-  isMember,
+  authState,
   onSignIn,
   isPraying,
   onPray,
@@ -60,8 +61,17 @@ export default function MissionaryCard({
         {missionary.locationSensitive && <SecurityNotice />}
         <MinistrySection ministry={missionary.ministry} />
         <PrayerRequests requests={missionary.prayerRequests} />
-        <SensitiveBlock sensitive={missionary.sensitive} isMember={isMember} onSignIn={onSignIn} />
-        <UpdatesFeed updates={missionary.updates} prayerRequests={missionary.prayerRequests} />
+        <SensitiveBlock
+          missionaryId={missionary.id}
+          sensitiveCount={missionary.sensitiveCount}
+          authState={authState}
+          onSignIn={onSignIn}
+        />
+        <UpdatesFeed
+          updates={missionary.updates}
+          prayerRequests={missionary.prayerRequests}
+          missionaryName={missionary.name}
+        />
         <SupportBudget missionary={missionary} />
         <NewsletterSignup missionaryName={missionary.name} />
       </div>

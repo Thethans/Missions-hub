@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '../../../supabaseClient.js';
 
-// Demo-only member gate. The client-side password check is INTENTIONAL for this
-// public prototype so reviewers can exercise the members-only flow without a
-// backend. It is NOT real security: the confidential text still ships in the
-// bundle and is merely visually gated.
-// TODO(real): gate members server-side (e.g. Planning Center OIDC). Confidential
-// prayer requests must never be sent to a non-member's browser, and these same
-// timeout limits must be enforced on the server session/token — not just here.
-const DEMO_MEMBER_PASSWORD = 'member2026';
+// Real member gate — see REAL_AUTH_DESIGN.md. Sign-in is a Supabase Auth
+// magic-link email (no password), and "signed in" is not the same as
+// "verified member": membership is a separate, admin-managed allowlist
+// (the `verified_members` table) checked after auth succeeds. Confidential
+// prayer text lives in a table RLS actually protects (see SensitiveBlock.tsx)
+// — this hook only tracks/display auth state, it is not itself the security
+// boundary. That boundary is enforced by Postgres row-level security.
+export type AuthState = 'guest' | 'pending-verification' | 'verified';
 
-// Reference uses short values for easy testing (2 min idle / 10 min absolute).
-// TODO(real): production would use longer limits (e.g. 15 min idle / 8 hr
-// absolute) — or tight values for a public kiosk.
-const IDLE_LIMIT_MS = 2 * 60 * 1000; // sign out after 2 min of no interaction
-const IDLE_WARN_MS = 30 * 1000; // warn 30s before idle sign-out
-const ABSOLUTE_LIMIT_MS = 10 * 60 * 1000; // hard cap after login, regardless of activity
+// Client-side idle/absolute timers are a UX nicety (handy on a shared/kiosk
+// device) — not the security boundary. Real enforcement is the Supabase
+// project's JWT expiry / refresh-token settings, which should be configured
+// to match or be tighter than these values.
+const IDLE_LIMIT_MS = 15 * 60 * 1000; // sign out after 15 min of no interaction
+const IDLE_WARN_MS = 60 * 1000; // warn 60s before idle sign-out
+const ABSOLUTE_LIMIT_MS = 8 * 60 * 60 * 1000; // hard cap: 8 hours after verification
 
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'] as const;
 
@@ -26,12 +28,14 @@ export interface SessionToast {
 }
 
 export interface MemberSession {
-  isMember: boolean;
+  authState: AuthState;
+  /** Only meaningful when authState === 'verified'. */
+  isAdmin: boolean;
   /** Milliseconds until the absolute session limit — drives the badge countdown. */
   remainingMs: number;
   toast: SessionToast | null;
-  /** Verify the demo password; returns whether sign-in succeeded. */
-  signIn: (password: string) => boolean;
+  /** Sends a magic-link sign-in email. Resolves once the email is sent (or fails) — not once actually signed in; that arrives later via onAuthStateChange. */
+  signInWithEmail: (email: string) => Promise<{ sent: boolean; error?: string }>;
   /** End the session; an optional reason is shown briefly. */
   signOut: (reason?: string) => void;
   /** Extend the session from the idle warning ("Stay signed in"). */
@@ -39,13 +43,15 @@ export interface MemberSession {
 }
 
 /**
- * Owns the mock member session: the demo password check, the three sign-out
- * triggers (idle, absolute, leave-screen), the live countdown, and the toast
- * state (SPEC §4.12). Signing out flips `isMember`, which re-renders the card
- * and re-locks the sensitive block.
+ * Owns the real member session: Supabase Auth state, the verified_members
+ * allowlist check, the three sign-out triggers (idle, absolute,
+ * leave-screen), the live countdown, and the toast state. Signing out
+ * (or dropping out of `verified_members`) flips `authState`, which
+ * re-renders the card and re-locks the sensitive block.
  */
 export default function useMemberSession(): MemberSession {
-  const [isMember, setIsMember] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>('guest');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [remainingMs, setRemainingMs] = useState(0);
   const [toast, setToast] = useState<SessionToast | null>(null);
 
@@ -62,7 +68,8 @@ export default function useMemberSession(): MemberSession {
   const signOut = useCallback(
     (reason?: string) => {
       clearIdleTimers();
-      setIsMember(false);
+      setAuthState('guest');
+      setIsAdmin(false);
       window.clearTimeout(infoToastTimer.current);
       if (reason) {
         setToast({ message: reason, kind: 'info' });
@@ -70,9 +77,54 @@ export default function useMemberSession(): MemberSession {
       } else {
         setToast(null);
       }
+      // Actually invalidate the token, not just local UI state — a client
+      // sign-out alone wouldn't stop a copied/replayed session token.
+      void supabase?.auth.signOut();
     },
     [clearIdleTimers]
   );
+
+  // Looks up whether the signed-in user is on the verified_members
+  // allowlist (and not revoked). RLS also enforces this server-side for the
+  // actual sensitive-data fetch (see SensitiveBlock.tsx) — this call just
+  // drives what the UI shows; it is not itself a security boundary.
+  const checkMembership = useCallback(async (userId: string) => {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from('verified_members')
+      .select('is_admin, revoked_at')
+      .eq('user_id', userId)
+      .is('revoked_at', null)
+      .maybeSingle();
+
+    if (error) {
+      // Fail closed: never assume verified when the check itself failed.
+      console.error('Failed to check member verification status:', error);
+      setAuthState('pending-verification');
+      setIsAdmin(false);
+      return;
+    }
+
+    if (data) {
+      expiresAtRef.current = Date.now() + ABSOLUTE_LIMIT_MS;
+      setRemainingMs(ABSOLUTE_LIMIT_MS);
+      setIsAdmin(data.is_admin);
+      setAuthState('verified');
+    } else {
+      setIsAdmin(false);
+      setAuthState('pending-verification');
+    }
+  }, []);
+
+  const signInWithEmail = useCallback(async (email: string): Promise<{ sent: boolean; error?: string }> => {
+    if (!supabase) return { sent: false, error: 'Sign-in is not configured for this environment.' };
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/prayer-map' }
+    });
+    if (error) return { sent: false, error: error.message };
+    return { sent: true };
+  }, []);
 
   const resetIdle = useCallback(() => {
     clearIdleTimers();
@@ -80,10 +132,10 @@ export default function useMemberSession(): MemberSession {
     // the same value makes React bail out, so this is cheap on every mousemove).
     setToast((t) => (t?.kind === 'warn' ? null : t));
     idleWarnTimer.current = window.setTimeout(() => {
-      setToast({ message: 'You will be signed out in 30 seconds for security.', kind: 'warn' });
+      setToast({ message: 'You will be signed out in 1 minute for security.', kind: 'warn' });
     }, IDLE_LIMIT_MS - IDLE_WARN_MS);
     idleTimer.current = window.setTimeout(() => {
-      signOut('You were signed out after 2 minutes of inactivity.');
+      signOut('You were signed out after 15 minutes of inactivity.');
     }, IDLE_LIMIT_MS);
   }, [clearIdleTimers, signOut]);
 
@@ -92,18 +144,36 @@ export default function useMemberSession(): MemberSession {
     resetIdle();
   }, [resetIdle]);
 
-  const signIn = useCallback((password: string): boolean => {
-    if (password !== DEMO_MEMBER_PASSWORD) return false;
-    expiresAtRef.current = Date.now() + ABSOLUTE_LIMIT_MS;
-    setRemainingMs(ABSOLUTE_LIMIT_MS);
-    setToast(null);
-    setIsMember(true);
-    return true;
-  }, []);
-
-  // All timers + listeners live only while signed in.
+  // Picks up an existing session on mount (e.g. returning from the magic-link
+  // redirect, or a page refresh) and reacts to sign-in/sign-out events.
   useEffect(() => {
-    if (!isMember) return;
+    if (!supabase) return;
+    let cancelled = false;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled || !session?.user) return;
+      checkMembership(session.user.id);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
+      if (session?.user) {
+        checkMembership(session.user.id);
+      } else {
+        setAuthState('guest');
+        setIsAdmin(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      listener.subscription.unsubscribe();
+    };
+  }, [checkMembership]);
+
+  // All idle/absolute/leave-screen timers + listeners live only once verified.
+  useEffect(() => {
+    if (authState !== 'verified') return;
 
     resetIdle();
 
@@ -134,10 +204,10 @@ export default function useMemberSession(): MemberSession {
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [isMember, resetIdle, signOut, clearIdleTimers]);
+  }, [authState, resetIdle, signOut, clearIdleTimers]);
 
   // Clear the info-toast timer on unmount.
   useEffect(() => () => window.clearTimeout(infoToastTimer.current), []);
 
-  return { isMember, remainingMs, toast, signIn, signOut, extend };
+  return { authState, isAdmin, remainingMs, toast, signInWithEmail, signOut, extend };
 }

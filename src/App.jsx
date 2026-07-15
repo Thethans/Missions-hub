@@ -10,6 +10,7 @@ import { routeImports } from './routeImports.js';
 // same ones to prefetch a chunk on link hover, before the user clicks.
 const MapPage = lazy(routeImports['/map']);
 const PrayerMapPage = lazy(routeImports['/prayer-map']);
+const PrayerMapAdminPage = lazy(routeImports['/prayer-map/admin']);
 const QuizPage = lazy(routeImports['/quiz']);
 const OpportunitiesPage = lazy(routeImports['/opportunities']);
 const ChecklistPage = lazy(routeImports['/checklist']);
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/prayer-map" element={<PrayerMapPage />} />
+        <Route path="/prayer-map/admin" element={<PrayerMapAdminPage />} />
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/opportunities" element={<OpportunitiesPage />} />
         <Route path="/checklist" element={<ChecklistPage />} />

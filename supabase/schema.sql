@@ -109,3 +109,108 @@ create policy "Users can insert own checklist progress"
 create policy "Users can delete own checklist progress"
   on user_checklist_progress for delete
   using (auth.uid() = user_id);
+
+-- Prayer map: confidential prayer requests -------------------------------
+-- Stage 1 of src/features/prayer-map/REAL_AUTH_DESIGN.md. Replaces the
+-- client-side DEMO_MEMBER_PASSWORD gate (useMemberSession.ts) — confidential
+-- text now lives only in a table RLS actually protects, instead of a plain
+-- field in the client-bundled mock data. Note "prayer_requests" above is a
+-- different, unrelated feature (world-map quiz) — these are named distinctly
+-- to avoid colliding with it.
+
+create table if not exists missionary_sensitive_requests (
+  id uuid primary key default gen_random_uuid(),
+  missionary_id text not null,   -- matches the existing string ids (e.g. 'johnson-ethiopia')
+  text text not null,
+  created_at timestamptz default now()
+);
+
+-- Admin-managed allowlist: being signed in is not the same as being a
+-- verified church member. Keyed by email (not user_id) because an admin
+-- needs to add someone who hasn't signed in yet — see the trigger below
+-- for how user_id gets backfilled the first time that email actually signs
+-- in. revoked_at gives an instant kill-switch — RLS re-checks this on
+-- every query, so revoking access doesn't wait for a session timeout the
+-- way client-side sign-out alone would.
+create table if not exists verified_members (
+  id uuid primary key default gen_random_uuid(),
+  church_email text not null unique,
+  user_id uuid references auth.users,      -- null until this email signs in for the first time
+  is_admin boolean not null default false,
+  verified_by uuid references auth.users,  -- which admin added them
+  verified_at timestamptz default now(),
+  revoked_at timestamptz                   -- null = active
+);
+
+-- Auto-links a pre-added allowlist row to the real auth user the moment
+-- they first sign in — this is what makes "admin adds jane@church.org
+-- before jane has ever logged in" actually work.
+create or replace function link_verified_member() returns trigger as $$
+begin
+  update verified_members
+  set user_id = new.id
+  where church_email = new.email and user_id is null;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function link_verified_member();
+
+alter table missionary_sensitive_requests enable row level security;
+
+create policy "Only verified members can read sensitive prayer requests"
+  on missionary_sensitive_requests for select
+  using (
+    exists (
+      select 1 from verified_members
+      where verified_members.user_id = auth.uid()
+      and verified_members.revoked_at is null
+    )
+  );
+
+alter table verified_members enable row level security;
+
+-- Everyone can see their own row (for "pending verification" UI) or, if
+-- they're an active admin, every row (for the admin UI's member list).
+create policy "Own row, or every row if you're an active admin"
+  on verified_members for select
+  using (
+    user_id = auth.uid()
+    or exists (
+      select 1 from verified_members vm
+      where vm.user_id = auth.uid() and vm.is_admin and vm.revoked_at is null
+    )
+  );
+
+-- Only active admins can add or revoke members — never the client
+-- directly on its own say-so.
+create policy "Active admins can add verified members"
+  on verified_members for insert
+  with check (
+    exists (
+      select 1 from verified_members vm
+      where vm.user_id = auth.uid() and vm.is_admin and vm.revoked_at is null
+    )
+  );
+
+create policy "Active admins can revoke/update verified members"
+  on verified_members for update
+  using (
+    exists (
+      select 1 from verified_members vm
+      where vm.user_id = auth.uid() and vm.is_admin and vm.revoked_at is null
+    )
+  );
+
+-- Bootstrapping: the insert policy above requires an *existing* admin, so
+-- the very first admin row must be inserted manually once, via the
+-- Supabase dashboard or a one-off script with the service-role key — same
+-- "no self-serve UI for the very first setup step" precedent this file
+-- already takes with checklist_items. Every admin after that is added
+-- through the admin UI. Example (run once, after that first admin has
+-- signed in at least once so their auth.users row/id exists):
+--
+--   insert into verified_members (church_email, user_id, is_admin, verified_at)
+--   values ('admin@yourchurch.org', '<their auth.users.id>', true, now());

@@ -16,7 +16,13 @@ export interface PrayerRequest {
   type: PrayerRequestType;
 }
 
-/** Confidential request rendered only to a signed-in "member". */
+/**
+ * Confidential request rendered only to a verified member. The `text` here
+ * is never part of the bundled mock data (see `Missionary.sensitiveCount`
+ * below) — it's fetched live, gated by Postgres row-level security, only
+ * once `authState === 'verified'`. See SensitiveBlock.tsx and
+ * REAL_AUTH_DESIGN.md.
+ */
 export interface SensitiveRequest {
   text: string;
 }
@@ -35,8 +41,12 @@ export interface MissionaryUpdate {
   date: string;
   title: string;
   text: string;
-  /** mock image — an inline SVG-gradient data URI (no external hosting) */
+  /** bundled local photo (see assets/updates/CREDITS.md for sourcing) */
   photo: string;
+  /** photo's real intrinsic pixel width — sets <img width> to reserve layout space and avoid shift while it loads */
+  photoWidth: number;
+  /** photo's real intrinsic pixel height — sets <img height> to reserve layout space and avoid shift while it loads */
+  photoHeight: number;
 }
 
 /**
@@ -67,8 +77,14 @@ export interface Missionary {
   supportGoal: number;
   budget: BudgetLine[];
   prayerRequests: PrayerRequest[];
-  /** empty for most; only Rebecca has entries */
-  sensitive: SensitiveRequest[];
+  /**
+   * Count only — 0 for most, only Rebecca currently has any. This is public,
+   * non-confidential data (a number, not the text), so it's fine to bundle;
+   * it's what SensitiveBlock uses to decide whether to render the locked
+   * section at all and what its copy says. The actual confidential text is
+   * never bundled — see SensitiveRequest above.
+   */
+  sensitiveCount: number;
   updates: MissionaryUpdate[];
   /**
    * Set for missionaries serving in a security-sensitive ("creative access")

@@ -61,25 +61,31 @@ export const missionaries: Missionary[] = [
       { text: 'Pray for new believers to grow in faith and community', type: 'sticky' },
       { text: 'Wisdom in selecting local leaders for the church', type: 'sticky' }
     ],
-    sensitive: [],
+    sensitiveCount: 0,
     updates: [
       {
         date: '2 days ago',
         title: '47 at our new gathering',
         text: 'This weekend we had 47 people visit our new worship gathering. Pray for wisdom as we disciple these new believers and help them understand the Gospel.',
-        photo: smithGathering
+        photo: smithGathering,
+        photoWidth: 1024,
+        photoHeight: 682
       },
       {
         date: '1 week ago',
         title: 'Well project complete',
         text: 'The village well is finished! Clean water for 200 families, and every day it opens doors for Gospel conversations with those who come to draw water.',
-        photo: smithWell
+        photo: smithWell,
+        photoWidth: 1024,
+        photoHeight: 732
       },
       {
         date: '3 weeks ago',
         title: 'Language milestone',
         text: 'Sarah preached her first full lesson in Moore this week. Two years of study bearing fruit. The women wept to hear Scripture in their heart language.',
-        photo: smithBibleStudy
+        photo: smithBibleStudy,
+        photoWidth: 1024,
+        photoHeight: 768
       }
     ]
   },
@@ -108,19 +114,23 @@ export const missionaries: Missionary[] = [
       { text: 'Physical strength and wisdom for medical decisions', type: 'sticky' },
       { text: 'Open doors in three unreached villages', type: 'auto' }
     ],
-    sensitive: [],
+    sensitiveCount: 0,
     updates: [
       {
         date: '5 days ago',
         title: '284 patients this week',
         text: 'Conducted a mobile clinic in three villages. Treated 284 patients and shared the Gospel with each family. Many asked for prayer over their sick children.',
-        photo: chenClinic
+        photo: chenClinic,
+        photoWidth: 1024,
+        photoHeight: 683
       },
       {
         date: '2 weeks ago',
         title: 'A doctor comes to faith',
         text: "A local doctor I've mentored for a year professed faith in Christ. He now wants to reach his own people. Pray for his boldness.",
-        photo: chenMentoring
+        photo: chenMentoring,
+        photoWidth: 1024,
+        photoHeight: 681
       }
     ]
   },
@@ -150,25 +160,31 @@ export const missionaries: Missionary[] = [
       { text: 'Spiritual maturity for new church leaders', type: 'sticky' },
       { text: 'Transport and resources for outreach trips', type: 'auto' }
     ],
-    sensitive: [],
+    sensitiveCount: 0,
     updates: [
       {
         date: '1 day ago',
         title: '15 pastors trained',
         text: "Trained 15 pastors from remote mountain communities this month. We're seeing spiritual multiplication happen. Please pray for sustainable discipleship.",
-        photo: rodriguezRetreat
+        photo: rodriguezRetreat,
+        photoWidth: 1024,
+        photoHeight: 768
       },
       {
         date: '10 days ago',
         title: 'New church in Yungay',
         text: 'The believers in Yungay have organized into a self-governing church with their own elders. Our fourth church plant to reach this milestone!',
-        photo: rodriguezChurch
+        photo: rodriguezChurch,
+        photoWidth: 819,
+        photoHeight: 1024
       },
       {
         date: '1 month ago',
         title: 'Youth camp',
         text: 'Over 80 teenagers attended our first regional youth camp. Twelve made decisions to follow Christ and several sense a call to ministry.',
-        photo: rodriguezYouthCamp
+        photo: rodriguezYouthCamp,
+        photoWidth: 1024,
+        photoHeight: 683
       }
     ]
   },
@@ -200,32 +216,35 @@ export const missionaries: Missionary[] = [
       },
       { text: 'Pray the children and families come to know Christ', type: 'sticky' }
     ],
-    sensitive: [
-      {
-        text: 'The fire was not accidental. A local official opposed to our work is behind ongoing intimidation. Please pray for protection for our staff, wisdom in dealing with authorities, and that we would respond with the grace of Christ. We are keeping details off the public page for the safety of our Ethiopian team members, whose names we cannot share openly.'
-      },
-      {
-        text: 'One of our teachers, [name withheld], is facing pressure from her family to leave the ministry over her new faith. Pray for her courage and for her family’s hearts to soften.'
-      }
-    ],
+    // The actual confidential text used to live here as plain bundled data —
+    // it now lives only in missionary_sensitive_requests (see
+    // supabase/seed_prayer_map_sensitive_requests.sql for the demo content),
+    // gated by RLS. See REAL_AUTH_DESIGN.md.
+    sensitiveCount: 2,
     updates: [
       {
         date: '8 hours ago',
         title: 'Fire in the schoolroom',
         text: "Please pray. An electrical fire damaged our schoolroom Tuesday night. No one was hurt, praise God, but the roof and most of our books are gone. We're determined to rebuild quickly so the children don't lose momentum.",
-        photo: johnsonFire
+        photo: johnsonFire,
+        photoWidth: 1024,
+        photoHeight: 683
       },
       {
         date: '3 days ago',
         title: '60 children reading',
         text: "Started a literacy program for 60 children. Our prayer is that they'll encounter Jesus through God's Word as they learn to read.",
-        photo: johnsonReading
+        photo: johnsonReading,
+        photoWidth: 500,
+        photoHeight: 332
       },
       {
         date: '2 weeks ago',
         title: "Mothers' discipleship group",
         text: 'The mothers of my students asked to start a weekly Bible study. Fifteen women now gather every Thursday. God is at work in whole families.',
-        photo: johnsonMothers
+        photo: johnsonMothers,
+        photoWidth: 804,
+        photoHeight: 1024
       }
     ]
   },
@@ -254,19 +273,23 @@ export const missionaries: Missionary[] = [
       { text: 'Pray for effective distribution and study of the translation', type: 'sticky' },
       { text: 'Health and safety through the rainy season', type: 'auto' }
     ],
-    sensitive: [],
+    sensitiveCount: 0,
     updates: [
       {
         date: '6 hours ago',
         title: 'New Testament complete!',
         text: 'We finished the Kamano New Testament translation today! The community gathered to see God’s Word in their heart language for the very first time. Tears everywhere.',
-        photo: torresBible
+        photo: torresBible,
+        photoWidth: 1024,
+        photoHeight: 768
       },
       {
         date: '3 weeks ago',
         title: 'Recording the Gospels',
         text: "We've begun audio recording the Gospels for the many who cannot yet read. Pray for clear recordings and willing local voices.",
-        photo: torresRecording
+        photo: torresRecording,
+        photoWidth: 753,
+        photoHeight: 1023
       }
     ]
   },
@@ -305,29 +328,32 @@ export const missionaries: Missionary[] = [
         type: 'urgent'
       }
     ],
-    sensitive: [
-      {
-        text: 'They serve among a specific unreached people group in the wider Gulf region. For the safety of national believers, the people group name and exact country are shared only with our missions committee, not on this platform. Please don’t discuss specifics outside official channels.'
-      }
-    ],
+    // See supabase/seed_prayer_map_sensitive_requests.sql — same as Johnson above.
+    sensitiveCount: 1,
     updates: [
       {
         date: '4 days ago',
         title: 'A quiet gathering',
         text: 'Six friends met in our home again this week to talk through the Scriptures together. Please pray for eyes to see and hearts to soften — and for our continued cover as we go about ordinary life.',
-        photo: karimGathering
+        photo: karimGathering,
+        photoWidth: 768,
+        photoHeight: 1024
       },
       {
         date: '3 weeks ago',
         title: 'Answered prayer on paperwork',
         text: 'A residency renewal that had been stuck for months finally went through this week. Thank you for praying — please continue to pray for favor with local officials.',
-        photo: karimPaperwork
+        photo: karimPaperwork,
+        photoWidth: 682,
+        photoHeight: 1024
       },
       {
         date: '2 months ago',
         title: 'New season, same mission',
         text: 'The business is steady, our cover remains solid, and the small group of believers we walk with keeps growing in faith, even amid real risk. Thank you for standing with us in prayer, even without knowing our names.',
-        photo: karimSeason
+        photo: karimSeason,
+        photoWidth: 1024,
+        photoHeight: 768
       }
     ],
     locationSensitive: true

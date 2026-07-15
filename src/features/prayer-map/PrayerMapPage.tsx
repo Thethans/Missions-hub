@@ -42,19 +42,20 @@ export default function PrayerMapPage() {
   const selected = selectedId ? missionaries.find((m) => m.id === selectedId) ?? null : null;
   const selectedWithBudget = selected ? withDerivedBudget(selected) : null;
 
+  // Note: unlike the old password check, success here just means "the email
+  // was sent" — the sheet shows its own "check your email" state and stays
+  // open (with its own Close button) rather than being closed by the parent;
+  // actually being signed in arrives later, out-of-band, via the magic-link
+  // redirect and useMemberSession's onAuthStateChange subscription.
   const handleSignIn = useCallback(
-    (password: string): boolean => {
-      const ok = session.signIn(password);
-      if (ok) setLoginOpen(false);
-      return ok;
-    },
+    (email: string) => session.signInWithEmail(email),
     [session]
   );
 
   return (
     <div className="pm-page">
       <MemberStatusBadge
-        isMember={session.isMember}
+        authState={session.authState}
         remainingMs={session.remainingMs}
         onSignOut={() => session.signOut()}
       />
@@ -83,7 +84,7 @@ export default function PrayerMapPage() {
             <MissionaryCard
               missionary={selectedWithBudget}
               onClose={close}
-              isMember={session.isMember}
+              authState={session.authState}
               onSignIn={() => setLoginOpen(true)}
               isPraying={prayer.isPraying(selectedWithBudget.id)}
               onPray={() => prayer.toggle(selectedWithBudget.id)}
