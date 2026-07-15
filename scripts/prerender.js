@@ -18,6 +18,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
+import puppeteerCore from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
@@ -76,7 +78,17 @@ async function prerender() {
   const server = await serve(PORT);
   console.log(`Serving dist/ on http://localhost:${PORT}`);
 
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  // Vercel's build container has no downloadable Chrome for stock puppeteer
+  // to find (see @sparticuz/chromium, a build compiled for serverless/CI
+  // environments). Locally, the full puppeteer package already has its own
+  // bundled Chrome, which is simpler for day-to-day dev.
+  const browser = process.env.VERCEL
+    ? await puppeteerCore.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: 'shell'
+      })
+    : await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
 
   for (const route of ROUTES) {
