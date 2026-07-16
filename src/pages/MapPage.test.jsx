@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import MapPage from './MapPage.jsx';
 
@@ -100,5 +101,42 @@ describe('MapPage', () => {
     });
 
     consoleError.mockRestore();
+  });
+
+  it('seeds the detail panel with a featured people group once data loads, instead of only instructional text (P3-C)', async () => {
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    await waitFor(() => {
+      expect(screen.getByText(/this week's featured people group/i)).toBeInTheDocument();
+    });
+    expect(screen.getByRole('heading', { name: 'Test Group' })).toBeInTheDocument();
+    expect(screen.queryByText(/click any point on the map/i)).not.toBeInTheDocument();
+  });
+
+  it('selecting the featured group swaps the panel to the full profile view', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+    await waitFor(() => screen.getByText(/this week's featured people group/i));
+
+    await user.click(screen.getByRole('button', { name: /explore on the map/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/this week's featured people group/i)).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/an estimated 1,000 people/i)).toBeInTheDocument();
   });
 });

@@ -1,7 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Compass, CheckSquare } from '@phosphor-icons/react';
+import agencies from '../data/agencies.json';
+import { QUESTIONS } from '../data/quizQuestions.js';
 
+// Counts come from the same files the quiz itself reads (src/data/
+// agencies.json, src/data/quizQuestions.js) rather than being hand-typed —
+// the audit flagged this exact line as a stale claim ("opportunity count
+// went 55 → 1,440 without the copy noticing"): it said "14" when
+// agencies.json already had 28 real entries.
 const ITEMS = [
   {
     icon: Globe,
@@ -11,7 +18,7 @@ const ITEMS = [
   {
     icon: Compass,
     title: 'A matcher that shows its work',
-    desc: '7 questions, 14 researched sending agencies, and a results view that explains exactly what matched and what to ask about — not just a ranked list.'
+    desc: `${QUESTIONS.length} questions, ${agencies.length} researched sending agencies, and a results view that explains exactly what matched and what to ask about — not just a ranked list.`
   },
   {
     icon: CheckSquare,

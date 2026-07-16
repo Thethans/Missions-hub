@@ -33,7 +33,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T20:59:52.327Z"
+// Generated: "2026-07-16T21:16:37.004Z"
 // Opportunities: 1440 across 22 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';

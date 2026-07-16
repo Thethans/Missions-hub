@@ -26,6 +26,11 @@ const TOKENS_PATH = path.join(ROOT, 'src/styles/tokens.css');
 const TEMPLATE_PATH = path.join(ROOT, 'scripts/lib/OpportunitiesExplorer.template.jsx');
 const OUTPUT_PATH = path.join(ROOT, 'src/components/OpportunitiesExplorer.jsx');
 const FALLBACK_DATA_PATH = path.join(ROOT, 'public/data/opportunities-fallback.json');
+// Small static-importable counts (P3-B) — pages that cite "N agencies" or
+// "N opportunities" read this instead of a hand-typed number, so copy can't
+// drift the way it did before ("7+ agencies" in OpportunitiesPage.jsx's
+// meta description, when the real count was already 22).
+const META_PATH = path.join(ROOT, 'src/data/opportunitiesMeta.json');
 
 // ── Supabase client ──────────────────────────────────────────────────
 
@@ -138,6 +143,10 @@ async function main() {
   fs.writeFileSync(FALLBACK_DATA_PATH, JSON.stringify(opportunities), 'utf-8');
   console.log('  Written to ' + path.relative(ROOT, FALLBACK_DATA_PATH) +
     ' (' + (fs.statSync(FALLBACK_DATA_PATH).size / 1024).toFixed(1) + ' KB)');
+
+  const agencyCount = new Set(opportunities.map((o) => o.agency)).size;
+  fs.writeFileSync(META_PATH, JSON.stringify({ opportunityCount: opportunities.length, agencyCount }), 'utf-8');
+  console.log('  Written to ' + path.relative(ROOT, META_PATH));
 
   console.log('Done.');
 }

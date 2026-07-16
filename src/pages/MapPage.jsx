@@ -1,13 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import WorldMap from '../components/WorldMap.jsx';
 import MapAccessibleSearch from '../components/MapAccessibleSearch.jsx';
 import MapDetailPanel from '../components/MapDetailPanel.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
 
+// Same rotation every visitor gets this week (not per-visitor random), so
+// it reads as "this week's featured group" rather than a flickery reload
+// lottery — and it's stable enough to reason about/link to. Index into
+// `features` (not feature.id) is what WorldMap's own generateId:true source
+// assigns internally in this same array order, so this lines up with a real
+// map click on the same point.
+function weekOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 1);
+  return Math.floor((date - start) / (7 * 24 * 60 * 60 * 1000));
+}
+
 export default function MapPage() {
   const [selected, setSelected] = useState(null);
   const [features, setFeatures] = useState(null);
   const detailRef = useRef(null);
+
+  const featured = useMemo(() => {
+    if (!features || features.length === 0) return null;
+    const idx = weekOfYear(new Date()) % features.length;
+    const feature = features[idx];
+    return { ...feature.properties, coordinates: feature.geometry.coordinates, id: idx };
+  }, [features]);
   usePageMeta({
     title: 'World Map',
     description: 'Interactive map of unreached people groups worldwide, with live data from Joshua Project.',
@@ -41,7 +59,7 @@ export default function MapPage() {
         <WorldMap selected={selected} onSelect={setSelected} onDataLoaded={setFeatures} />
       </div>
       <div ref={detailRef}>
-        <MapDetailPanel selected={selected} />
+        <MapDetailPanel selected={selected} featured={featured} onExploreFeatured={setSelected} />
       </div>
     </>
   );
