@@ -122,7 +122,10 @@ export default function JourneySection() {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.95, ease: EASE_DRAMATIC }}
           >
-            <span className="journey-step-watermark">{step.n}</span>
+            <span className="journey-step-watermark" aria-hidden="true">{step.n}</span>
+            {/* The one numeral of the three per step (watermark, this, and
+                the lane's JourneyDot) that assistive tech actually hears —
+                the other two are aria-hidden decorative repeats. */}
             <motion.span
               className="journey-step-number"
               initial={prefersReduced ? false : { opacity: 0, scale: 1.6 }}
@@ -166,6 +169,7 @@ function JourneyDot({ label, fraction, progress, prefersReduced }) {
     <div
       className={`journey-dot${reached ? ' journey-dot--reached' : ''}`}
       style={{ top: `${fraction * 100}%` }}
+      aria-hidden="true"
     >
       {label}
     </div>
