@@ -2082,7 +2082,11 @@ a { color: var(--voyage-teal); }
 .opp-card-wrapper { height: 100%; }
 
 .opp-card-skeleton {
-  height: 220px;
+  /* Matches real card height (measured 244-311px, avg ~263px) closely
+     enough that the loading→loaded swap doesn't shove the footer down —
+     a Lighthouse CLS run caught this at 220px (real cards are taller on
+     average, not shorter). */
+  height: 265px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: linear-gradient(100deg, var(--atlas-paper) 30%, rgba(22, 35, 59, 0.06) 45%, var(--atlas-paper) 60%);

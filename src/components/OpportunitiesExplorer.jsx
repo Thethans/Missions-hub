@@ -33,7 +33,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T21:43:05.533Z"
+// Generated: "2026-07-16T21:50:32.410Z"
 // Opportunities: 1026 across 22 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -786,8 +786,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         ) : (
           <div className="opp-loading" role="status">
             <p className="visually-hidden">Loading opportunities…</p>
+            {/* Matches PAGE_SIZE, not an arbitrary smaller count — a real
+                page of results is 24 cards, and skeleton/real height
+                parity is what keeps the footer from jumping down once
+                the swap happens (measured via Lighthouse CLS). */}
             <div className="opp-grid" aria-hidden="true">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                 <div className="opp-card-skeleton" key={i} />
               ))}
             </div>

@@ -715,8 +715,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         ) : (
           <div className="opp-loading" role="status">
             <p className="visually-hidden">Loading opportunities…</p>
+            {/* Matches PAGE_SIZE, not an arbitrary smaller count — a real
+                page of results is 24 cards, and skeleton/real height
+                parity is what keeps the footer from jumping down once
+                the swap happens (measured via Lighthouse CLS). */}
             <div className="opp-grid" aria-hidden="true">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                 <div className="opp-card-skeleton" key={i} />
               ))}
             </div>
