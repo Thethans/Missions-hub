@@ -234,6 +234,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [inquiryOpp, setInquiryOpp] = useState(null);
 
+  // Signed-out: favorites are device-owned, in localStorage (savedIds above).
+  // Signed-in: Supabase's saved_opportunities table is the source of truth,
+  // so favorites follow the user across devices. The two are merged (union,
+  // never a wholesale overwrite) the moment a session first appears.
+  const [session, setSession] = useState(null);
+
   // Loads the static fallback snapshot once on mount. Only applies it if
   // nothing has been set yet — if the live Supabase fetch below already won
   // the race, this must never clobber fresher data with the stale snapshot.
@@ -303,6 +309,56 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     localStorage.setItem('fielded_saved_opps', JSON.stringify([...savedIds]));
   }, [savedIds]);
 
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  // First sign-in: merge whatever was saved locally (signed-out browsing)
+  // with whatever's already in Supabase for this user, so neither side gets
+  // clobbered. Keyed on the user id, not the session object itself, since
+  // onAuthStateChange also fires (with a new session object) on token
+  // refresh — that must not re-run the merge on every refresh.
+  const userId = session?.user?.id;
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    let cancelled = false;
+    async function mergeFavorites() {
+      const { data, error } = await supabase
+        .from('saved_opportunities')
+        .select('opportunity_id')
+        .eq('user_id', userId);
+      if (cancelled) return;
+      if (error) {
+        console.error('Failed to load saved opportunities from Supabase:', error);
+        return;
+      }
+      const remoteIds = new Set((data || []).map((r) => r.opportunity_id));
+      let localIds = new Set();
+      try {
+        localIds = new Set(JSON.parse(localStorage.getItem('fielded_saved_opps') || '[]'));
+      } catch {
+        // ignore malformed cache
+      }
+      const missingFromRemote = [...localIds].filter((id) => !remoteIds.has(id));
+      if (missingFromRemote.length > 0) {
+        const { error: upsertError } = await supabase
+          .from('saved_opportunities')
+          .upsert(missingFromRemote.map((id) => ({ user_id: userId, opportunity_id: id })), {
+            onConflict: 'user_id,opportunity_id'
+          });
+        if (upsertError) console.error('Failed to merge local favorites into Supabase:', upsertError);
+      }
+      if (!cancelled) setSavedIds(new Set([...remoteIds, ...localIds]));
+    }
+    mergeFavorites();
+    return () => { cancelled = true; };
+  }, [userId]);
+
   const agencies = useMemo(
     () => [...new Set((opportunities || []).map((o) => o.agency))].sort(),
     [opportunities]
@@ -340,12 +396,28 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
 
   function toggleSave(id) {
+    const wasSaved = savedIds.has(id);
     setSavedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+
+    // Signed in: Supabase is the source of truth, so the edit goes there
+    // (and follows the user across devices). Signed out: the localStorage
+    // effect above is the only persistence, same as before this feature.
+    if (supabase && userId) {
+      const write = wasSaved
+        ? supabase.from('saved_opportunities').delete().match({ user_id: userId, opportunity_id: id })
+        : supabase.from('saved_opportunities').upsert(
+            { user_id: userId, opportunity_id: id },
+            { onConflict: 'user_id,opportunity_id' }
+          );
+      write.then(({ error }) => {
+        if (error) console.error('Failed to sync saved opportunity to Supabase:', error);
+      });
+    }
   }
 
   function clearFilters() {

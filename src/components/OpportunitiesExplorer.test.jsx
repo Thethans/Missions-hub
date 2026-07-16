@@ -17,16 +17,37 @@ async function importWithFreshFetchFlag(value) {
 
 // Mirrors the shape of a chained Supabase query builder: from/select/eq/order
 // all return the same chainable object, and range() is the terminal call the
-// component actually awaits — so only range() needs to resolve.
-function makeSupabaseMock(pages) {
+// opportunities-table query actually awaits — so only range() needs to
+// resolve there. saved_opportunities uses a shorter select().eq() chain (no
+// range/order), so it gets its own small builder.
+//
+// authSession/onAuthStateChange default to signed-out (null session, no-op
+// unsubscribe) since most tests don't care about auth at all.
+function makeSupabaseMock({ opportunityPages = [{ data: [], error: null }], savedIds = [], authSession = null } = {}) {
   let call = 0;
-  const builder = {
-    select: () => builder,
-    eq: () => builder,
-    order: () => builder,
-    range: () => Promise.resolve(pages[Math.min(call++, pages.length - 1)])
+  const opportunitiesBuilder = {
+    select: () => opportunitiesBuilder,
+    eq: () => opportunitiesBuilder,
+    order: () => opportunitiesBuilder,
+    range: () => Promise.resolve(opportunityPages[Math.min(call++, opportunityPages.length - 1)])
   };
-  return { from: vi.fn(() => builder) };
+
+  const savedOpportunities = {
+    select: () => ({
+      eq: () => Promise.resolve({ data: savedIds.map((id) => ({ opportunity_id: id })), error: null })
+    }),
+    upsert: vi.fn(() => Promise.resolve({ error: null })),
+    delete: () => ({ match: vi.fn(() => Promise.resolve({ error: null })) })
+  };
+
+  return {
+    from: vi.fn((table) => (table === 'saved_opportunities' ? savedOpportunities : opportunitiesBuilder)),
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: authSession } }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+    },
+    _savedOpportunities: savedOpportunities
+  };
 }
 
 const FALLBACK_SAMPLE = [
@@ -94,7 +115,7 @@ describe('OpportunitiesExplorer', () => {
   }, TIMEOUT);
 
   it('never calls Supabase when the fresh-fetch flag is off, even with a client configured', async () => {
-    mockSupabase = makeSupabaseMock([{ data: [], error: null }]);
+    mockSupabase = makeSupabaseMock({ opportunityPages: [{ data: [], error: null }] });
 
     render(<OpportunitiesExplorer agencyFilter="" />);
 
@@ -106,24 +127,26 @@ describe('OpportunitiesExplorer', () => {
 
   it('replaces the fallback snapshot with live data on a successful background refresh when the flag is on', async () => {
     const FreshFetchExplorer = await importWithFreshFetchFlag('true');
-    mockSupabase = makeSupabaseMock([
-      {
-        data: [
-          {
-            id: 'live-1',
-            agency: 'Live Agency',
-            title: 'Freshly Fetched Opportunity',
-            url: 'https://example.org/opp',
-            location: null,
-            region: null,
-            role_type: null,
-            term_length: null,
-            description: null
-          }
-        ],
-        error: null
-      }
-    ]);
+    mockSupabase = makeSupabaseMock({
+      opportunityPages: [
+        {
+          data: [
+            {
+              id: 'live-1',
+              agency: 'Live Agency',
+              title: 'Freshly Fetched Opportunity',
+              url: 'https://example.org/opp',
+              location: null,
+              region: null,
+              role_type: null,
+              term_length: null,
+              description: null
+            }
+          ],
+          error: null
+        }
+      ]
+    });
 
     render(<FreshFetchExplorer agencyFilter="" />);
 
@@ -135,7 +158,7 @@ describe('OpportunitiesExplorer', () => {
 
   it('keeps showing the fallback snapshot and surfaces an inline notice when the background refresh errors', async () => {
     const FreshFetchExplorer = await importWithFreshFetchFlag('true');
-    mockSupabase = makeSupabaseMock([{ data: null, error: { message: 'RLS policy violation' } }]);
+    mockSupabase = makeSupabaseMock({ opportunityPages: [{ data: null, error: { message: 'RLS policy violation' } }] });
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(<FreshFetchExplorer agencyFilter="" />);
@@ -241,5 +264,84 @@ describe('OpportunitiesExplorer sorting', () => {
     expect(screen.getByText(/sorted by your quiz matches/i)).toBeInTheDocument();
     expect(agencyOrder()).toEqual(['Zed Agency', 'Mid Agency', 'Alpha Agency']);
     expect(within(screen.getByLabelText(/sort opportunities by/i)).getByRole('option', { name: 'Relevance' })).toBeInTheDocument();
+  }, TIMEOUT);
+});
+
+const FAVORITES_SAMPLE = [
+  { id: 'opp-local', agency: 'Local Agency', title: 'Locally Saved Opportunity', url: 'https://example.org/local', location: null, region: null, role_type: null, term_length: null, description: null },
+  { id: 'opp-remote', agency: 'Remote Agency', title: 'Remotely Saved Opportunity', url: 'https://example.org/remote', location: null, region: null, role_type: null, term_length: null, description: null }
+];
+
+const SESSION = { user: { id: 'user-1' } };
+
+describe('OpportunitiesExplorer auth-linked favorites', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(FAVORITES_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('saves to localStorage only when signed out, never touching Supabase', async () => {
+    const user = userEvent.setup();
+    mockSupabase = makeSupabaseMock({ opportunityPages: [{ data: [], error: null }] });
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+    await waitFor(() => screen.getByText('Locally Saved Opportunity'));
+
+    await user.click(screen.getAllByLabelText('Save opportunity')[0]);
+
+    expect(JSON.parse(localStorage.getItem('fielded_saved_opps'))).toContain('opp-local');
+    expect(mockSupabase._savedOpportunities.upsert).not.toHaveBeenCalled();
+  }, TIMEOUT);
+
+  it('merges localStorage favorites into Supabase on first sign-in without clobbering either side', async () => {
+    localStorage.setItem('fielded_saved_opps', JSON.stringify(['opp-local']));
+    mockSupabase = makeSupabaseMock({
+      opportunityPages: [{ data: [], error: null }],
+      savedIds: ['opp-remote'],
+      authSession: SESSION
+    });
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+    await waitFor(() => screen.getByText('Locally Saved Opportunity'));
+
+    await waitFor(() => {
+      expect(mockSupabase._savedOpportunities.upsert).toHaveBeenCalledWith(
+        [{ user_id: 'user-1', opportunity_id: 'opp-local' }],
+        { onConflict: 'user_id,opportunity_id' }
+      );
+    });
+
+    // Both the locally-saved and remotely-saved opportunity now show as saved.
+    await waitFor(() => {
+      const saveButtons = screen.getAllByLabelText('Remove from saved');
+      expect(saveButtons).toHaveLength(2);
+    });
+  }, TIMEOUT);
+
+  it('writes toggles to Supabase (not localStorage-only) once signed in', async () => {
+    const user = userEvent.setup();
+    mockSupabase = makeSupabaseMock({
+      opportunityPages: [{ data: [], error: null }],
+      savedIds: [],
+      authSession: SESSION
+    });
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+    await waitFor(() => screen.getByText('Locally Saved Opportunity'));
+
+    await user.click(screen.getAllByLabelText('Save opportunity')[0]);
+
+    expect(mockSupabase._savedOpportunities.upsert).toHaveBeenCalledWith(
+      { user_id: 'user-1', opportunity_id: 'opp-local' },
+      { onConflict: 'user_id,opportunity_id' }
+    );
   }, TIMEOUT);
 });
