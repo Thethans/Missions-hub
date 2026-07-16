@@ -315,34 +315,84 @@ a { color: var(--voyage-teal); }
   position: absolute;
   inset: 0;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   contain: layout style paint;
 }
 
-.hero-globe { width: min(85vh, 900px); opacity: 0.9; flex-shrink: 0; }
-
-.hero-dots {
-  flex: 1;
-  min-width: 0;
+/* "The Living Atlas" — dot-matrix world map, pulse layer (real unreached
+   coordinates), and route layer (illustrative sending arcs). See
+   HeroBackground.jsx and scripts/generate-hero-dots.js. */
+.hero-atlas {
+  width: 100%;
   height: 100%;
-  opacity: 0.7;
-  animation: hero-dots-fade 2s ease-out both;
+  opacity: 0.8;
+  animation: hero-atlas-fade 2s ease-out both;
 }
-.hero-dots--left { mask-image: linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%); }
-.hero-dots--right { mask-image: linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%); }
 
-@keyframes hero-dots-fade {
+@keyframes hero-atlas-fade {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to { opacity: 0.8; }
 }
 
-@media (max-width: 768px) {
-  .hero-dots { display: none; }
+.hero-atlas-dots circle {
+  fill: var(--atlas-paper);
+  opacity: 0.3;
 }
-.hero-globe .globe-stage { width: 100%; }
-.hero-globe .globe-plane { filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45)); }
+
+.hero-atlas-pulse {
+  fill: var(--status-unreached);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-atlas-pulse 3.5s ease-in-out infinite;
+}
+
+@keyframes hero-atlas-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.6); }
+}
+
+.hero-atlas-route {
+  fill: none;
+  stroke: var(--voyage-teal);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 4;
+  opacity: 0.7;
+}
+
+.hero-atlas-routes g {
+  animation: hero-atlas-route-draw 6s ease-in-out infinite;
+}
+
+@keyframes hero-atlas-route-draw {
+  0% { stroke-dashoffset: 0; opacity: 0; }
+  8% { opacity: 0.7; }
+  45% { stroke-dashoffset: -120; opacity: 0.7; }
+  70%, 100% { stroke-dashoffset: -120; opacity: 0; }
+}
+
+.hero-atlas-coord {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  fill: var(--atlas-paper);
+  opacity: 0;
+  animation: hero-atlas-coord-fade 6s ease-in-out infinite;
+}
+
+@keyframes hero-atlas-coord-fade {
+  0%, 20% { opacity: 0; }
+  45%, 65% { opacity: 0.75; }
+  85%, 100% { opacity: 0; }
+}
+
+/* Static texture, no motion — the map itself stays, nothing pulses or draws. */
+.hero-atlas--static { animation: none; opacity: 0.8; }
+.hero-atlas--static .hero-atlas-pulse,
+.hero-atlas--static .hero-atlas-routes g,
+.hero-atlas--static .hero-atlas-coord {
+  animation: none;
+}
+.hero-atlas--static .hero-atlas-pulse { opacity: 0.7; transform: none; }
+.hero-atlas--static .hero-atlas-route { opacity: 0.5; }
+.hero-atlas--static .hero-atlas-coord { opacity: 0.6; }
 
 /* Darkens the middle of the hero (where the text sits) without dimming the
    globe's bright edges/glow, so the wordmark and copy stay legible over

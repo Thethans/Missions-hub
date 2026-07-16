@@ -22,10 +22,13 @@ jobs:
           JP_API_KEY: ${{ secrets.JP_API_KEY }}
         run: npm run fetch-jp
 
-      - name: Commit updated data file
+      - name: Regenerate hero atlas dots
+        run: npm run generate-hero-dots
+
+      - name: Commit updated data files
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add public/data/people-groups.geojson
+          git add public/data/people-groups.geojson public/data/stats.json src/data/stats.json src/data/heroAtlas.json
           git diff --quiet --cached || git commit -m "chore: refresh Joshua Project data"
           git push

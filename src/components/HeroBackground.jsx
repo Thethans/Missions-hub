@@ -1,108 +1,95 @@
-import React, { Suspense, lazy } from 'react';
-import { useMotionValue } from 'framer-motion';
+import React from 'react';
+import atlas from '../data/heroAtlas.json';
+import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
+import useMatchMedia from '../hooks/useMatchMedia.js';
 
-const Globe = lazy(() => import('./Globe.jsx'));
+// "The Living Atlas" (HERO section of FIELDED_PROFESSIONALIZATION_AUDIT.md):
+// a dot-matrix world map built from the site's own real people-group data
+// (see scripts/generate-hero-dots.js — src/data/heroAtlas.json is its
+// static, build-time-only output, never computed client-side), with two
+// motion layers: a pulse layer at real unreached-people-group coordinates,
+// and a route layer of illustrative sending-city → unreached-region arcs
+// with IBM Plex Mono coordinate labels. Pure inline SVG + CSS animation —
+// no canvas, no three.js, no new dependency. Replaces the old hand-placed
+// DotConstellation + cobe Globe composition; Globe.jsx itself is untouched
+// and unused for now, reserved for a future flagship moment per the spec.
 
-function DotConstellation({ side }) {
-  const dots = side === 'left' ? [
-    { cx: 15, cy: 18, r: 1.5, opacity: 0.35 },
-    { cx: 42, cy: 12, r: 2, opacity: 0.25 },
-    { cx: 68, cy: 30, r: 1, opacity: 0.45 },
-    { cx: 25, cy: 45, r: 1.8, opacity: 0.3 },
-    { cx: 55, cy: 52, r: 1.2, opacity: 0.4 },
-    { cx: 10, cy: 65, r: 2.2, opacity: 0.2 },
-    { cx: 48, cy: 70, r: 1, opacity: 0.35 },
-    { cx: 72, cy: 60, r: 1.5, opacity: 0.28 },
-    { cx: 30, cy: 80, r: 1.8, opacity: 0.22 },
-    { cx: 60, cy: 85, r: 1, opacity: 0.38 },
-    { cx: 20, cy: 35, r: 0.8, opacity: 0.5 },
-    { cx: 75, cy: 42, r: 0.8, opacity: 0.42 },
-    { cx: 38, cy: 25, r: 1.3, opacity: 0.32 },
-    { cx: 8, cy: 50, r: 1, opacity: 0.28 },
-    { cx: 65, cy: 15, r: 0.8, opacity: 0.36 },
-    { cx: 50, cy: 38, r: 1.5, opacity: 0.18 },
-    { cx: 18, cy: 72, r: 1.2, opacity: 0.3 },
-    { cx: 80, cy: 75, r: 1, opacity: 0.2 },
-    { cx: 35, cy: 58, r: 0.6, opacity: 0.45 },
-    { cx: 62, cy: 48, r: 0.7, opacity: 0.35 },
-  ] : [
-    { cx: 28, cy: 15, r: 1.5, opacity: 0.3 },
-    { cx: 58, cy: 22, r: 2, opacity: 0.22 },
-    { cx: 82, cy: 10, r: 1.2, opacity: 0.4 },
-    { cx: 35, cy: 40, r: 1, opacity: 0.45 },
-    { cx: 70, cy: 35, r: 1.8, opacity: 0.28 },
-    { cx: 90, cy: 50, r: 1.5, opacity: 0.35 },
-    { cx: 45, cy: 55, r: 2.2, opacity: 0.2 },
-    { cx: 20, cy: 60, r: 1, opacity: 0.38 },
-    { cx: 65, cy: 68, r: 0.8, opacity: 0.42 },
-    { cx: 85, cy: 72, r: 1.3, opacity: 0.25 },
-    { cx: 40, cy: 78, r: 1, opacity: 0.32 },
-    { cx: 55, cy: 82, r: 1.8, opacity: 0.18 },
-    { cx: 75, cy: 88, r: 0.8, opacity: 0.35 },
-    { cx: 25, cy: 30, r: 0.7, opacity: 0.5 },
-    { cx: 50, cy: 45, r: 1.2, opacity: 0.3 },
-    { cx: 80, cy: 28, r: 0.8, opacity: 0.38 },
-    { cx: 15, cy: 48, r: 1, opacity: 0.25 },
-    { cx: 92, cy: 38, r: 0.6, opacity: 0.45 },
-    { cx: 38, cy: 65, r: 1.5, opacity: 0.22 },
-    { cx: 72, cy: 55, r: 0.7, opacity: 0.35 },
-  ];
+// Matches the existing .hero-dots mobile breakpoint in styles.css.
+const MOBILE_QUERY = '(max-width: 768px)';
 
-  const lines = side === 'left' ? [
-    { x1: 15, y1: 18, x2: 42, y2: 12 },
-    { x1: 42, y1: 12, x2: 68, y2: 30 },
-    { x1: 25, y1: 45, x2: 55, y2: 52 },
-    { x1: 55, y1: 52, x2: 72, y2: 60 },
-    { x1: 20, y1: 35, x2: 38, y2: 25 },
-    { x1: 38, y1: 25, x2: 65, y2: 15 },
-    { x1: 10, y1: 65, x2: 30, y2: 80 },
-    { x1: 48, y1: 70, x2: 60, y2: 85 },
-    { x1: 8, y1: 50, x2: 18, y2: 72 },
-    { x1: 35, y1: 58, x2: 50, y2: 38 },
-  ] : [
-    { x1: 28, y1: 15, x2: 58, y2: 22 },
-    { x1: 58, y1: 22, x2: 82, y2: 10 },
-    { x1: 35, y1: 40, x2: 70, y2: 35 },
-    { x1: 70, y1: 35, x2: 90, y2: 50 },
-    { x1: 25, y1: 30, x2: 50, y2: 45 },
-    { x1: 45, y1: 55, x2: 65, y2: 68 },
-    { x1: 65, y1: 68, x2: 85, y2: 72 },
-    { x1: 20, y1: 60, x2: 38, y2: 65 },
-    { x1: 80, y1: 28, x2: 92, y2: 38 },
-    { x1: 40, y1: 78, x2: 55, y2: 82 },
-  ];
+// The "10/40 Window" is real missiological shorthand for the latitude band
+// (10°N-40°N) historically cited as containing the bulk of the world's
+// unreached peoples — cropping the mobile viewBox to it isn't an arbitrary
+// framing choice, it's the same concept the rest of this product is built
+// around. Computed from generate-hero-dots.js's own projection constants
+// (LAT_MIN -58, LAT_MAX 76, height 400): y for lat=40 is ~104, for lat=10
+// is ~193, so this crop keeps that band roughly centered with padding.
+const MOBILE_VIEWBOX = '0 70 800 260';
 
+function Dots({ dots, mobile }) {
+  const visible = mobile ? dots.filter((_, i) => i % 2 === 0) : dots;
   return (
-    <svg
-      className={`hero-dots hero-dots--${side}`}
-      viewBox="0 0 100 100"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      {lines.map((l, i) => (
-        <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-          stroke="rgba(43, 110, 118, 0.3)" strokeWidth="0.4" />
+    <g className="hero-atlas-dots">
+      {visible.map((d, i) => (
+        <circle key={i} cx={d.x} cy={d.y} r={1.6} />
       ))}
-      {dots.map((d, i) => (
-        <circle key={i} cx={d.cx} cy={d.cy} r={d.r}
-          fill="rgba(250, 247, 240, 1)" opacity={d.opacity} />
+    </g>
+  );
+}
+
+function Pulses({ pulses, animate }) {
+  return (
+    <g className="hero-atlas-pulses">
+      {pulses.map((p, i) => (
+        <circle
+          key={i}
+          cx={p.x}
+          cy={p.y}
+          r={3}
+          className="hero-atlas-pulse"
+          style={animate ? { animationDelay: `${p.delayFraction * 3.5}s` } : undefined}
+        />
       ))}
-    </svg>
+    </g>
+  );
+}
+
+function Routes({ routes, animate }) {
+  return (
+    <g className="hero-atlas-routes">
+      {routes.map((r, i) => (
+        <g key={i} style={animate ? { animationDelay: `${i * 1.3}s` } : undefined}>
+          <path
+            d={`M ${r.from.x} ${r.from.y} Q ${r.controlX} ${r.controlY} ${r.to.x} ${r.to.y}`}
+            className="hero-atlas-route"
+          />
+          <text x={r.from.x} y={r.from.y - 10} className="hero-atlas-coord" textAnchor="middle">
+            {r.from.label}
+          </text>
+          <text x={r.to.x} y={r.to.y - 10} className="hero-atlas-coord" textAnchor="middle">
+            {r.to.label}
+          </text>
+        </g>
+      ))}
+    </g>
   );
 }
 
 export default function HeroBackground() {
-  const staticProgress = useMotionValue(0);
+  const prefersReduced = usePrefersReducedMotion();
+  const mobile = useMatchMedia(MOBILE_QUERY);
 
   return (
     <div className="hero-background" aria-hidden="true">
-      <DotConstellation side="left" />
-      <div className="hero-globe">
-        <Suspense fallback={null}>
-          <Globe progress={staticProgress} />
-        </Suspense>
-      </div>
-      <DotConstellation side="right" />
+      <svg
+        className={`hero-atlas${prefersReduced ? ' hero-atlas--static' : ''}`}
+        viewBox={mobile ? MOBILE_VIEWBOX : atlas.viewBox}
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <Dots dots={atlas.dots} mobile={mobile} />
+        <Routes routes={atlas.routes} animate={!prefersReduced} />
+        <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
+      </svg>
     </div>
   );
 }

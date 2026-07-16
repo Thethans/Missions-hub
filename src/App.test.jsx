@@ -4,10 +4,12 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from './App.jsx';
 
-// cobe talks to a real WebGL context, which jsdom doesn't implement. Globe
-// is lazy-loaded behind a Suspense boundary (see HeroBackground.jsx)
-// specifically so a synchronous render like this one never has to mount it
-// — this mock is a defensive backstop in case that ever changes.
+// cobe talks to a real WebGL context, which jsdom doesn't implement.
+// HeroBackground.jsx no longer renders Globe.jsx (replaced by the inline-SVG
+// "Living Atlas" — see HeroBackground.jsx), so nothing in this render tree
+// imports cobe today; this mock stays as a defensive backstop in case
+// Globe.jsx (still in the codebase, reserved for a future flagship moment)
+// gets wired back in.
 vi.mock('cobe', () => ({
   default: () => ({ update: () => {}, destroy: () => {} })
 }));
