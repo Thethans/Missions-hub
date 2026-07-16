@@ -2,16 +2,25 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useSearchParams } from 'react-router-dom';
 import OpportunitiesExplorer from './OpportunitiesExplorer.jsx';
+
+// Surfaces the current URL search params as text so tests can assert on the
+// page/filter/sort state the component syncs into the URL, without reaching
+// into MemoryRouter's private history internals.
+function LocationDisplay() {
+  const [params] = useSearchParams();
+  return <div data-testid="url-params">{params.toString()}</div>;
+}
 
 // The no-quiz-result "Start with a quick quiz" hint links to /quiz via
 // react-router's <Link>, so every render needs a Router ancestor.
-function renderExplorer(Component, props) {
+function renderExplorer(Component, props, { initialEntries } = {}) {
   const Explorer = Component || OpportunitiesExplorer;
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries || ['/']}>
       <Explorer {...props} />
+      <LocationDisplay />
     </MemoryRouter>
   );
 }
@@ -355,5 +364,111 @@ describe('OpportunitiesExplorer auth-linked favorites', () => {
       { user_id: 'user-1', opportunity_id: 'opp-local' },
       { onConflict: 'user_id,opportunity_id' }
     );
+  }, TIMEOUT);
+});
+
+// 3 agencies × 10 opportunities each = 30, so pagination (24/page) and the
+// round-robin interleave both have something non-trivial to prove against.
+const AGENCY_NAMES = ['Agency A', 'Agency B', 'Agency C'];
+const PAGINATION_SAMPLE = Array.from({ length: 30 }, (_, i) => ({
+  id: `opp-${i}`,
+  agency: AGENCY_NAMES[i % 3],
+  title: `Opp ${i}`,
+  url: `https://example.org/${i}`,
+  location: null,
+  // Region/role/term values must be ones the generated component's static
+  // REGIONS/ROLE_TYPES/TERM_LENGTHS lists actually contain (they're baked in
+  // from real Supabase data at build time, not derived from this fixture) —
+  // otherwise no matching filter chip renders at all.
+  region: i % 2 === 0 ? 'Sub-Saharan Africa' : 'Europe',
+  role_type: i % 2 === 0 ? 'medical' : 'administration',
+  term_length: i % 2 === 0 ? 'short-term (under 2 years)' : 'career/long-term',
+  description: null
+}));
+
+describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(PAGINATION_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('shows 24 cards on page 1 and the rest on page 2, with a pager', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(24);
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(6);
+    });
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('syncs the current page into the URL so it is shareable/reloadable', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('url-params').textContent).toContain('page=2');
+    });
+  }, TIMEOUT);
+
+  it('honors a page number already present in the URL on load', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' }, { initialEntries: ['/?page=2'] });
+
+    await waitFor(() => {
+      expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+    });
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(6);
+  }, TIMEOUT);
+
+  it('interleaves by agency by default instead of grouping all of one agency first', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    const cardTitles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+    const firstThreeAgencies = cardTitles.slice(0, 3).map((t) => AGENCY_NAMES[Number(t.replace('Opp ', '')) % 3]);
+    // Interleaved: the first 3 cards should be one from each agency, not
+    // all "Agency A" (which is what raw alphabetical-by-agency would give).
+    expect(new Set(firstThreeAgencies).size).toBe(3);
+  }, TIMEOUT);
+
+  it('shows facet counts on filter chips reflecting the other active filters', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    await user.click(screen.getByRole('button', { name: /filters/i }));
+
+    const agencyChip = screen.getByRole('button', { name: /Agency A/ });
+    expect(within(agencyChip).getByText('(10)')).toBeInTheDocument();
+
+    // Narrow to Sub-Saharan Africa (15 of the 30 rows), then Agency A's facet
+    // count should drop to the 5 Agency A rows also in that region.
+    await user.click(screen.getByRole('button', { name: /^Sub-Saharan Africa/ }));
+    await waitFor(() => {
+      expect(within(screen.getByRole('button', { name: /Agency A/ })).getByText('(5)')).toBeInTheDocument();
+    });
+  }, TIMEOUT);
+
+  it('formats the results count with a thousands separator and keeps it visually separate from the Filters button', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText(/30 opportunities/));
+    expect(screen.getByText(/30 opportunities/).textContent).not.toMatch(/Filters/);
   }, TIMEOUT);
 });

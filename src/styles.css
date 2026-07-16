@@ -1949,6 +1949,45 @@ a { color: var(--voyage-teal); }
   margin: 0;
 }
 
+/* Pagination */
+.opp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.opp-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink-navy);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.opp-page-btn:hover:not(:disabled) { border-color: var(--voyage-teal); }
+
+.opp-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.opp-page-status {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  white-space: nowrap;
+}
+
 /* Card grid */
 .opp-grid {
   display: grid;

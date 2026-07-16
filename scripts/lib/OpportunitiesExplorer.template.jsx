@@ -7,9 +7,9 @@
 // Generated: '__GENERATED_DATE__'
 // Opportunities: '__OPP_COUNT__' across '__AGENCY_COUNT__' agencies
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending } from '@phosphor-icons/react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
 
@@ -32,7 +32,45 @@ function loadQuizAgencyScores() {
 
 const SORT_RELEVANCE = 'relevance';
 const SORT_AGENCY = 'agency';
-const SORT_RECENT = 'recent';
+// Neither `scraped_at` nor `date_posted` is a reliable per-listing freshness
+// signal (scraped_at is a bulk re-scrape timestamp, date_posted is almost
+// always null) — a round-robin interleave by agency is the honest default
+// instead of a fabricated "recently added" claim. It also fixes the actual
+// bug: raw alphabetical-by-agency reads as an ABWE directory since ABWE
+// alone accounts for the first ~250 rows.
+const SORT_MIXED = 'mixed';
+
+const PAGE_SIZE = 24;
+
+// One item from each agency bucket per round, cycling until every bucket is
+// exhausted — turns "first 250 rows are all ABWE" into "one ABWE listing
+// every ~22 opportunities." Bucket order follows first-appearance order in
+// `list` (which is itself agency-alphabetical from the source query), so the
+// interleave is still deterministic and stable across renders.
+function interleaveByAgency(list) {
+  const buckets = new Map();
+  for (const o of list) {
+    if (!buckets.has(o.agency)) buckets.set(o.agency, []);
+    buckets.get(o.agency).push(o);
+  }
+  const bucketArrays = [...buckets.values()];
+  const result = [];
+  let i = 0;
+  while (result.length < list.length) {
+    for (const bucket of bucketArrays) {
+      if (i < bucket.length) result.push(bucket[i]);
+    }
+    i += 1;
+  }
+  return result;
+}
+
+// Parses a comma-separated query-param value into a Set, or an empty Set if
+// the param is absent — used for every multi-select filter's URL sync.
+function parseSetParam(params, key) {
+  const raw = params.get(key);
+  return raw ? new Set(raw.split(',').filter(Boolean)) : new Set();
+}
 
 // The full opportunities list used to be inlined here as a literal — with
 // 1500+ records that made this one file (and its route chunk) ~650KB before
@@ -61,8 +99,8 @@ function FilterChip({ label, active, count, onClick }) {
       className={`opp-filter-chip${active ? ' opp-filter-chip--active' : ''}`}
       onClick={onClick}
     >
-      {label}
-      {count > 0 && <span className="opp-filter-chip-count">{count}</span>}
+      <span>{label}</span>
+      {count > 0 && <span className="opp-filter-chip-count">({count.toLocaleString()})</span>}
     </button>
   );
 }
@@ -204,18 +242,33 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [loadError, setLoadError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
 
+  // Page, filters, and sort all live in the URL (?page=2&agency=ABWE&category=medical)
+  // so results are shareable and survive a reload — read once on mount as the
+  // initial state, then kept in sync by the effect below on every change.
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // Filters — Sets for multi-select (union/OR within a category, intersection/AND across categories)
-  const [search, setSearch] = useState('');
-  const [selectedAgencies, setSelectedAgencies] = useState(() =>
-    agencyFilter ? new Set([agencyFilter]) : new Set()
-  );
-  const [selectedRegions, setSelectedRegions] = useState(new Set());
-  const [selectedRoles, setSelectedRoles] = useState(new Set());
-  const [selectedTerms, setSelectedTerms] = useState(new Set());
+  const [search, setSearch] = useState(() => searchParams.get('q') || '');
+  const [selectedAgencies, setSelectedAgencies] = useState(() => {
+    const fromUrl = parseSetParam(searchParams, 'agency');
+    if (fromUrl.size > 0) return fromUrl;
+    return agencyFilter ? new Set([agencyFilter]) : new Set();
+  });
+  const [selectedRegions, setSelectedRegions] = useState(() => parseSetParam(searchParams, 'region'));
+  // URL param is named `category` (not `role`) to match the audit spec's
+  // example (`?category=medical`) — it maps to the role_type field.
+  const [selectedRoles, setSelectedRoles] = useState(() => parseSetParam(searchParams, 'category'));
+  const [selectedTerms, setSelectedTerms] = useState(() => parseSetParam(searchParams, 'term'));
   const [showFilters, setShowFilters] = useState(false);
 
   const [quizScores] = useState(loadQuizAgencyScores);
-  const [sortMode, setSortMode] = useState(() => (quizScores ? SORT_RELEVANCE : SORT_RECENT));
+  const [sortMode, setSortMode] = useState(() => {
+    const fromUrl = searchParams.get('sort');
+    if (fromUrl === SORT_AGENCY || (fromUrl === SORT_RELEVANCE && quizScores)) return fromUrl;
+    if (fromUrl === SORT_MIXED) return SORT_MIXED;
+    return quizScores ? SORT_RELEVANCE : SORT_MIXED;
+  });
+  const [page, setPage] = useState(() => Math.max(1, parseInt(searchParams.get('page'), 10) || 1));
 
   function toggleFilter(setter, value) {
     setter(prev => {
@@ -365,36 +418,122 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     [opportunities]
   );
 
-  const filtered = useMemo(() => {
-    let list = opportunities || [];
-
-    if (showSavedOnly) {
-      list = list.filter((o) => savedIds.has(o.id));
-    }
+  // Every filter dimension applied except `search`/`showSavedOnly` (which
+  // apply everywhere) and whichever dimension `skipKey` names — that's what
+  // makes a facet count reflect "how many results if I also picked this
+  // option", not "how many results right now" (which would just repeat the
+  // header count on every chip and zero out sibling options in the same
+  // group the instant one is selected).
+  function baseFilteredList(list, skipKey) {
+    let out = list;
+    if (showSavedOnly) out = out.filter((o) => savedIds.has(o.id));
     if (search) {
       const q = search.toLowerCase();
-      list = list.filter((o) =>
+      out = out.filter((o) =>
         o.title.toLowerCase().includes(q) ||
         (o.description || '').toLowerCase().includes(q) ||
         o.agency.toLowerCase().includes(q) ||
         (o.location || '').toLowerCase().includes(q)
       );
     }
-    if (selectedAgencies.size > 0) list = list.filter((o) => selectedAgencies.has(o.agency));
-    if (selectedRegions.size > 0) list = list.filter((o) => selectedRegions.has(o.region));
-    if (selectedRoles.size > 0) list = list.filter((o) => selectedRoles.has(o.role_type));
-    if (selectedTerms.size > 0) list = list.filter((o) => selectedTerms.has(o.term_length));
+    if (skipKey !== 'agency' && selectedAgencies.size > 0) out = out.filter((o) => selectedAgencies.has(o.agency));
+    if (skipKey !== 'region' && selectedRegions.size > 0) out = out.filter((o) => selectedRegions.has(o.region));
+    if (skipKey !== 'role' && selectedRoles.size > 0) out = out.filter((o) => selectedRoles.has(o.role_type));
+    if (skipKey !== 'term' && selectedTerms.size > 0) out = out.filter((o) => selectedTerms.has(o.term_length));
+    return out;
+  }
+
+  function countBy(list, field) {
+    const counts = new Map();
+    for (const o of list) {
+      const v = o[field];
+      if (v == null) continue;
+      counts.set(v, (counts.get(v) || 0) + 1);
+    }
+    return counts;
+  }
+
+  const agencyCounts = useMemo(
+    () => countBy(baseFilteredList(opportunities || [], 'agency'), 'agency'),
+    [opportunities, search, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+  );
+  const regionCounts = useMemo(
+    () => countBy(baseFilteredList(opportunities || [], 'region'), 'region'),
+    [opportunities, search, selectedAgencies, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+  );
+  const roleCounts = useMemo(
+    () => countBy(baseFilteredList(opportunities || [], 'role'), 'role_type'),
+    [opportunities, search, selectedAgencies, selectedRegions, selectedTerms, showSavedOnly, savedIds]
+  );
+  const termCounts = useMemo(
+    () => countBy(baseFilteredList(opportunities || [], 'term'), 'term_length'),
+    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, showSavedOnly, savedIds]
+  );
+
+  const filtered = useMemo(() => {
+    let list = baseFilteredList(opportunities || [], null);
 
     if (sortMode === SORT_AGENCY) {
       list = [...list].sort((a, b) => a.agency.localeCompare(b.agency) || a.title.localeCompare(b.title));
     } else if (sortMode === SORT_RELEVANCE && quizScores) {
       list = [...list].sort((a, b) => (quizScores.get(b.agency) ?? -1) - (quizScores.get(a.agency) ?? -1));
+    } else {
+      // SORT_MIXED (default): round-robin interleave by agency — see
+      // interleaveByAgency() above for why this replaces raw alphabetical.
+      list = interleaveByAgency(list);
     }
-    // SORT_RECENT: no reorder — the static snapshot's own order is the closest
-    // thing to "recently added" available without a source created_at field.
 
     return list;
   }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
+  );
+
+  // Reset to page 1 whenever the result set could have changed shape —
+  // search, filters, or sort — but not on first mount, so a shared/reloaded
+  // URL like ?page=3&agency=ABWE actually lands on page 3 instead of always
+  // snapping back to page 1.
+  const isFirstFilterRender = useRef(true);
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+    setPage(1);
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, sortMode, showSavedOnly]);
+
+  // Clamp if filters shrank the result set out from under the current page
+  // (e.g. on page 5 of "ABWE", then also filter to a term length with none).
+  // Skipped while opportunities is still null — otherwise totalPages is
+  // briefly 1 (nothing loaded yet) and this would snap a URL-provided
+  // ?page=3 back down to 1 before the real data ever arrives.
+  useEffect(() => {
+    if (opportunities === null) return;
+    if (page > totalPages) setPage(totalPages);
+  }, [opportunities, page, totalPages]);
+
+  // URL is the single source of truth for "what am I looking at" — every
+  // page/filter/sort change re-serializes here so results stay shareable and
+  // reloadable. `replace: true` avoids piling one history entry per
+  // keystroke in the search box; Prev/Next/page-number clicks still update
+  // this same URL (browser back still works, just steps over the whole
+  // filter state rather than one field at a time).
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (search) next.set('q', search);
+    if (selectedAgencies.size > 0) next.set('agency', [...selectedAgencies].join(','));
+    if (selectedRegions.size > 0) next.set('region', [...selectedRegions].join(','));
+    if (selectedRoles.size > 0) next.set('category', [...selectedRoles].join(','));
+    if (selectedTerms.size > 0) next.set('term', [...selectedTerms].join(','));
+    if (showSavedOnly) next.set('saved', '1');
+    if (sortMode !== SORT_MIXED) next.set('sort', sortMode);
+    if (page > 1) next.set('page', String(page));
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, sortMode, page]);
 
   function toggleSave(id) {
     const wasSaved = savedIds.has(id);
@@ -476,7 +615,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           >
             {quizScores && <option value={SORT_RELEVANCE}>Relevance</option>}
             <option value={SORT_AGENCY}>Agency A–Z</option>
-            <option value={SORT_RECENT}>Recently added</option>
+            <option value={SORT_MIXED}>All agencies (mixed)</option>
           </select>
         </label>
       </div>
@@ -499,7 +638,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             </span>
             <div className="opp-chip-row">
               {agencies.map((a) => (
-                <FilterChip key={a} label={a} active={selectedAgencies.has(a)}
+                <FilterChip key={a} label={a} active={selectedAgencies.has(a)} count={agencyCounts.get(a) || 0}
                   onClick={() => toggleFilter(setSelectedAgencies, a)} />
               ))}
             </div>
@@ -511,7 +650,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             </span>
             <div className="opp-chip-row">
               {REGIONS.map((r) => (
-                <FilterChip key={r} label={r} active={selectedRegions.has(r)}
+                <FilterChip key={r} label={r} active={selectedRegions.has(r)} count={regionCounts.get(r) || 0}
                   onClick={() => toggleFilter(setSelectedRegions, r)} />
               ))}
             </div>
@@ -523,7 +662,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             </span>
             <div className="opp-chip-row">
               {ROLE_TYPES.map((r) => (
-                <FilterChip key={r} label={r} active={selectedRoles.has(r)}
+                <FilterChip key={r} label={r} active={selectedRoles.has(r)} count={roleCounts.get(r) || 0}
                   onClick={() => toggleFilter(setSelectedRoles, r)} />
               ))}
             </div>
@@ -535,7 +674,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             </span>
             <div className="opp-chip-row">
               {TERM_LENGTHS.map((t) => (
-                <FilterChip key={t} label={t} active={selectedTerms.has(t)}
+                <FilterChip key={t} label={t} active={selectedTerms.has(t)} count={termCounts.get(t) || 0}
                   onClick={() => toggleFilter(setSelectedTerms, t)} />
               ))}
             </div>
@@ -573,7 +712,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           )}
           <div className="opp-results-header">
             <p className="opp-results-count">
-              {filtered.length} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
+              {filtered.length.toLocaleString()} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
               {hasActiveFilters ? ' matching your filters' : ''}
               {loading ? ' (refreshing…)' : ''}
             </p>
@@ -589,17 +728,43 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
               )}
             </div>
           ) : (
-            <div className="opp-grid">
-              {filtered.map((opp) => (
-                <OpportunityCard
-                  key={opp.id}
-                  opp={opp}
-                  saved={savedIds.has(opp.id)}
-                  onToggleSave={toggleSave}
-                  onInquire={setInquiryOpp}
-                />
-              ))}
-            </div>
+            <>
+              <div className="opp-grid">
+                {pageItems.map((opp) => (
+                  <OpportunityCard
+                    key={opp.id}
+                    opp={opp}
+                    saved={savedIds.has(opp.id)}
+                    onToggleSave={toggleSave}
+                    onInquire={setInquiryOpp}
+                  />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <nav className="opp-pagination" aria-label="Opportunities pages">
+                  <button
+                    type="button"
+                    className="opp-page-btn"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                  >
+                    <CaretLeft size={16} weight="bold" /> Previous
+                  </button>
+                  <span className="opp-page-status">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="opp-page-btn"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    Next <CaretRight size={16} weight="bold" />
+                  </button>
+                </nav>
+              )}
+            </>
           )}
         </>
       )}
