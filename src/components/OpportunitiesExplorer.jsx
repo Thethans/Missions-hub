@@ -33,8 +33,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T21:16:37.004Z"
-// Opportunities: 1440 across 22 agencies
+// Generated: "2026-07-16T21:43:05.533Z"
+// Opportunities: 1026 across 22 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -125,7 +125,6 @@ const REGIONS = [
   "Latin America",
   "Middle East / North Africa",
   "North America",
-  "Oceania",
   "Oceania / Asia-Pacific",
   "South Asia",
   "Southeast Asia",
@@ -512,7 +511,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // header count on every chip and zero out sibling options in the same
   // group the instant one is selected).
   function baseFilteredList(list, skipKey) {
-    let out = list;
+    // Category pages ("Serve in Albania", "{Category} — Avant") aren't
+    // individual openings — sanitize.js (P1-C) flags them via listing_type
+    // so they're excluded from the default list rather than padding it with
+    // entries that don't represent a real, distinct role.
+    let out = list.filter((o) => o.listing_type !== 'category_page');
     if (showSavedOnly) out = out.filter((o) => savedIds.has(o.id));
     if (search) {
       const q = search.toLowerCase();

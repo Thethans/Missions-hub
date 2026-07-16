@@ -53,7 +53,7 @@ async function fetchOpportunities() {
   while (true) {
     const { data, error } = await supabase
       .from('opportunities')
-      .select('id, agency, title, url, location, region, role_type, term_length, description')
+      .select('id, agency, title, url, location, region, role_type, term_length, description, listing_type')
       .eq('active', true)
       .order('agency', { ascending: true })
       .order('title', { ascending: true })

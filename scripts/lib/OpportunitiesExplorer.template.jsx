@@ -440,7 +440,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // header count on every chip and zero out sibling options in the same
   // group the instant one is selected).
   function baseFilteredList(list, skipKey) {
-    let out = list;
+    // Category pages ("Serve in Albania", "{Category} — Avant") aren't
+    // individual openings — sanitize.js (P1-C) flags them via listing_type
+    // so they're excluded from the default list rather than padding it with
+    // entries that don't represent a real, distinct role.
+    let out = list.filter((o) => o.listing_type !== 'category_page');
     if (showSavedOnly) out = out.filter((o) => savedIds.has(o.id));
     if (search) {
       const q = search.toLowerCase();

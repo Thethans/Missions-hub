@@ -212,6 +212,34 @@ describe('classifyListingType', () => {
   it('classifies an ordinary opening as opening', () => {
     expect(classifyListingType({ title: 'Accountant and Bookkeeper', description: 'Support our finance team.' })).toBe('opening');
   });
+
+  // Real observed failure quoted in the audit: "'{Category} — Avant' pages
+  // get category_page" — a distinct pattern from "Serve in {Country}",
+  // caught by a title literally ending in "— {the listing's own agency}"
+  // (a real individual opening is essentially never titled that way).
+  it('flags a "{Category} — {Agency}" title with no category-page description tell', () => {
+    expect(classifyListingType({
+      agency: 'Avant Ministries',
+      title: 'Administration & Support — Avant Ministries',
+      description: null
+    })).toBe('category_page');
+  });
+
+  it('flags the same pattern for a different agency (not hardcoded to Avant)', () => {
+    expect(classifyListingType({
+      agency: 'Serge',
+      title: 'Types of Work — Serge',
+      description: null
+    })).toBe('category_page');
+  });
+
+  it('does not flag a title that merely contains the agency name mid-string', () => {
+    expect(classifyListingType({
+      agency: 'Serge',
+      title: 'Serge Medical Missions Coordinator',
+      description: 'A real individual role.'
+    })).toBe('opening');
+  });
 });
 
 describe('sanitizeOpportunity (full pipeline, one record)', () => {

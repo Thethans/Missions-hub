@@ -518,3 +518,31 @@ describe('OpportunitiesExplorer card CTAs (P2-C)', () => {
     expect(detailsLinks[0].textContent).not.toMatch(/Inquire/);
   }, TIMEOUT);
 });
+
+const LISTING_TYPE_SAMPLE = [
+  { id: 'lt-1', agency: 'Avant Ministries', title: 'Serve in Albania — Avant Ministries', url: 'https://example.org/1', location: null, region: null, role_type: null, term_length: null, description: null, listing_type: 'category_page' },
+  { id: 'lt-2', agency: 'ABWE', title: 'Accountant and Bookkeeper', url: 'https://example.org/2', location: null, region: null, role_type: null, term_length: null, description: null, listing_type: 'opening' }
+];
+
+describe('OpportunitiesExplorer category-page exclusion (P1-C listing_type)', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(LISTING_TYPE_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('excludes listing_type: category_page rows from the default list', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Accountant and Bookkeeper'));
+
+    expect(screen.queryByText('Serve in Albania — Avant Ministries')).not.toBeInTheDocument();
+    expect(screen.getByText(/1 opportunity\b/)).toBeInTheDocument();
+  }, TIMEOUT);
+});

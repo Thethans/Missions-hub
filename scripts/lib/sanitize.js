@@ -272,6 +272,15 @@ export function classifyListingType(opp) {
   const title = (opp.title || '').trim();
   if (CATEGORY_PAGE_TITLE_RE.test(title)) return 'category_page';
   if (opp.description && /explore mission opportunities/i.test(opp.description)) return 'category_page';
+  // The audit names two Avant patterns: "Serve in {Country}" (caught above)
+  // and "{Category} — Avant" — a title that literally ends in "— {the
+  // agency's own name}" is a real opening's title almost never (nobody
+  // titles an individual role "Accountant — ABWE"), but is exactly how
+  // every one of these category/browse pages is titled.
+  if (opp.agency) {
+    const suffix = new RegExp(`[—–-]\\s*${escapeRegExp(opp.agency.trim())}$`, 'i');
+    if (suffix.test(title)) return 'category_page';
+  }
   return 'opening';
 }
 
