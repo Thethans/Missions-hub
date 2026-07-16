@@ -244,3 +244,18 @@ create policy "Users can save own opportunities"
 create policy "Users can unsave own opportunities"
   on saved_opportunities for delete
   using (auth.uid() = user_id);
+
+-- Opportunities: sanitize-pipeline columns (P1-C) ------------------------
+-- The `opportunities` table itself lives outside this file (see the DDL
+-- comment in scripts/lib/supabase-client.js — it's populated by the scraper
+-- pipeline, not migrated here), but its columns still need this one-time
+-- ALTER so scripts/lib/sanitize.js's output has somewhere to land:
+-- description_full (untruncated sanitized text — `description` becomes the
+-- ≤200-char card version), listing_type ('opening' | 'category_page'),
+-- stale_flag (a >12-month-old date mentioned in the listing), and
+-- merged_titles (near-dupe title variants collapsed into this record).
+alter table opportunities
+  add column if not exists description_full text,
+  add column if not exists listing_type text,
+  add column if not exists stale_flag boolean not null default false,
+  add column if not exists merged_titles text[] not null default '{}';

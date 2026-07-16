@@ -18,6 +18,11 @@
 //     scraped_at    timestamptz not null default now(),
 //     raw_html      text,
 //     active        boolean not null default true,
+//     -- Added by the P1-C sanitize pipeline (scripts/lib/sanitize.js):
+//     description_full text,               -- untruncated sanitized text; `description` is the ≤200-char card version
+//     listing_type      text,               -- 'opening' | 'category_page'
+//     stale_flag        boolean not null default false,
+//     merged_titles     text[] not null default '{}',
 //     constraint opportunities_url_key unique (url)
 //   );
 //
