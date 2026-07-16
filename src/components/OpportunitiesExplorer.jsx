@@ -23,10 +23,18 @@
 //   --space-16: 64px
 //   --radius: 8px
 //   --shadow: 0 2px 12px rgba(22, 35, 59, 0.12)
+//   --glass-blur: blur(16px) saturate(1.5)
+//   --glass-light-bg: rgba(255, 255, 255, 0.45)
+//   --glass-light-border: rgba(255, 255, 255, 0.7)
+//   --glass-light-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.85)
+//   --glass-dark-bg: rgba(250, 247, 240, 0.06)
+//   --glass-dark-border: rgba(250, 247, 240, 0.16)
+//   --glass-dark-sheen: inset 0 1px 0 rgba(250, 247, 240, 0.14)
+//   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-11T18:30:34.895Z"
-// Opportunities: 1558 across 21 agencies
+// Generated: "2026-07-16T14:18:17.830Z"
+// Opportunities: 1440 across 22 agencies
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown } from '@phosphor-icons/react';
@@ -40,7 +48,15 @@ import RevealOnScroll from './RevealOnScroll.jsx';
 // people-groups data (see WorldMap.jsx) — same-origin, CDN-cached, and still
 // resilient to Supabase specifically being unreachable, which is what this
 // fallback is actually for.
+//
+// The static snapshot is the primary data source on every load (one 568KB
+// CDN-cached fetch). Supabase is only consulted as an optional background
+// freshness check, gated by VITE_ENABLE_FRESH_FETCH — every visit used to
+// fire two sequential 1000-row Supabase queries on top of the static fetch,
+// which is 1,500+ rows downloaded for data the static snapshot already had.
 const FALLBACK_URL = '/data/opportunities-fallback.json';
+const ENABLE_FRESH_FETCH = import.meta.env.VITE_ENABLE_FRESH_FETCH === 'true';
+
 const REGIONS = [
   "Central Asia",
   "East Asia",
@@ -289,7 +305,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   }, []);
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || !ENABLE_FRESH_FETCH) return;
     let cancelled = false;
     async function refresh() {
       setLoading(true);

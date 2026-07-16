@@ -19,7 +19,14 @@ import RevealOnScroll from './RevealOnScroll.jsx';
 // people-groups data (see WorldMap.jsx) — same-origin, CDN-cached, and still
 // resilient to Supabase specifically being unreachable, which is what this
 // fallback is actually for.
+//
+// The static snapshot is the primary data source on every load (one 568KB
+// CDN-cached fetch). Supabase is only consulted as an optional background
+// freshness check, gated by VITE_ENABLE_FRESH_FETCH — every visit used to
+// fire two sequential 1000-row Supabase queries on top of the static fetch,
+// which is 1,500+ rows downloaded for data the static snapshot already had.
 const FALLBACK_URL = '/data/opportunities-fallback.json';
+const ENABLE_FRESH_FETCH = import.meta.env.VITE_ENABLE_FRESH_FETCH === 'true';
 
 const REGIONS = '__REGIONS__';
 const ROLE_TYPES = '__ROLE_TYPES__';
@@ -226,7 +233,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   }, []);
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || !ENABLE_FRESH_FETCH) return;
     let cancelled = false;
     async function refresh() {
       setLoading(true);

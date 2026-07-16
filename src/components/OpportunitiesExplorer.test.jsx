@@ -3,6 +3,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import OpportunitiesExplorer from './OpportunitiesExplorer.jsx';
 
+// import.meta.env.VITE_ENABLE_FRESH_FETCH is inlined at module-transform
+// time, so vi.stubEnv only takes effect on a fresh module instance —
+// tests that flip the flag must reset modules and re-import dynamically
+// rather than reuse the static OpportunitiesExplorer import above.
+async function importWithFreshFetchFlag(value) {
+  vi.stubEnv('VITE_ENABLE_FRESH_FETCH', value);
+  vi.resetModules();
+  const mod = await import('./OpportunitiesExplorer.jsx');
+  return mod.default;
+}
+
 // Mirrors the shape of a chained Supabase query builder: from/select/eq/order
 // all return the same chainable object, and range() is the terminal call the
 // component actually awaits — so only range() needs to resolve.
@@ -59,10 +70,12 @@ describe('OpportunitiesExplorer', () => {
   beforeEach(() => {
     mockSupabase = null;
     mockFallbackFetch();
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('shows a loading state, then the fallback snapshot, before any live fetch resolves', async () => {
@@ -77,7 +90,19 @@ describe('OpportunitiesExplorer', () => {
     });
   }, TIMEOUT);
 
-  it('replaces the fallback snapshot with live data on a successful fetch', async () => {
+  it('never calls Supabase when the fresh-fetch flag is off, even with a client configured', async () => {
+    mockSupabase = makeSupabaseMock([{ data: [], error: null }]);
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Cached Fallback Opportunity')).toBeInTheDocument();
+    });
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  }, TIMEOUT);
+
+  it('replaces the fallback snapshot with live data on a successful background refresh when the flag is on', async () => {
+    const FreshFetchExplorer = await importWithFreshFetchFlag('true');
     mockSupabase = makeSupabaseMock([
       {
         data: [
@@ -97,7 +122,7 @@ describe('OpportunitiesExplorer', () => {
       }
     ]);
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    render(<FreshFetchExplorer agencyFilter="" />);
 
     await waitFor(() => {
       expect(screen.getByText('Freshly Fetched Opportunity')).toBeInTheDocument();
@@ -105,11 +130,12 @@ describe('OpportunitiesExplorer', () => {
     expect(screen.queryByText(/couldn't reach live listings/i)).not.toBeInTheDocument();
   }, TIMEOUT);
 
-  it('keeps showing the fallback snapshot and surfaces an inline notice when the live fetch errors', async () => {
+  it('keeps showing the fallback snapshot and surfaces an inline notice when the background refresh errors', async () => {
+    const FreshFetchExplorer = await importWithFreshFetchFlag('true');
     mockSupabase = makeSupabaseMock([{ data: null, error: { message: 'RLS policy violation' } }]);
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    render(<FreshFetchExplorer agencyFilter="" />);
 
     await waitFor(() => {
       expect(screen.getByText(/couldn't reach live listings/i)).toBeInTheDocument();
