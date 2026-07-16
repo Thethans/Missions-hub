@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import OpportunitiesExplorer from './OpportunitiesExplorer.jsx';
 
 // import.meta.env.VITE_ENABLE_FRESH_FETCH is inlined at module-transform
@@ -71,11 +72,13 @@ describe('OpportunitiesExplorer', () => {
     mockSupabase = null;
     mockFallbackFetch();
     vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
+    localStorage.clear();
   });
 
   it('shows a loading state, then the fallback snapshot, before any live fetch resolves', async () => {
@@ -168,5 +171,75 @@ describe('OpportunitiesExplorer', () => {
       expect(screen.getByRole('alert')).toHaveTextContent(/couldn't load opportunities/i);
     });
     expect(consoleError).toHaveBeenCalled();
+  }, TIMEOUT);
+});
+
+const MULTI_AGENCY_SAMPLE = [
+  { id: 'a-1', agency: 'Zed Agency', title: 'Zed Role', url: 'https://example.org/z', location: null, region: null, role_type: null, term_length: null, description: null },
+  { id: 'a-2', agency: 'Alpha Agency', title: 'Alpha Role', url: 'https://example.org/a', location: null, region: null, role_type: null, term_length: null, description: null },
+  { id: 'a-3', agency: 'Mid Agency', title: 'Mid Role', url: 'https://example.org/m', location: null, region: null, role_type: null, term_length: null, description: null }
+];
+
+function agencyOrder() {
+  return screen.getAllByText(/Agency$/).map((el) => el.textContent);
+}
+
+describe('OpportunitiesExplorer sorting', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(MULTI_AGENCY_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('defaults to the static snapshot order (Recently added) with no quiz result', async () => {
+    render(<OpportunitiesExplorer agencyFilter="" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Zed Role')).toBeInTheDocument();
+    });
+    expect(agencyOrder()).toEqual(['Zed Agency', 'Alpha Agency', 'Mid Agency']);
+    expect(screen.queryByText(/sorted by your quiz matches/i)).not.toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('re-sorts alphabetically when Agency A–Z is chosen', async () => {
+    const user = userEvent.setup();
+    render(<OpportunitiesExplorer agencyFilter="" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Zed Role')).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText(/sort opportunities by/i), 'agency');
+
+    expect(agencyOrder()).toEqual(['Alpha Agency', 'Mid Agency', 'Zed Agency']);
+  }, TIMEOUT);
+
+  it('defaults to relevance and sorts by quiz match score when a saved quiz result exists', async () => {
+    localStorage.setItem('fielded_quiz_result', JSON.stringify({
+      answers: {},
+      matches: [
+        { name: 'Alpha Agency', score: 1 },
+        { name: 'Zed Agency', score: 9 },
+        { name: 'Mid Agency', score: 5 }
+      ],
+      timestamp: Date.now()
+    }));
+
+    render(<OpportunitiesExplorer agencyFilter="" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Zed Role')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/sorted by your quiz matches/i)).toBeInTheDocument();
+    expect(agencyOrder()).toEqual(['Zed Agency', 'Mid Agency', 'Alpha Agency']);
+    expect(within(screen.getByLabelText(/sort opportunities by/i)).getByRole('option', { name: 'Relevance' })).toBeInTheDocument();
   }, TIMEOUT);
 });

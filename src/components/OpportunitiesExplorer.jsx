@@ -33,13 +33,34 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T14:18:17.830Z"
+// Generated: "2026-07-16T14:24:26.017Z"
 // Opportunities: 1440 across 22 agencies
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown } from '@phosphor-icons/react';
+import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
+
+// Reuses the quiz's own scoring output (src/data/scoreAgency.js via
+// MatchQuiz.jsx) rather than a second scoring system — CLAUDE.md is explicit
+// that getMatches is the one source of "relevance to your quiz" ranking.
+const QUIZ_RESULT_KEY = 'fielded_quiz_result';
+
+function loadQuizAgencyScores() {
+  try {
+    const raw = localStorage.getItem(QUIZ_RESULT_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (!saved || !Array.isArray(saved.matches) || saved.matches.length === 0) return null;
+    return new Map(saved.matches.map((m) => [m.name, m.score]));
+  } catch {
+    return null;
+  }
+}
+
+const SORT_RELEVANCE = 'relevance';
+const SORT_AGENCY = 'agency';
+const SORT_RECENT = 'recent';
 
 // The full opportunities list used to be inlined here as a literal — with
 // 1500+ records that made this one file (and its route chunk) ~650KB before
@@ -264,6 +285,9 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [selectedTerms, setSelectedTerms] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
 
+  const [quizScores] = useState(loadQuizAgencyScores);
+  const [sortMode, setSortMode] = useState(() => (quizScores ? SORT_RELEVANCE : SORT_RECENT));
+
   function toggleFilter(setter, value) {
     setter(prev => {
       const next = new Set(prev);
@@ -376,8 +400,16 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (selectedRoles.size > 0) list = list.filter((o) => selectedRoles.has(o.role_type));
     if (selectedTerms.size > 0) list = list.filter((o) => selectedTerms.has(o.term_length));
 
+    if (sortMode === SORT_AGENCY) {
+      list = [...list].sort((a, b) => a.agency.localeCompare(b.agency) || a.title.localeCompare(b.title));
+    } else if (sortMode === SORT_RELEVANCE && quizScores) {
+      list = [...list].sort((a, b) => (quizScores.get(b.agency) ?? -1) - (quizScores.get(a.agency) ?? -1));
+    }
+    // SORT_RECENT: no reorder — the static snapshot's own order is the closest
+    // thing to "recently added" available without a source created_at field.
+
     return list;
-  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]);
+  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
 
   function toggleSave(id) {
     setSavedIds((prev) => {
@@ -433,7 +465,24 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           <Heart weight={showSavedOnly ? 'fill' : 'regular'} size={18} />
           <span className="opp-saved-count">{savedIds.size}</span>
         </button>
+        <label className="opp-sort">
+          <SortAscending size={16} weight="bold" />
+          <span className="visually-hidden">Sort opportunities by</span>
+          <select
+            className="opp-sort-select"
+            value={sortMode}
+            onChange={(e) => setSortMode(e.target.value)}
+          >
+            {quizScores && <option value={SORT_RELEVANCE}>Relevance</option>}
+            <option value={SORT_AGENCY}>Agency A–Z</option>
+            <option value={SORT_RECENT}>Recently added</option>
+          </select>
+        </label>
       </div>
+
+      {sortMode === SORT_RELEVANCE && quizScores && (
+        <p className="opp-sort-pill">Sorted by your quiz matches</p>
+      )}
 
       {/* Expandable filter panel */}
       {showFilters && (

@@ -1769,6 +1769,43 @@ a { color: var(--voyage-teal); }
   font-size: 0.75rem;
 }
 
+/* Sort control */
+.opp-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--muted-text);
+}
+
+.opp-sort-select {
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink-navy);
+  cursor: pointer;
+}
+
+.opp-sort-pill {
+  display: inline-flex;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-3);
+  border-radius: 999px;
+  background: rgba(43, 110, 118, 0.1);
+  color: var(--voyage-teal);
+}
+
 /* Filter panel */
 .opp-filters {
   background: white;
