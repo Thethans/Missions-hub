@@ -1,7 +1,14 @@
 import { useEffect } from 'react';
 
 const SITE_NAME = 'Fielded';
-const BASE_URL = 'https://missions-hub.vercel.app';
+// Single source of truth for the site's host — P3-A (custom domain) is a
+// one-line change here (or set VITE_SITE_URL and skip the code edit
+// entirely). index.html's static tags and public/sitemap.xml can't read
+// this at runtime (see the comments there); everything else that needs the
+// real domain — every page's canonical/OG tags via usePageMeta, which is
+// what scripts/prerender.js actually snapshots into the shipped HTML —
+// goes through this constant.
+export const BASE_URL = import.meta.env.VITE_SITE_URL || 'https://missions-hub.vercel.app';
 const DEFAULT_IMAGE = BASE_URL + '/og-image.png';
 
 const DEFAULT_DESC =
