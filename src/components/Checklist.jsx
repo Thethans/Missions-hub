@@ -72,7 +72,7 @@ function SignInForm() {
       <button type="submit" disabled={sending}>
         {sending ? 'Sending…' : 'Send sign-in link'}
       </button>
-      {error && <p className="checklist-error">{error}</p>}
+      {error && <p className="checklist-error" role="alert">{error}</p>}
     </form>
   );
 }
@@ -129,7 +129,7 @@ function ProfileSetup({ initial, onSaved }) {
         </select>
       </label>
       <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Continue'}</button>
-      {error && <p className="checklist-error">{error}</p>}
+      {error && <p className="checklist-error" role="alert">{error}</p>}
     </form>
   );
 }
@@ -203,8 +203,8 @@ function ChecklistView({ userId, profile, onEditProfile }) {
     setOpenCategories(next);
   }
 
-  if (error) return <p className="checklist-error">{error}</p>;
-  if (!items) return <p className="checklist-loading">Loading checklist…</p>;
+  if (error) return <p className="checklist-error" role="alert">{error}</p>;
+  if (!items) return <p className="checklist-loading" role="status">Loading checklist…</p>;
 
   if (visibleItems.length === 0) {
     return (
@@ -308,12 +308,12 @@ export default function Checklist() {
   }, [session]);
 
   if (!supabase) {
-    return <p className="checklist-error">Supabase isn't configured — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</p>;
+    return <p className="checklist-error" role="alert">Supabase isn't configured — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</p>;
   }
 
-  if (authLoading) return <p className="checklist-loading">Loading…</p>;
+  if (authLoading) return <p className="checklist-loading" role="status">Loading…</p>;
   if (!session) return <SignInForm />;
-  if (profile === undefined) return <p className="checklist-loading">Loading…</p>;
+  if (profile === undefined) return <p className="checklist-loading" role="status">Loading…</p>;
 
   if (!profile || editingProfile) {
     return (

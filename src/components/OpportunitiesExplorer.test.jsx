@@ -2,7 +2,19 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import OpportunitiesExplorer from './OpportunitiesExplorer.jsx';
+
+// The no-quiz-result "Start with a quick quiz" hint links to /quiz via
+// react-router's <Link>, so every render needs a Router ancestor.
+function renderExplorer(Component, props) {
+  const Explorer = Component || OpportunitiesExplorer;
+  return render(
+    <MemoryRouter>
+      <Explorer {...props} />
+    </MemoryRouter>
+  );
+}
 
 // import.meta.env.VITE_ENABLE_FRESH_FETCH is inlined at module-transform
 // time, so vi.stubEnv only takes effect on a fresh module instance —
@@ -105,7 +117,7 @@ describe('OpportunitiesExplorer', () => {
   it('shows a loading state, then the fallback snapshot, before any live fetch resolves', async () => {
     mockSupabase = null; // fallback fetch is the only data source
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     expect(screen.getByText(/loading opportunities/i)).toBeInTheDocument();
 
@@ -117,7 +129,7 @@ describe('OpportunitiesExplorer', () => {
   it('never calls Supabase when the fresh-fetch flag is off, even with a client configured', async () => {
     mockSupabase = makeSupabaseMock({ opportunityPages: [{ data: [], error: null }] });
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText('Cached Fallback Opportunity')).toBeInTheDocument();
@@ -148,7 +160,7 @@ describe('OpportunitiesExplorer', () => {
       ]
     });
 
-    render(<FreshFetchExplorer agencyFilter="" />);
+    renderExplorer(FreshFetchExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText('Freshly Fetched Opportunity')).toBeInTheDocument();
@@ -161,7 +173,7 @@ describe('OpportunitiesExplorer', () => {
     mockSupabase = makeSupabaseMock({ opportunityPages: [{ data: null, error: { message: 'RLS policy violation' } }] });
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(<FreshFetchExplorer agencyFilter="" />);
+    renderExplorer(FreshFetchExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText(/couldn't reach live listings/i)).toBeInTheDocument();
@@ -175,7 +187,7 @@ describe('OpportunitiesExplorer', () => {
   it('renders the fallback snapshot with no Supabase client configured', async () => {
     mockSupabase = null;
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText('Cached Fallback Opportunity')).toBeInTheDocument();
@@ -188,7 +200,7 @@ describe('OpportunitiesExplorer', () => {
     mockFallbackFetch(null, false); // fetch resolves but !res.ok
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/couldn't load opportunities/i);
@@ -222,7 +234,7 @@ describe('OpportunitiesExplorer sorting', () => {
   });
 
   it('defaults to the static snapshot order (Recently added) with no quiz result', async () => {
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText('Zed Role')).toBeInTheDocument();
@@ -233,7 +245,7 @@ describe('OpportunitiesExplorer sorting', () => {
 
   it('re-sorts alphabetically when Agency A–Z is chosen', async () => {
     const user = userEvent.setup();
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText('Zed Role')).toBeInTheDocument();
@@ -255,7 +267,7 @@ describe('OpportunitiesExplorer sorting', () => {
       timestamp: Date.now()
     }));
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
 
     await waitFor(() => {
       expect(screen.getByText('Zed Role')).toBeInTheDocument();
@@ -292,7 +304,7 @@ describe('OpportunitiesExplorer auth-linked favorites', () => {
     const user = userEvent.setup();
     mockSupabase = makeSupabaseMock({ opportunityPages: [{ data: [], error: null }] });
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
     await waitFor(() => screen.getByText('Locally Saved Opportunity'));
 
     await user.click(screen.getAllByLabelText('Save opportunity')[0]);
@@ -309,7 +321,7 @@ describe('OpportunitiesExplorer auth-linked favorites', () => {
       authSession: SESSION
     });
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
     await waitFor(() => screen.getByText('Locally Saved Opportunity'));
 
     await waitFor(() => {
@@ -334,7 +346,7 @@ describe('OpportunitiesExplorer auth-linked favorites', () => {
       authSession: SESSION
     });
 
-    render(<OpportunitiesExplorer agencyFilter="" />);
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
     await waitFor(() => screen.getByText('Locally Saved Opportunity'));
 
     await user.click(screen.getAllByLabelText('Save opportunity')[0]);

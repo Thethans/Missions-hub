@@ -990,6 +990,22 @@ a { color: var(--voyage-teal); }
   font-size: 0.85rem;
 }
 
+.map-loading {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted-text);
+}
+
 .map-data-error {
   position: absolute;
   bottom: var(--space-4);
@@ -1632,11 +1648,13 @@ a { color: var(--voyage-teal); }
   padding: var(--space-8) var(--space-6) var(--space-16);
 }
 
-.opp-loading, .opp-error, .opp-empty {
+.opp-error, .opp-empty {
   text-align: center;
   padding: var(--space-16) var(--space-6);
   color: var(--muted-text);
 }
+
+.opp-loading { color: var(--muted-text); }
 
 .opp-error { max-width: 480px; margin: 0 auto; }
 
@@ -1806,6 +1824,14 @@ a { color: var(--voyage-teal); }
   color: var(--voyage-teal);
 }
 
+.opp-sort-hint {
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin-bottom: var(--space-3);
+}
+
+.opp-sort-hint a { color: var(--voyage-teal); }
+
 /* Filter panel */
 .opp-filters {
   background: white;
@@ -1931,6 +1957,24 @@ a { color: var(--voyage-teal); }
 }
 
 .opp-card-wrapper { height: 100%; }
+
+.opp-card-skeleton {
+  height: 220px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--atlas-paper) 30%, rgba(22, 35, 59, 0.06) 45%, var(--atlas-paper) 60%);
+  background-size: 200% 100%;
+  animation: opp-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opp-card-skeleton { animation: none; }
+}
+
+@keyframes opp-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 .opp-card {
   height: 100%;

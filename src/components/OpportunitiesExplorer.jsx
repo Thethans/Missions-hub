@@ -33,10 +33,11 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T14:30:27.995Z"
+// Generated: "2026-07-16T14:36:57.199Z"
 // Opportunities: 1440 across 22 agencies
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
@@ -552,9 +553,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         </label>
       </div>
 
-      {sortMode === SORT_RELEVANCE && quizScores && (
+      {sortMode === SORT_RELEVANCE && quizScores ? (
         <p className="opp-sort-pill">Sorted by your quiz matches</p>
-      )}
+      ) : !quizScores ? (
+        <p className="opp-sort-hint">
+          <Link to="/quiz">Start with a quick quiz</Link> to find your best fit — opportunities can then sort by relevance to your answers.
+        </p>
+      ) : null}
 
       {/* Expandable filter panel */}
       {showFilters && (
@@ -623,7 +628,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           </div>
         ) : (
           <div className="opp-loading" role="status">
-            <p>Loading opportunities…</p>
+            <p className="visually-hidden">Loading opportunities…</p>
+            <div className="opp-grid" aria-hidden="true">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div className="opp-card-skeleton" key={i} />
+              ))}
+            </div>
           </div>
         )
       ) : (

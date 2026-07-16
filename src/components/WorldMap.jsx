@@ -302,7 +302,12 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
           Couldn't load people-group data right now — try refreshing the page.
         </p>
       ) : (
-        <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+        <>
+          {counts === null && (
+            <p className="map-loading" role="status">Finding unreached peoples&hellip;</p>
+          )}
+          <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+        </>
       )}
       {selected && <MapPopupCard properties={selected} onClose={() => onSelect(null)} />}
     </div>
