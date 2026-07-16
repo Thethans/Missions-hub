@@ -224,8 +224,11 @@ const MULTI_AGENCY_SAMPLE = [
   { id: 'a-3', agency: 'Mid Agency', title: 'Mid Role', url: 'https://example.org/m', location: null, region: null, role_type: null, term_length: null, description: null }
 ];
 
+// Scoped to the card header's agency label specifically — a plain
+// /Agency$/ text query also matches each card's "Inquire with {agency}"
+// button now that P2-C gives that button an object.
 function agencyOrder() {
-  return screen.getAllByText(/Agency$/).map((el) => el.textContent);
+  return [...document.querySelectorAll('.opp-card-agency')].map((el) => el.textContent);
 }
 
 describe('OpportunitiesExplorer sorting', () => {
@@ -455,14 +458,14 @@ describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
 
     await user.click(screen.getByRole('button', { name: /filters/i }));
 
-    const agencyChip = screen.getByRole('button', { name: /Agency A/ });
+    const agencyChip = screen.getByRole('button', { name: /^Agency A/ });
     expect(within(agencyChip).getByText('(10)')).toBeInTheDocument();
 
     // Narrow to Sub-Saharan Africa (15 of the 30 rows), then Agency A's facet
     // count should drop to the 5 Agency A rows also in that region.
     await user.click(screen.getByRole('button', { name: /^Sub-Saharan Africa/ }));
     await waitFor(() => {
-      expect(within(screen.getByRole('button', { name: /Agency A/ })).getByText('(5)')).toBeInTheDocument();
+      expect(within(screen.getByRole('button', { name: /^Agency A/ })).getByText('(5)')).toBeInTheDocument();
     });
   }, TIMEOUT);
 
@@ -470,5 +473,48 @@ describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
     renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
     await waitFor(() => screen.getByText(/30 opportunities/));
     expect(screen.getByText(/30 opportunities/).textContent).not.toMatch(/Filters/);
+  }, TIMEOUT);
+});
+
+const CTA_SAMPLE = [
+  { id: 'cta-1', agency: 'Africa Inland Mission (AIM)', title: 'Field Role', url: 'https://example.org/1', location: null, region: null, role_type: null, term_length: null, description: null },
+  { id: 'cta-2', agency: 'Cru (Campus Crusade for Christ)', title: 'Campus Role', url: 'https://example.org/2', location: null, region: null, role_type: null, term_length: null, description: null },
+  { id: 'cta-3', agency: 'ABWE', title: 'Field Role Two', url: 'https://example.org/3', location: null, region: null, role_type: null, term_length: null, description: null }
+];
+
+describe('OpportunitiesExplorer card CTAs (P2-C)', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(CTA_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('gives the primary button an object, deriving a short agency name from the source name itself', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Field Role'));
+
+    // "(AIM)" is all-caps — treated as the real acronym.
+    expect(screen.getByRole('button', { name: 'Inquire with AIM' })).toBeInTheDocument();
+    // "(Campus Crusade for Christ)" isn't an acronym — falls back to the
+    // text before the parens rather than inventing/lengthening the name.
+    expect(screen.getByRole('button', { name: 'Inquire with Cru' })).toBeInTheDocument();
+    // No parens at all — the full name is already short.
+    expect(screen.getByRole('button', { name: 'Inquire with ABWE' })).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('keeps "View details" as a distinct secondary link, not merged into the primary button', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Field Role'));
+
+    const detailsLinks = screen.getAllByRole('link', { name: /view details/i });
+    expect(detailsLinks.length).toBeGreaterThan(0);
+    expect(detailsLinks[0].textContent).not.toMatch(/Inquire/);
   }, TIMEOUT);
 });

@@ -2096,30 +2096,39 @@ a { color: var(--voyage-teal); }
   border-top: 1px solid var(--line);
 }
 
+/* Secondary action — plain text link. min-height keeps its tap target at
+   the same 44px floor as the primary button beside it, even though the
+   link itself is just text. */
 .opp-card-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
+/* Primary action — filled by default (not just on hover), so "View details"
+   and "Inquire with {agency}" read as two distinct weights of action
+   rather than a matched pair. */
 .opp-inquire-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  min-height: 44px;
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--voyage-teal);
   border-radius: var(--radius);
-  background: transparent;
-  color: var(--voyage-teal);
+  background: var(--voyage-teal);
+  color: white;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .opp-inquire-btn:hover {
-  background: var(--voyage-teal);
-  color: white;
+  background: #245e65;
 }
 
 /* Inquiry modal */

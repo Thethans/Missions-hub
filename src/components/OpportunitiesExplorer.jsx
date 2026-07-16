@@ -33,7 +33,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T20:39:35.832Z"
+// Generated: "2026-07-16T20:59:52.327Z"
 // Opportunities: 1440 across 22 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -164,6 +164,21 @@ const TERM_LENGTHS = [
   "career/long-term"
 ];
 
+// "Inquire" needs an object — but agency names are a mix of shapes
+// ("ABWE", "Africa Inland Mission (AIM)", "Cru (Campus Crusade for
+// Christ)"), so a blind "text in parens" extraction would turn Cru into
+// "Inquire with Campus Crusade for Christ." Only treats the parenthetical
+// as the short name when it actually looks like an acronym (all caps,
+// 2-6 letters) — otherwise falls back to the text before the parens, and
+// falls back to the full name when there's no parenthetical at all. Never
+// invents an abbreviation that isn't already present in the source name.
+function shortAgencyName(agency) {
+  const match = agency.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if (!match) return agency;
+  const [, before, paren] = match;
+  return /^[A-Z]{2,6}$/.test(paren) ? paren : before.trim();
+}
+
 function FilterChip({ label, active, count, onClick }) {
   return (
     <button
@@ -228,7 +243,7 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
             className="opp-inquire-btn"
             onClick={() => onInquire(opp)}
           >
-            <EnvelopeSimple size={16} weight="bold" /> Inquire
+            <EnvelopeSimple size={16} weight="bold" /> Inquire with {shortAgencyName(opp.agency)}
           </button>
         </div>
       </article>
