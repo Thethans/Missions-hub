@@ -138,7 +138,7 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
           </div>
         </div>
 
-        <h3 className="opp-card-title">{opp.title}</h3>
+        <h2 className="opp-card-title">{opp.title}</h2>
 
         {opp.description && (
           <p className="opp-card-desc">{opp.description}</p>

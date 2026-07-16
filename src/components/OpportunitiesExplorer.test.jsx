@@ -407,14 +407,14 @@ describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
     renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
     await waitFor(() => screen.getByText('Opp 0'));
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(24);
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(24);
     expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /next/i }));
 
     await waitFor(() => {
-      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(6);
+      expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(6);
     });
     expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
   }, TIMEOUT);
@@ -437,14 +437,14 @@ describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
     await waitFor(() => {
       expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
     });
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(6);
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(6);
   }, TIMEOUT);
 
   it('interleaves by agency by default instead of grouping all of one agency first', async () => {
     renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
     await waitFor(() => screen.getByText('Opp 0'));
 
-    const cardTitles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+    const cardTitles = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     const firstThreeAgencies = cardTitles.slice(0, 3).map((t) => AGENCY_NAMES[Number(t.replace('Opp ', '')) % 3]);
     // Interleaved: the first 3 cards should be one from each agency, not
     // all "Agency A" (which is what raw alphabetical-by-agency would give).

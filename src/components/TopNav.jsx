@@ -85,7 +85,7 @@ export default function TopNav() {
       </NavLink>
 
       {/* Desktop nav */}
-      <nav className="site-nav-links site-nav-links--desktop">
+      <nav className="site-nav-links site-nav-links--desktop" aria-label="Primary navigation">
         {navLinks}
       </nav>
 

@@ -33,7 +33,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T21:50:32.410Z"
+// Generated: "2026-07-16T22:01:32.788Z"
 // Opportunities: 1026 across 22 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -209,7 +209,7 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
           </div>
         </div>
 
-        <h3 className="opp-card-title">{opp.title}</h3>
+        <h2 className="opp-card-title">{opp.title}</h2>
 
         {opp.description && (
           <p className="opp-card-desc">{opp.description}</p>
