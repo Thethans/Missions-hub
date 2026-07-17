@@ -106,7 +106,6 @@ async function prerender() {
       })
     : await puppeteer.launch({
         headless: true,
-        dumpio: true,
         args: [
           '--no-sandbox',
           '--disable-dev-shm-usage',
