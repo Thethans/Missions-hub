@@ -93,6 +93,8 @@ async function prerender() {
   const HOST = '127.0.0.1';
   const server = await serve(PORT);
   console.log(`Serving dist/ on http://${HOST}:${PORT}`);
+  const debugExecPath = await puppeteer.executablePath();
+  console.log('DEBUG puppeteer executablePath:', debugExecPath, 'exists:', existsSync(debugExecPath));
 
   // Vercel's build container has no downloadable Chrome for stock puppeteer
   // to find (see @sparticuz/chromium, a build compiled for serverless/CI
@@ -106,12 +108,7 @@ async function prerender() {
       })
     : await puppeteer.launch({
         headless: true,
-        // --disable-dev-shm-usage: CI containers (e.g. GitHub Actions'
-        // ubuntu-latest) mount /dev/shm far smaller than a real machine's;
-        // Chrome silently hangs on navigation instead of erroring when it
-        // runs out of shared memory there, which is what was producing the
-        // "Navigation timeout of 30000ms exceeded" on every route — not an
-        // actual page load problem. This flag makes Chrome use /tmp instead.
+        dumpio: true,
         args: ['--no-sandbox', '--disable-dev-shm-usage']
       });
   const page = await browser.newPage();
