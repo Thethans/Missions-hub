@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import RevealOnScroll from './RevealOnScroll.jsx';
+import SpotlightOverlay from './SpotlightOverlay.jsx';
 
 // Real, honest Q&A about how this specific site works — no invented stats
 // or claims, just a plain description of what's actually built.
@@ -32,10 +33,21 @@ function FaqItem({ item, index }) {
     <RevealOnScroll index={index} className="faq-item-wrapper">
       <div className="faq-item">
         <button className="faq-question" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          <span>{item.q}</span>
+          <span className="faq-question-text">
+            <span className="faq-number">{String(index + 1).padStart(2, '0')}</span>
+            {item.q}
+          </span>
           <span className="faq-toggle">{open ? '−' : '+'}</span>
         </button>
-        {open && <p className="faq-answer">{item.a}</p>}
+        {/* Always rendered (not mounted/unmounted) — grid-template-rows
+            0fr→1fr is a pure-CSS way to animate to an unknown/auto content
+            height without JS-measuring it, more robust than animating a
+            motion.div to height:'auto'. */}
+        <div className={`faq-answer-wrap${open ? ' faq-answer-wrap--open' : ''}`}>
+          <div className="faq-answer-inner">
+            <p className="faq-answer">{item.a}</p>
+          </div>
+        </div>
       </div>
     </RevealOnScroll>
   );
@@ -44,11 +56,14 @@ function FaqItem({ item, index }) {
 export default function Faq() {
   return (
     <section className="faq">
-      <h2>Questions worth answering up front</h2>
-      <div className="faq-list">
-        {ITEMS.map((item, i) => (
-          <FaqItem key={item.q} item={item} index={i} />
-        ))}
+      <SpotlightOverlay />
+      <div className="faq-inner">
+        <h2>Questions worth answering up front</h2>
+        <div className="faq-list">
+          {ITEMS.map((item, i) => (
+            <FaqItem key={item.q} item={item} index={i} />
+          ))}
+        </div>
       </div>
     </section>
   );

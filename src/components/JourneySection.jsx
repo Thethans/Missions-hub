@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { JOURNEY_STEPS as STEPS } from '../data/journeySteps.js';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
+import Globe from './Globe.jsx';
 
 const FALLBACK_FRACTIONS = STEPS.map((_, i) => i / (STEPS.length - 1));
 
@@ -31,6 +32,14 @@ export default function JourneySection() {
   const prefersReduced = usePrefersReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start 0.7', 'end 0.9'] });
   const threadHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
+  // Drives the sticky companion globe (Globe.jsx — built for exactly this
+  // slot, see the "future flagship moment" note in HeroBackground.jsx, and
+  // PlaneIcon's own comment that it renders in "hero globe + journey flight
+  // path"). A separate, wider progress span than the thread-fill above: the
+  // globe should keep turning for as long as the section is anywhere on
+  // screen, not just the thread's narrower start/end trigger window.
+  const { scrollYProgress: globeProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
 
   // Scroll-linked parallax for the section title: it drifts up as the whole
   // journey scrolls past, giving the hand-off into this section real depth
@@ -81,78 +90,85 @@ export default function JourneySection() {
       >
         Your journey
       </motion.h2>
-      <div className="journey-steps">
-        <div className="journey-lane" ref={laneRef}>
-          <div className="journey-thread">
-            <motion.div className="journey-thread-fill" style={{ height: prefersReduced ? '100%' : threadHeight }} />
-          </div>
-          {!prefersReduced &&
-            PARTICLES.map((p, i) => (
-              <span
-                key={i}
-                className={`journey-particle${p.teal ? '' : ' journey-particle--paper'}`}
-                style={{
-                  '--dx': `${p.dx}px`,
-                  animationDuration: `${p.duration}s`,
-                  animationDelay: `${p.delay}s`
-                }}
+      <div className="journey-layout">
+        <div className="journey-steps">
+          <div className="journey-lane" ref={laneRef}>
+            <div className="journey-thread">
+              <motion.div className="journey-thread-fill" style={{ height: prefersReduced ? '100%' : threadHeight }} />
+            </div>
+            {!prefersReduced &&
+              PARTICLES.map((p, i) => (
+                <span
+                  key={i}
+                  className={`journey-particle${p.teal ? '' : ' journey-particle--paper'}`}
+                  style={{
+                    '--dx': `${p.dx}px`,
+                    animationDuration: `${p.duration}s`,
+                    animationDelay: `${p.delay}s`
+                  }}
+                />
+              ))}
+            {STEPS.map((step, i) => (
+              <JourneyDot
+                key={step.n}
+                label={step.n}
+                fraction={dotFractions[i] ?? FALLBACK_FRACTIONS[i]}
+                progress={scrollYProgress}
+                prefersReduced={prefersReduced}
               />
             ))}
+          </div>
           {STEPS.map((step, i) => (
-            <JourneyDot
+            <motion.div
               key={step.n}
-              label={step.n}
-              fraction={dotFractions[i] ?? FALLBACK_FRACTIONS[i]}
-              progress={scrollYProgress}
-              prefersReduced={prefersReduced}
-            />
+              className="journey-step"
+              ref={(el) => (stepRefs.current[i] = el)}
+              initial={
+                prefersReduced
+                  ? false
+                  : { opacity: 0, x: i % 2 === 0 ? -80 : 80, y: 40, scale: 0.9, rotate: i % 2 === 0 ? -2 : 2, filter: 'blur(8px)' }
+              }
+              whileInView={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, filter: 'blur(0px)' }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.95, ease: EASE_DRAMATIC }}
+            >
+              <span className="journey-step-watermark" aria-hidden="true">{step.n}</span>
+              {/* The one numeral of the three per step (watermark, this, and
+                  the lane's JourneyDot) that assistive tech actually hears —
+                  the other two are aria-hidden decorative repeats. */}
+              <motion.span
+                className="journey-step-number"
+                initial={prefersReduced ? false : { opacity: 0, scale: 1.6 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+              >
+                {step.n}
+              </motion.span>
+              <motion.h3
+                initial={prefersReduced ? false : { opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.16 }}
+              >
+                {step.title}
+              </motion.h3>
+              <motion.p
+                initial={prefersReduced ? false : { opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                {step.desc}
+              </motion.p>
+            </motion.div>
           ))}
         </div>
-        {STEPS.map((step, i) => (
-          <motion.div
-            key={step.n}
-            className="journey-step"
-            ref={(el) => (stepRefs.current[i] = el)}
-            initial={
-              prefersReduced
-                ? false
-                : { opacity: 0, x: i % 2 === 0 ? -80 : 80, y: 40, scale: 0.9, rotate: i % 2 === 0 ? -2 : 2, filter: 'blur(8px)' }
-            }
-            whileInView={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, filter: 'blur(0px)' }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.95, ease: EASE_DRAMATIC }}
-          >
-            <span className="journey-step-watermark" aria-hidden="true">{step.n}</span>
-            {/* The one numeral of the three per step (watermark, this, and
-                the lane's JourneyDot) that assistive tech actually hears —
-                the other two are aria-hidden decorative repeats. */}
-            <motion.span
-              className="journey-step-number"
-              initial={prefersReduced ? false : { opacity: 0, scale: 1.6 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-            >
-              {step.n}
-            </motion.span>
-            <motion.h3
-              initial={prefersReduced ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.6, delay: 0.16 }}
-            >
-              {step.title}
-            </motion.h3>
-            <motion.p
-              initial={prefersReduced ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              {step.desc}
-            </motion.p>
-          </motion.div>
-        ))}
+        <div className="journey-globe-col" aria-hidden="true">
+          <div className="journey-globe-sticky">
+            <Globe progress={globeProgress} />
+          </div>
+        </div>
       </div>
     </section>
   );

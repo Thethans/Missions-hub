@@ -13,6 +13,8 @@
     "typecheck": "tsc --noEmit",
     "fetch-jp": "node scripts/fetch-joshua-project.mjs",
     "generate-hero-dots": "node scripts/generate-hero-dots.js",
+    "generate-map-preview": "node scripts/generate-map-preview.js",
+    "generate-opportunities-stats": "node scripts/generate-opportunities-stats.js",
     "sync-opportunities": "node scripts/sync-opportunities.js",
     "sync-opportunities:dry": "node scripts/sync-opportunities.js --all --dryRun",
     "backfill-sanitize": "node scripts/backfill-sanitize.js",
