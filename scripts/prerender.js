@@ -122,21 +122,24 @@ async function prerender() {
       });
   const page = await browser.newPage();
 
-  const inFlight = new Set();
-  page.on('request', (req) => inFlight.add(req.url()));
-  page.on('requestfinished', (req) => inFlight.delete(req.url()));
-  page.on('requestfailed', (req) => inFlight.delete(req.url()));
-
   for (const route of ROUTES) {
     const url = `http://${HOST}:${PORT}${route}`;
     console.log(`  Prerendering ${route}…`);
 
-    try {
-      await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
-    } catch (err) {
-      console.log('DEBUG still in-flight at timeout:', [...inFlight]);
-      throw err;
-    }
+    // 'networkidle0' turned out to hang for the entire timeout in CI even
+    // with zero requests actually in flight (confirmed by instrumenting
+    // page.on('request'/'requestfinished'/'requestfailed') — nothing was
+    // pending, the wait condition itself just never resolved). That's a
+    // known flaky failure mode of networkidle0 specifically; 'load' (page
+    // + all its initial resources finished) is a simpler, more reliable
+    // lifecycle event, and the explicit data-loaded wait below is what
+    // actually guarantees the content we care about has rendered anyway.
+    await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+
+    // Give in-flight fetches (opportunities/stats/geojson) a moment to
+    // resolve and re-render before capturing — 'load' alone doesn't wait
+    // for these, unlike the networkidle0 condition it replaces above.
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Wait for usePageMeta's useEffect to fire
     await page.waitForFunction(
