@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hand-maintained (no generator script) — the domain is hardcoded in all 9
+  <loc> entries below since a static public/ asset can't read an env var at
+  build time. When the domain changes (P3-A), update all 9 alongside
+  index.html's canonical/OG tags and scripts/prerender.js's matching
+  literal — see the comment in index.html for the full list.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://missions-hub.vercel.app/</loc>

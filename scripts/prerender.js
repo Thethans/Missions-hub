@@ -140,7 +140,10 @@ async function prerender() {
     // for these, unlike the networkidle0 condition it replaces above.
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Wait for usePageMeta's useEffect to fire
+    // Wait for usePageMeta's useEffect to fire — detected by the og:url tag
+    // changing away from index.html's static initial value. That literal
+    // must match index.html's own hardcoded og:url (see the comment there);
+    // both need updating together when the domain changes (P3-A).
     await page.waitForFunction(
       () => document.title && document.title !== 'Fielded — Get to the Field' || document.querySelector('meta[property="og:url"]')?.content !== 'https://missions-hub.vercel.app/',
       { timeout: 5000 }

@@ -19,6 +19,13 @@ if (!API_KEY) {
 const BASE = 'https://api.joshuaproject.net/v1/people_groups.json';
 const OUT_PATH = path.resolve('public/data/people-groups.geojson');
 const STATS_PATH = path.resolve('public/data/stats.json');
+// StatsStrip.jsx imports this copy directly (a static build-time import,
+// not a runtime fetch) so the homepage's stat numbers are real from the
+// very first render — including the Puppeteer prerender snapshot and any
+// no-JS client, neither of which would ever see a value from a runtime
+// fetch() resolve. public/data/stats.json is kept in sync alongside it in
+// case anything else ever wants the plain JSON over HTTP.
+const SRC_STATS_PATH = path.resolve('src/data/stats.json');
 
 function progressStatus(pctEvangelical) {
   if (pctEvangelical >= 5) return 'reached';
@@ -90,7 +97,9 @@ async function main() {
     unreachedCountries: new Set(unreached.map((f) => f.properties.country)).size
   };
   fs.writeFileSync(STATS_PATH, JSON.stringify(stats));
-  console.log(`Wrote stats to ${STATS_PATH}:`, stats);
+  fs.mkdirSync(path.dirname(SRC_STATS_PATH), { recursive: true });
+  fs.writeFileSync(SRC_STATS_PATH, JSON.stringify(stats));
+  console.log(`Wrote stats to ${STATS_PATH} and ${SRC_STATS_PATH}:`, stats);
 }
 
 main().catch((err) => {

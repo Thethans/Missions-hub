@@ -23,6 +23,43 @@ const CIRCLE_COLOR = [
   '#999999'
 ];
 
+// Redundant, non-color channel for status, since red/gold/green (the most
+// common colorblind confusion pair) is otherwise the only signal on the
+// canvas: unreached is a solid disc, formative is a faded disc, reached is a
+// hollow ring (near-zero fill, thicker colored stroke so it still reads at a
+// glance). Mirrored in the legend/popup/detail-panel dot CSS so the shape
+// language is consistent everywhere status appears.
+const CIRCLE_FILL_OPACITY = [
+  'match',
+  ['get', 'progressStatus'],
+  'unreached', 0.85,
+  'formative', 0.55,
+  'reached', 0.1,
+  0.85
+];
+
+const CIRCLE_STROKE_WIDTH = [
+  'let',
+  'base',
+  ['match', ['get', 'progressStatus'], 'unreached', 1, 'formative', 1.25, 'reached', 2, 1],
+  [
+    'case',
+    ['any', ['boolean', ['feature-state', 'hover'], false], ['boolean', ['feature-state', 'select'], false]],
+    ['+', ['var', 'base'], 1.5],
+    ['var', 'base']
+  ]
+];
+
+// Reached's ring is nearly all stroke (the fill is almost transparent), so it
+// needs its own color rather than the shared cream — cream reads fine as a
+// hairline edge on a solid disc but would nearly vanish against the light
+// land tiles as a ring's only visible pixels.
+const CIRCLE_STROKE_COLOR = [
+  'case',
+  ['boolean', ['feature-state', 'select'], false], '#2b6e76',
+  ['match', ['get', 'progressStatus'], 'reached', '#345f42', '#faf7f0']
+];
+
 // A light lat/lon grid every 30° — cheap to hand-generate, and it gives the
 // flat basemap an "instrument panel" cartographic texture instead of a
 // plain fill, without adding any 3D.
@@ -179,18 +216,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
           'circle-color': CIRCLE_COLOR,
           'circle-opacity': 0,
           'circle-opacity-transition': { duration: 900 },
-          'circle-stroke-width': [
-            'case',
-            ['any', ['boolean', ['feature-state', 'hover'], false], ['boolean', ['feature-state', 'select'], false]],
-            2,
-            1
-          ],
-          'circle-stroke-color': [
-            'case',
-            ['boolean', ['feature-state', 'select'], false],
-            '#2b6e76',
-            '#faf7f0'
-          ]
+          'circle-stroke-width': CIRCLE_STROKE_WIDTH,
+          'circle-stroke-color': CIRCLE_STROKE_COLOR
         }
       });
 
@@ -202,7 +229,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
       // Fade markers in a beat after the shadow/pulse layers land, instead
       // of everything popping in at once.
       requestAnimationFrame(() => {
-        map.setPaintProperty('people-groups-points', 'circle-opacity', 0.85);
+        map.setPaintProperty('people-groups-points', 'circle-opacity', CIRCLE_FILL_OPACITY);
       });
 
       // Slow pulse: radius and opacity breathe via a sine wave. Reduced to a
@@ -304,7 +331,12 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
           Couldn't load people-group data right now — try refreshing the page.
         </p>
       ) : (
-        <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+        <>
+          {counts === null && (
+            <p className="map-loading" role="status">Finding unreached peoples&hellip;</p>
+          )}
+          <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+        </>
       )}
       {selected && <MapPopupCard properties={selected} onClose={() => onSelect(null)} />}
     </div>

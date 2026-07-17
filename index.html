@@ -9,6 +9,20 @@
       content="A live map of unreached people groups, a transparent mission-agency matcher, and a pre-field checklist — everything between 'I think I'm called' and getting to the field."
     />
     <meta name="theme-color" content="#16233B" />
+    <!--
+      The canonical/OG/twitter URLs below are hardcoded, not read from
+      VITE_SITE_URL (src/hooks/usePageMeta.js) — index.html isn't processed
+      by React, so it can't read a runtime env var, and Vite's HTML env
+      substitution has no safe fallback if the var is ever unset, which
+      would ship a blank canonical URL. In practice these values are only
+      the "before JS runs" state: every real route is prerendered (see
+      scripts/prerender.js) and the prerender snapshot overwrites this exact
+      file with the real per-page tags from usePageMeta. When the domain
+      changes (P3-A), update the 4 URLs below, scripts/prerender.js's own
+      matching literal, and public/sitemap.xml (9 occurrences) together —
+      grep this repo for "missions-hub.vercel.app" to find all of them.
+    -->
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />

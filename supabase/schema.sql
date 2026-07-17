@@ -214,3 +214,48 @@ create policy "Active admins can revoke/update verified members"
 --
 --   insert into verified_members (church_email, user_id, is_admin, verified_at)
 --   values ('admin@yourchurch.org', '<their auth.users.id>', true, now());
+
+-- Opportunities: auth-linked favorites -----------------------------------
+-- Favorites used to live only in localStorage (fielded_saved_opps), so they
+-- were device-owned — sign in on a second device and the list was empty.
+-- This makes Supabase the source of truth once a user is signed in; the
+-- client still keeps localStorage as the signed-out fallback and merges the
+-- two (union, never a wholesale overwrite) the first time a session appears.
+-- opportunity_id isn't a foreign key here because the `opportunities` table
+-- itself isn't managed through this schema file (see scripts/sync-opportunities
+-- and generate-component.js — it's populated by a separate scraper pipeline).
+create table if not exists saved_opportunities (
+  user_id uuid not null references auth.users,
+  opportunity_id text not null,
+  created_at timestamptz default now(),
+  primary key (user_id, opportunity_id)
+);
+
+alter table saved_opportunities enable row level security;
+
+create policy "Users can view own saved opportunities"
+  on saved_opportunities for select
+  using (auth.uid() = user_id);
+
+create policy "Users can save own opportunities"
+  on saved_opportunities for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can unsave own opportunities"
+  on saved_opportunities for delete
+  using (auth.uid() = user_id);
+
+-- Opportunities: sanitize-pipeline columns (P1-C) ------------------------
+-- The `opportunities` table itself lives outside this file (see the DDL
+-- comment in scripts/lib/supabase-client.js — it's populated by the scraper
+-- pipeline, not migrated here), but its columns still need this one-time
+-- ALTER so scripts/lib/sanitize.js's output has somewhere to land:
+-- description_full (untruncated sanitized text — `description` becomes the
+-- ≤200-char card version), listing_type ('opening' | 'category_page'),
+-- stale_flag (a >12-month-old date mentioned in the listing), and
+-- merged_titles (near-dupe title variants collapsed into this record).
+alter table opportunities
+  add column if not exists description_full text,
+  add column if not exists listing_type text,
+  add column if not exists stale_flag boolean not null default false,
+  add column if not exists merged_titles text[] not null default '{}';

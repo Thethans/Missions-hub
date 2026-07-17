@@ -33,6 +33,15 @@ body {
 
 input[type='checkbox'], input[type='radio'] { accent-color: var(--voyage-teal); }
 
+::selection { background: var(--voyage-teal); color: var(--atlas-paper); }
+
+html { scrollbar-color: var(--voyage-teal) var(--atlas-paper); scrollbar-width: thin; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--atlas-paper); }
+::-webkit-scrollbar-thumb { background: var(--voyage-teal); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #245e65; }
+
 /* Standard sr-only pattern: content stays in the accessibility tree (for
    screen-reader announcements) but is removed from visual layout entirely. */
 .visually-hidden {
@@ -311,38 +320,141 @@ a { color: var(--voyage-teal); }
   overflow: hidden;
 }
 
+/* Carries the scroll-linked scale/opacity (see HomePage.jsx) — kept
+   separate from .hero itself so the transform doesn't feed back into the
+   scroll measurement taken against .hero's own untransformed box. */
+.hero-zoom {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .hero-background {
   position: absolute;
   inset: 0;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   contain: layout style paint;
 }
 
-.hero-globe { width: min(85vh, 900px); opacity: 0.9; flex-shrink: 0; }
-
-.hero-dots {
-  flex: 1;
-  min-width: 0;
+/* "The Living Atlas" — dot-matrix world map, pulse layer (real unreached
+   coordinates), and route layer (illustrative sending arcs). See
+   HeroBackground.jsx and scripts/generate-hero-dots.js. */
+.hero-atlas {
+  width: 100%;
   height: 100%;
-  opacity: 0.7;
-  animation: hero-dots-fade 2s ease-out both;
+  opacity: 0.8;
+  animation: hero-atlas-fade 2s ease-out both;
 }
-.hero-dots--left { mask-image: linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%); }
-.hero-dots--right { mask-image: linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%); }
 
-@keyframes hero-dots-fade {
+@keyframes hero-atlas-fade {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to { opacity: 0.8; }
 }
 
-@media (max-width: 768px) {
-  .hero-dots { display: none; }
+.hero-atlas-dots circle {
+  fill: var(--atlas-paper);
+  opacity: 0.3;
 }
-.hero-globe .globe-stage { width: 100%; }
-.hero-globe .globe-plane { filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45)); }
+
+.hero-atlas-pulse {
+  fill: var(--status-unreached);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-atlas-pulse 3.5s ease-in-out infinite;
+}
+
+@keyframes hero-atlas-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.6); }
+}
+
+.hero-atlas-route {
+  fill: none;
+  stroke: var(--voyage-teal);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 4;
+  opacity: 0.7;
+}
+
+.hero-atlas-routes g {
+  animation: hero-atlas-route-draw 6s ease-in-out infinite;
+}
+
+@keyframes hero-atlas-route-draw {
+  0% { stroke-dashoffset: 0; opacity: 0; }
+  8% { opacity: 0.7; }
+  45% { stroke-dashoffset: -120; opacity: 0.7; }
+  70%, 100% { stroke-dashoffset: -120; opacity: 0; }
+}
+
+.hero-atlas-coord {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  fill: var(--atlas-paper);
+  opacity: 0;
+  animation: hero-atlas-coord-fade 6s ease-in-out infinite;
+}
+
+@keyframes hero-atlas-coord-fade {
+  0%, 20% { opacity: 0; }
+  45%, 65% { opacity: 0.75; }
+  85%, 100% { opacity: 0; }
+}
+
+/* Ambient rising particles — pure atmosphere (not real data, unlike the
+   pulse layer), continuous motion so the hero never sits perfectly still
+   even before any pulse/route cycle catches the eye. Same fall/rise pattern
+   as .journey-particle, mirrored vertically. */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-particle {
+  position: absolute;
+  bottom: -4%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--voyage-teal);
+  opacity: 0;
+  animation-name: hero-particle-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, bottom, opacity;
+  contain: strict;
+}
+
+.hero-particle--paper {
+  width: 2px;
+  height: 2px;
+  background: var(--atlas-paper);
+}
+
+@keyframes hero-particle-rise {
+  0% { bottom: -4%; opacity: 0; transform: translateX(calc(var(--dx) * -1)); }
+  10% { opacity: 0.6; }
+  50% { transform: translateX(var(--dx)); }
+  90% { opacity: 0.6; }
+  100% { bottom: 104%; opacity: 0; transform: translateX(calc(var(--dx) * -1)); }
+}
+
+/* Static texture, no motion — the map itself stays, nothing pulses or draws. */
+.hero-atlas--static { animation: none; opacity: 0.8; }
+.hero-atlas--static .hero-atlas-pulse,
+.hero-atlas--static .hero-atlas-routes g,
+.hero-atlas--static .hero-atlas-coord {
+  animation: none;
+}
+.hero-atlas--static .hero-atlas-pulse { opacity: 0.7; transform: none; }
+.hero-atlas--static .hero-atlas-route { opacity: 0.5; }
+.hero-atlas--static .hero-atlas-coord { opacity: 0.6; }
 
 /* Darkens the middle of the hero (where the text sits) without dimming the
    globe's bright edges/glow, so the wordmark and copy stay legible over
@@ -396,6 +508,10 @@ a { color: var(--voyage-teal); }
 }
 
 .hero p { max-width: 480px; margin: 0 0 var(--space-6); color: rgba(250, 247, 240, 0.8); }
+
+/* Wraps a .cta-button for the magnetic hover pull (see useMagnetic.js) —
+   inline-block so it doesn't disturb the button's own layout/centering. */
+.magnetic-wrap { display: inline-block; }
 
 .cta-button {
   display: inline-block;
@@ -530,17 +646,58 @@ a { color: var(--voyage-teal); }
   }
 }
 
+/* ==== HOME: SECTION DIVIDER ==== */
+
+.section-divider {
+  display: block;
+  width: 100%;
+  height: 72px;
+  margin-bottom: -1px; /* closes any subpixel gap against the next section */
+}
+
+@media (max-width: 640px) {
+  .section-divider { height: 44px; }
+}
+
 /* ==== HOME: JOURNEY (scrollytelling) ==== */
 
-/* No card, no box — just the steps column with a thread running down its
-   left edge. The plane (see .journey-plane) rides that thread straight
-   down as you scroll; a separate boxed diagonal visual here would have
-   read as a duplicate of the hero's globe. */
+/* No card, no box on the steps themselves — just the column with a thread
+   running down its left edge. The section's own visual anchor is the
+   sticky globe in .journey-globe-col (see JourneySection.jsx / Globe.jsx).
+   Bottom padding is more compact (--space-12, not --space-16) since a
+   SectionDivider follows and already adds its own visual separation; top
+   padding stays generous since it follows StatsStrip's dissolve rather than
+   a divider. */
 .journey {
-  max-width: 700px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: var(--space-16) var(--space-6);
+  padding: var(--space-16) var(--space-6) var(--space-12);
   position: relative;
+}
+
+/* Steps column + a sticky rotating-globe companion (see Globe.jsx) filling
+   the wide desktop canvas the narrow single-column version used to leave
+   empty. Globe column drops out below 960px — cobe/WebGL on top of the
+   scrollytelling thread is more than a narrow viewport needs. */
+.journey-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.journey-globe-col { position: relative; }
+
+.journey-globe-sticky {
+  position: sticky;
+  top: 18vh;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 960px) {
+  .journey-layout { grid-template-columns: 1fr; }
+  .journey-globe-col { display: none; }
 }
 
 .journey-heading {
@@ -786,16 +943,64 @@ a { color: var(--voyage-teal); }
 
 /* ==== HOME: CAPABILITIES ==== */
 
+/* Navy, not paper — alternates with the cream Journey/MapTeaser sections on
+   either side of it so the mid-page scroll has real light/dark rhythm
+   instead of three consecutive same-toned sections. Flanked by a
+   SectionDivider on both edges (see HomePage.jsx), which already adds ~72px
+   of visual separation, so this uses the more compact --space-12 rather
+   than the --space-16 every other section defaults to — deliberate
+   variation in the page's vertical rhythm instead of one repeated value.
+   position/z-index establish a local stacking context so the grain and
+   spotlight overlays (negative z-index) stay behind this section's own
+   content without needing to touch the content's stacking individually. */
 .capabilities {
-  padding: var(--space-16) var(--space-6);
-  text-align: center;
+  position: relative;
+  z-index: 0;
+  padding: var(--space-12) var(--space-6);
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
 }
 
-.capabilities h2 { margin: 0 0 var(--space-12); font-size: clamp(1.5rem, 3vw, 2rem); }
+/* Cursor-following glow (see SpotlightOverlay.jsx) — sits above the grain
+   (-2) but still behind this section's actual content (default z-index). */
+.spotlight-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(circle 420px at var(--spot-x, 50%) var(--spot-y, 50%), rgba(43, 110, 118, 0.18), transparent 70%);
+  pointer-events: none;
+}
 
+.capabilities::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Left-aligned and bounded to the same width as the grid below (not
+   full-bleed centered text) — a deliberate editorial block instead of a
+   centered banner heading. */
+.capabilities h2 {
+  max-width: 1000px;
+  margin: 0 auto var(--space-12);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  text-align: left;
+}
+
+/* Fixed 2 columns (not auto-fit) — with exactly 4 cards, auto-fit's
+   minmax(260px,1fr) comfortably fits 3 per row at this max-width, leaving
+   the 4th stranded alone on its own row. A deliberate 2x2 stays balanced
+   regardless of container width. */
 .capabilities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-8);
   max-width: 1000px;
   margin: 0 auto;
@@ -804,10 +1009,10 @@ a { color: var(--voyage-teal); }
 .capability-card {
   height: 100%;
   text-align: left;
-  background: var(--glass-light-bg);
-  border: 1px solid var(--glass-light-border);
+  background: var(--glass-dark-bg);
+  border: 1px solid var(--glass-dark-border);
   border-radius: 16px;
-  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  box-shadow: var(--glass-dark-sheen);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   padding: var(--space-8);
@@ -816,48 +1021,124 @@ a { color: var(--voyage-teal); }
 
 .capability-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--glass-light-sheen), 0 18px 42px rgba(22, 35, 59, 0.2);
-  border-color: rgba(43, 110, 118, 0.35);
+  box-shadow: var(--glass-dark-sheen), 0 18px 42px rgba(0, 0, 0, 0.35);
+  border-color: rgba(43, 110, 118, 0.5);
 }
 
-.capability-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(43, 110, 118, 0.12) 0%, rgba(43, 110, 118, 0.06) 100%);
+/* Large mono numeral replaces the old icon-in-a-circle badge — reuses the
+   same 01/02/03 numbering language as the nav and Journey section instead
+   of a generic icon motif, and doubles as the card's visual anchor. */
+.capability-number {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
   color: var(--voyage-teal);
   margin-bottom: var(--space-4);
+  line-height: 1;
 }
 
-.capability-card h3 { margin: 0 0 var(--space-3); font-size: 1.1rem; }
-.capability-card p { margin: 0; color: var(--muted-text); line-height: 1.6; }
+.capability-card h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: 1.1rem;
+  color: var(--atlas-paper);
+}
+
+.capability-card h3 svg { color: var(--voyage-teal); flex-shrink: 0; }
+
+.capability-card p { margin: 0; color: rgba(250, 247, 240, 0.7); line-height: 1.6; }
+
+@media (max-width: 640px) {
+  .capabilities h2 { text-align: center; }
+}
 
 /* ==== HOME: MAP TEASER ==== */
 
+/* Flanked by a SectionDivider on both edges — more compact vertical padding
+   than the section-padding default, matching Capabilities' same reasoning. */
 .map-teaser {
-  max-width: 640px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: var(--space-16) var(--space-6);
-  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--space-12);
+  align-items: center;
 }
 
+.map-teaser-visual {
+  background: var(--ink-navy);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  aspect-ratio: 2 / 1;
+}
+
+.map-preview-graphic { width: 100%; height: 100%; display: block; }
+
+/* Same solid/faded/ring status encoding as the live map (WorldMap.jsx) —
+   SVG circles need fill/stroke rather than the background/border used for
+   the small status dots elsewhere, so these are their own rules rather than
+   reusing .status-unreached etc. */
+.map-preview-dot.status-unreached { fill: var(--status-unreached); fill-opacity: 0.85; }
+.map-preview-dot.status-formative { fill: var(--status-formative); fill-opacity: 0.55; }
+.map-preview-dot.status-reached { fill: none; stroke: var(--status-reached); stroke-width: 1.5; }
+
+.map-teaser-content { text-align: left; }
 .map-teaser h2 { margin: 0 0 var(--space-3); font-size: clamp(1.5rem, 3vw, 2rem); }
 .map-teaser p { color: var(--muted-text); margin: 0 0 var(--space-8); font-size: 1.05rem; line-height: 1.6; }
 
+@media (max-width: 768px) {
+  .map-teaser { grid-template-columns: 1fr; text-align: center; }
+  .map-teaser-content { text-align: center; }
+}
+
 /* ==== HOME: FAQ ==== */
 
+/* A SectionDivider precedes this section (top edge more compact, --space-12)
+   but nothing follows it except the footer, so the bottom edge keeps the
+   full --space-16 for a solid close rather than trailing off thin. */
 .faq {
-  padding: var(--space-16) var(--space-6);
+  position: relative;
+  z-index: 0;
+  padding: var(--space-12) var(--space-6) var(--space-16);
   background: var(--ink-navy);
   color: var(--atlas-paper);
 }
 
-.faq h2 { text-align: center; margin: 0 0 var(--space-8); }
+.faq::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
 
-.faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-3); }
+/* Left column heading + right column list instead of one centered stack —
+   gives the section a real two-column composition rather than everything
+   on the page defaulting to the same centered-column rhythm. */
+.faq-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-12);
+  align-items: start;
+}
+
+.faq h2 { margin: 0; font-size: clamp(1.75rem, 3vw, 2.25rem); text-align: left; }
+
+.faq-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+@media (max-width: 768px) {
+  .faq-inner { grid-template-columns: 1fr; gap: var(--space-6); }
+  .faq h2 { text-align: center; }
+}
 
 .faq-item {
   border: 1px solid var(--glass-dark-border);
@@ -892,12 +1173,39 @@ a { color: var(--voyage-teal); }
   cursor: pointer;
 }
 
+.faq-question-text { display: flex; align-items: baseline; gap: var(--space-3); }
+
+.faq-number {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--voyage-teal);
+}
+
 .faq-toggle {
   flex-shrink: 0;
   font-family: var(--font-mono);
   color: var(--voyage-teal);
   font-size: 1.3rem;
   line-height: 1;
+}
+
+/* grid-template-rows 0fr→1fr animates to an unmeasured/auto content height
+   using plain CSS transitions — no JS height measurement needed. */
+.faq-answer-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+.faq-answer-wrap--open { grid-template-rows: 1fr; opacity: 1; }
+
+.faq-answer-inner { overflow: hidden; min-height: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-answer-wrap { transition: none; }
 }
 
 .faq-answer {
@@ -913,7 +1221,7 @@ a { color: var(--voyage-teal); }
   .journey-dot { width: 34px; height: 34px; font-size: 0.7rem; }
   .journey-step { padding: var(--space-6); }
   .journey-step-watermark { font-size: 7rem; }
-  .capabilities-grid { flex-direction: column; }
+  .capabilities-grid { grid-template-columns: 1fr; }
 }
 
 /* ==== MAP ==== */
@@ -927,6 +1235,27 @@ a { color: var(--voyage-teal); }
 .status-unreached { background: var(--status-unreached); }
 .status-formative { background: var(--status-formative); }
 .status-reached { background: var(--status-reached); }
+
+/* Same solid/faded/ring shape language as the map's plotted points (see
+   WorldMap.jsx CIRCLE_FILL_OPACITY) — a redundant, non-color cue for status,
+   since red/gold/green is the most common colorblind confusion pair. Scoped
+   to the specific dot components (not the bare .status-* rule above) so it
+   doesn't bleed into other elements that reuse those classes, like the
+   meter-track fill. */
+.map-legend-swatch.status-formative,
+.map-popup-status-dot.status-formative,
+.map-detail-status-dot.status-formative,
+.map-search-result-dot.status-formative {
+  opacity: 0.6;
+}
+
+.map-legend-swatch.status-reached,
+.map-popup-status-dot.status-reached,
+.map-detail-status-dot.status-reached,
+.map-search-result-dot.status-reached {
+  background: transparent;
+  border: 2px solid var(--status-reached);
+}
 
 .map-popup-card {
   position: absolute;
@@ -988,6 +1317,22 @@ a { color: var(--voyage-teal); }
   flex-direction: column;
   gap: var(--space-2);
   font-size: 0.85rem;
+}
+
+.map-loading {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted-text);
 }
 
 .map-data-error {
@@ -1152,6 +1497,40 @@ a { color: var(--voyage-teal); }
   text-align: center;
   color: var(--muted-text);
   padding: var(--space-16) var(--space-6);
+}
+
+.map-detail--empty:has(.map-detail-featured) {
+  padding: var(--space-8) var(--space-6);
+}
+
+.map-detail-featured-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-4);
+}
+
+.map-detail-featured {
+  text-align: left;
+  max-width: 480px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-6);
+}
+
+.map-detail-featured .map-detail-stats {
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: var(--space-6);
+}
+
+.map-detail-featured .cta-button {
+  padding: var(--space-2) var(--space-6);
+  font-size: 0.9rem;
 }
 
 .map-detail-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
@@ -1632,11 +2011,13 @@ a { color: var(--voyage-teal); }
   padding: var(--space-8) var(--space-6) var(--space-16);
 }
 
-.opp-loading, .opp-error, .opp-empty {
+.opp-error, .opp-empty {
   text-align: center;
   padding: var(--space-16) var(--space-6);
   color: var(--muted-text);
 }
+
+.opp-loading { color: var(--muted-text); }
 
 .opp-error { max-width: 480px; margin: 0 auto; }
 
@@ -1769,6 +2150,51 @@ a { color: var(--voyage-teal); }
   font-size: 0.75rem;
 }
 
+/* Sort control */
+.opp-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--muted-text);
+}
+
+.opp-sort-select {
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink-navy);
+  cursor: pointer;
+}
+
+.opp-sort-pill {
+  display: inline-flex;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-3);
+  border-radius: 999px;
+  background: rgba(43, 110, 118, 0.1);
+  color: var(--voyage-teal);
+}
+
+.opp-sort-hint {
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin-bottom: var(--space-3);
+}
+
+.opp-sort-hint a { color: var(--voyage-teal); }
+
 /* Filter panel */
 .opp-filters {
   background: white;
@@ -1886,6 +2312,45 @@ a { color: var(--voyage-teal); }
   margin: 0;
 }
 
+/* Pagination */
+.opp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.opp-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink-navy);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.opp-page-btn:hover:not(:disabled) { border-color: var(--voyage-teal); }
+
+.opp-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.opp-page-status {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  white-space: nowrap;
+}
+
 /* Card grid */
 .opp-grid {
   display: grid;
@@ -1894,6 +2359,28 @@ a { color: var(--voyage-teal); }
 }
 
 .opp-card-wrapper { height: 100%; }
+
+.opp-card-skeleton {
+  /* Matches real card height (measured 244-311px, avg ~263px) closely
+     enough that the loading→loaded swap doesn't shove the footer down —
+     a Lighthouse CLS run caught this at 220px (real cards are taller on
+     average, not shorter). */
+  height: 265px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--atlas-paper) 30%, rgba(22, 35, 59, 0.06) 45%, var(--atlas-paper) 60%);
+  background-size: 200% 100%;
+  animation: opp-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opp-card-skeleton { animation: none; }
+}
+
+@keyframes opp-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 .opp-card {
   height: 100%;
@@ -1976,30 +2463,39 @@ a { color: var(--voyage-teal); }
   border-top: 1px solid var(--line);
 }
 
+/* Secondary action — plain text link. min-height keeps its tap target at
+   the same 44px floor as the primary button beside it, even though the
+   link itself is just text. */
 .opp-card-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
+/* Primary action — filled by default (not just on hover), so "View details"
+   and "Inquire with {agency}" read as two distinct weights of action
+   rather than a matched pair. */
 .opp-inquire-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  min-height: 44px;
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--voyage-teal);
   border-radius: var(--radius);
-  background: transparent;
-  color: var(--voyage-teal);
+  background: var(--voyage-teal);
+  color: white;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .opp-inquire-btn:hover {
-  background: var(--voyage-teal);
-  color: white;
+  background: #245e65;
 }
 
 /* Inquiry modal */

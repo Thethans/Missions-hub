@@ -12,8 +12,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "fetch-jp": "node scripts/fetch-joshua-project.mjs",
+    "generate-hero-dots": "node scripts/generate-hero-dots.js",
+    "generate-map-preview": "node scripts/generate-map-preview.js",
     "sync-opportunities": "node scripts/sync-opportunities.js",
     "sync-opportunities:dry": "node scripts/sync-opportunities.js --all --dryRun",
+    "backfill-sanitize": "node scripts/backfill-sanitize.js",
+    "backfill-sanitize:dry": "node scripts/backfill-sanitize.js --dryRun",
     "generate-component": "node scripts/generate-component.js",
     "og:image": "node scripts/assets/render-og.mjs",
     "icons": "node scripts/assets/render-icons.mjs"

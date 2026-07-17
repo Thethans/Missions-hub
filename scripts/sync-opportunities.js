@@ -19,6 +19,7 @@ import winston from 'winston';
 import { SCRAPERS, SCRAPER_KEYS, BROWSER_SCRAPERS } from './lib/scrapers/index.js';
 import { dedupeOpportunities } from './lib/scrapers/base.js';
 import { closeBrowser } from './lib/scrapers/browser.js';
+import { sanitizeOpportunities } from './lib/sanitize.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, '.scraper-cache.json');
@@ -199,7 +200,17 @@ async function scrapeOne(key, supabase, dryRun, cache) {
     return { key, error: false, scraped: 0, upserted: 0, deactivated: 0 };
   }
 
-  const rows = opportunities.map((opp) => ({
+  // Sanitize runs on the deduped-but-otherwise-raw `opportunities` list —
+  // freshness/deactivation below still uses that list's own URLs (not the
+  // sanitized/collapsed one), since collapsing near-dupe titles into one
+  // canonical record must never make a still-live variant's URL look like
+  // it disappeared from this scrape and get marked inactive.
+  const { opportunities: sanitized, categoryReassignments } = sanitizeOpportunities(opportunities);
+  for (const r of categoryReassignments) {
+    logger.info(`[${key}] Category reassigned for "${r.title}": ${r.from} → ${r.to}`);
+  }
+
+  const rows = sanitized.map((opp) => ({
     ...opp,
     scraped_at: new Date().toISOString(),
     active: true

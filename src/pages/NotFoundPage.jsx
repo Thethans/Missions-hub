@@ -18,7 +18,7 @@ export default function NotFoundPage() {
         <nav className="notfound-links">
           <Link to="/">Home</Link>
           <Link to="/map">Map</Link>
-          <Link to="/quiz">Quiz</Link>
+          <Link to="/quiz">Agency Match</Link>
           <Link to="/checklist">Checklist</Link>
           <Link to="/about">About</Link>
         </nav>
