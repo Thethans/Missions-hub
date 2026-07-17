@@ -93,8 +93,6 @@ async function prerender() {
   const HOST = '127.0.0.1';
   const server = await serve(PORT);
   console.log(`Serving dist/ on http://${HOST}:${PORT}`);
-  const debugExecPath = await puppeteer.executablePath();
-  console.log('DEBUG puppeteer executablePath:', debugExecPath, 'exists:', existsSync(debugExecPath));
 
   // Vercel's build container has no downloadable Chrome for stock puppeteer
   // to find (see @sparticuz/chromium, a build compiled for serverless/CI
@@ -108,8 +106,18 @@ async function prerender() {
       })
     : await puppeteer.launch({
         headless: true,
-        dumpio: true,
-        args: ['--no-sandbox', '--disable-dev-shm-usage']
+        args: [
+          '--no-sandbox',
+          '--disable-dev-shm-usage',
+          // CI runners have no real GPU, so Chrome falls back to a
+          // deprecated, extremely slow automatic software-WebGL path for
+          // the homepage's rotating globe (cobe) — slow enough to starve
+          // the event loop and stall page.goto's networkidle0 detection
+          // well past the 30s timeout, well after the page has actually
+          // loaded. SwiftShader is the fast, stable software GL Chrome
+          // itself recommends switching to for exactly this case.
+          '--enable-unsafe-swiftshader'
+        ]
       });
   const page = await browser.newPage();
 
