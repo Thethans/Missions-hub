@@ -97,7 +97,16 @@ async function prerender() {
         executablePath: await chromium.executablePath(),
         headless: 'shell'
       })
-    : await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    : await puppeteer.launch({
+        headless: true,
+        // --disable-dev-shm-usage: CI containers (e.g. GitHub Actions'
+        // ubuntu-latest) mount /dev/shm far smaller than a real machine's;
+        // Chrome silently hangs on navigation instead of erroring when it
+        // runs out of shared memory there, which is what was producing the
+        // "Navigation timeout of 30000ms exceeded" on every route — not an
+        // actual page load problem. This flag makes Chrome use /tmp instead.
+        args: ['--no-sandbox', '--disable-dev-shm-usage']
+      });
   const page = await browser.newPage();
 
   for (const route of ROUTES) {
