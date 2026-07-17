@@ -106,6 +106,7 @@ async function prerender() {
       })
     : await puppeteer.launch({
         headless: true,
+        dumpio: true,
         args: [
           '--no-sandbox',
           '--disable-dev-shm-usage',
@@ -121,11 +122,21 @@ async function prerender() {
       });
   const page = await browser.newPage();
 
+  const inFlight = new Set();
+  page.on('request', (req) => inFlight.add(req.url()));
+  page.on('requestfinished', (req) => inFlight.delete(req.url()));
+  page.on('requestfailed', (req) => inFlight.delete(req.url()));
+
   for (const route of ROUTES) {
     const url = `http://${HOST}:${PORT}${route}`;
     console.log(`  Prerendering ${route}…`);
 
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    try {
+      await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    } catch (err) {
+      console.log('DEBUG still in-flight at timeout:', [...inFlight]);
+      throw err;
+    }
 
     // Wait for usePageMeta's useEffect to fire
     await page.waitForFunction(
