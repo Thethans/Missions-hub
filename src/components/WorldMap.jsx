@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import basemapStyle from '../map/basemapStyle.js';
 import MapPopupCard from './MapPopupCard.jsx';
 import MapLegend from './MapLegend.jsx';
+import { getPreloaded, setPreloaded } from '../utils/preloadedData.js';
 
 const DATA_URL = '/data/people-groups.geojson';
 const STATUSES = ['unreached', 'formative', 'reached'];
@@ -49,7 +50,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   const selectedIdRef = useRef(null);
   const activeRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
-  const [counts, setCounts] = useState(null);
+  const [counts, setCounts] = useState(() => getPreloaded('mapCounts') ?? null);
   const [active, setActive] = useState(() => new Set(STATUSES));
   const [dataError, setDataError] = useState(false);
   activeRef.current = active;
@@ -110,6 +111,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
       data.features.forEach((f) => {
         if (tally[f.properties.progressStatus] !== undefined) tally[f.properties.progressStatus] += 1;
       });
+      setPreloaded('mapCounts', tally);
       setCounts(tally);
 
       // Share the loaded features with the parent (MapAccessibleSearch) so a
@@ -295,7 +297,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
 
   return (
     <div className="map-wrapper">
-      <div id="map-container" ref={mapContainer} />
+      <div id="map-container" ref={mapContainer} data-hydration-reset="children class style" />
       <div className="map-vignette" aria-hidden="true" />
       {dataError ? (
         <p className="map-data-error" role="alert">

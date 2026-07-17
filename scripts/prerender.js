@@ -49,19 +49,28 @@ const MIME = {
   '.webp': 'image/webp',
 };
 
+// The pristine, un-prerendered index.html (as vite build emitted it) — read
+// once before any route is captured. The '/' route's own capture overwrites
+// dist/index.html on disk with its already-injected __PRELOADED_DATA__
+// script; every other route's page.goto() falls back to that same file for
+// its extensionless path, so serving straight off disk would boot each
+// subsequent route from '/'s leftover preload data instead of a clean
+// slate. Keeping the original content in memory for the fallback case
+// keeps every route's capture independent, matching how Vercel actually
+// serves this in production (each route gets its own prerendered file, not
+// another route's).
+const pristineIndexHtml = readFileSync(join(DIST, 'index.html'));
+
 function serve(port) {
   return new Promise((resolve) => {
     const server = createServer((req, res) => {
       const url = req.url.split('?')[0];
       let filePath = join(DIST, url);
-
-      if (!existsSync(filePath) || !extname(filePath)) {
-        filePath = join(DIST, 'index.html');
-      }
+      let useFallback = !existsSync(filePath) || !extname(filePath);
 
       try {
-        const content = readFileSync(filePath);
-        const ext = extname(filePath);
+        const content = useFallback ? pristineIndexHtml : readFileSync(filePath);
+        const ext = useFallback ? '.html' : extname(filePath);
         res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
         res.end(content);
       } catch {
@@ -103,6 +112,42 @@ async function prerender() {
       { timeout: 5000 }
     ).catch(() => {
       // Homepage keeps the default title — that's fine
+    });
+
+    // Embed whatever public data the page accumulated in window.__PRELOADED__
+    // (see src/utils/preloadedData.js) so a real visitor's first hydration
+    // render — which happens before any fetch effect resolves — already
+    // matches this snapshot instead of racing it.
+    //
+    // Also reset any element flagged data-hydration-reset: third-party
+    // libraries (MapLibre, cobe) attach real DOM children/attributes to
+    // these containers imperatively, well after React's own render. Those
+    // additions are meaningless as static markup (a WebGL canvas has no
+    // useful serialized form) and would otherwise show up in this capture
+    // as extra nodes React's own first render never produces, which is a
+    // structural hydration mismatch, not a data one — resetting them keeps
+    // the snapshot matching React's pre-effect output, same as an untouched
+    // container coming from a fresh mount.
+    await page.evaluate(() => {
+      const script = document.createElement('script');
+      script.id = '__PRELOADED_DATA__';
+      script.type = 'application/json';
+      script.textContent = JSON.stringify(window.__PRELOADED__ || {});
+      document.body.appendChild(script);
+
+      // Value is a space-separated list of what to strip: "children",
+      // "class", "style", or any other attribute name (e.g. "width").
+      // Elements only need "class"/"style" stripped when that particular
+      // attribute is applied imperatively by the third-party library and
+      // never appears in this element's own JSX — stripping an attribute
+      // React's own render DOES set would just create a new mismatch.
+      document.querySelectorAll('[data-hydration-reset]').forEach((el) => {
+        const parts = (el.getAttribute('data-hydration-reset') || '').split(/\s+/).filter(Boolean);
+        for (const part of parts) {
+          if (part === 'children') el.replaceChildren();
+          else el.removeAttribute(part);
+        }
+      });
     });
 
     const html = await page.content();

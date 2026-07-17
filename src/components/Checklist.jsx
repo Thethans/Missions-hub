@@ -272,12 +272,21 @@ function ChecklistView({ userId, profile, onEditProfile }) {
 }
 
 export default function Checklist() {
-  const [authLoading, setAuthLoading] = useState(true);
+  // Starts false (not "loading…"): scripts/prerender.js always captures this
+  // page anonymous (no auth cookie in its headless profile), so the snapshot
+  // is always the sign-in gate. Never a "Loading…" spinner, and never any
+  // real session — that's per-user and must never be baked into shared
+  // static HTML. Starting from the same anonymous-gate assumption here makes
+  // a real visitor's first hydration render match the snapshot; the effect
+  // below swaps to the real view once getSession() resolves, same as it did
+  // before for any visitor who did have a session.
+  const [authLoading, setAuthLoading] = useState(false);
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(undefined); // undefined = not yet loaded, null = no profile
   const [editingProfile, setEditingProfile] = useState(false);
 
   useEffect(() => {
+    if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setAuthLoading(false);
@@ -289,7 +298,7 @@ export default function Checklist() {
   }, []);
 
   useEffect(() => {
-    if (!session) {
+    if (!supabase || !session) {
       setProfile(undefined);
       return;
     }

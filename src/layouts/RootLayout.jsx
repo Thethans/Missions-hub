@@ -18,7 +18,12 @@ const TITLES = {
 export default function RootLayout() {
   const { pathname } = useLocation();
   const mainRef = useRef(null);
-  const [announcement, setAnnouncement] = useState('');
+  // Derived synchronously from the current path (not '' + an effect): the
+  // effect below only needs to fire on subsequent route changes now, so the
+  // very first render already matches scripts/prerender.js's snapshot
+  // (which always captures post-effect, with the title resolved) instead of
+  // diverging from it.
+  const [announcement, setAnnouncement] = useState(() => TITLES[pathname] || 'Page Not Found — Fielded');
 
   useEffect(() => {
     const title = TITLES[pathname] || 'Page Not Found — Fielded';

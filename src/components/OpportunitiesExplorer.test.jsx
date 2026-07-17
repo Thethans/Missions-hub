@@ -59,6 +59,11 @@ describe('OpportunitiesExplorer', () => {
   beforeEach(() => {
     mockSupabase = null;
     mockFallbackFetch();
+    // window.__PRELOADED__ (src/utils/preloadedData.js) is a module-scope
+    // singleton the component writes to once it has data — without
+    // resetting it, one test's fetched opportunities would leak into the
+    // next test's initial render and skip its fetch entirely.
+    delete window.__PRELOADED__;
   });
 
   afterEach(() => {
