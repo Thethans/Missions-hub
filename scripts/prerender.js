@@ -78,14 +78,21 @@ function serve(port) {
         res.end('Not found');
       }
     });
-    server.listen(port, () => resolve(server));
+    // Bind explicitly to 127.0.0.1 rather than the default wildcard: some
+    // containerized CI runners (this is what was actually causing every
+    // "Navigation timeout" below) don't wire up IPv6 loopback, and Chrome
+    // resolving "localhost" tries ::1 first — it hangs there instead of
+    // falling back quickly, eating the whole 30s navigation timeout with
+    // no other error. Talking IPv4 directly sidesteps the resolution.
+    server.listen(port, '127.0.0.1', () => resolve(server));
   });
 }
 
 async function prerender() {
   const PORT = 4173;
+  const HOST = '127.0.0.1';
   const server = await serve(PORT);
-  console.log(`Serving dist/ on http://localhost:${PORT}`);
+  console.log(`Serving dist/ on http://${HOST}:${PORT}`);
 
   // Vercel's build container has no downloadable Chrome for stock puppeteer
   // to find (see @sparticuz/chromium, a build compiled for serverless/CI
@@ -110,7 +117,7 @@ async function prerender() {
   const page = await browser.newPage();
 
   for (const route of ROUTES) {
-    const url = `http://localhost:${PORT}${route}`;
+    const url = `http://${HOST}:${PORT}${route}`;
     console.log(`  Prerendering ${route}…`);
 
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
