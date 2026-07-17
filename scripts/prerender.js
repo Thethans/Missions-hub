@@ -78,14 +78,21 @@ function serve(port) {
         res.end('Not found');
       }
     });
-    server.listen(port, () => resolve(server));
+    // Bind explicitly to 127.0.0.1 rather than the default wildcard: some
+    // containerized CI runners (this is what was actually causing every
+    // "Navigation timeout" below) don't wire up IPv6 loopback, and Chrome
+    // resolving "localhost" tries ::1 first — it hangs there instead of
+    // falling back quickly, eating the whole 30s navigation timeout with
+    // no other error. Talking IPv4 directly sidesteps the resolution.
+    server.listen(port, '127.0.0.1', () => resolve(server));
   });
 }
 
 async function prerender() {
   const PORT = 4173;
+  const HOST = '127.0.0.1';
   const server = await serve(PORT);
-  console.log(`Serving dist/ on http://localhost:${PORT}`);
+  console.log(`Serving dist/ on http://${HOST}:${PORT}`);
 
   // Vercel's build container has no downloadable Chrome for stock puppeteer
   // to find (see @sparticuz/chromium, a build compiled for serverless/CI
@@ -97,14 +104,41 @@ async function prerender() {
         executablePath: await chromium.executablePath(),
         headless: 'shell'
       })
-    : await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    : await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-dev-shm-usage',
+          // CI runners have no real GPU, so Chrome falls back to a
+          // deprecated, extremely slow automatic software-WebGL path for
+          // the homepage's rotating globe (cobe) — slow enough to starve
+          // the event loop and stall page.goto's networkidle0 detection
+          // well past the 30s timeout, well after the page has actually
+          // loaded. SwiftShader is the fast, stable software GL Chrome
+          // itself recommends switching to for exactly this case.
+          '--enable-unsafe-swiftshader'
+        ]
+      });
   const page = await browser.newPage();
 
   for (const route of ROUTES) {
-    const url = `http://localhost:${PORT}${route}`;
+    const url = `http://${HOST}:${PORT}${route}`;
     console.log(`  Prerendering ${route}…`);
 
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    // 'networkidle0' turned out to hang for the entire timeout in CI even
+    // with zero requests actually in flight (confirmed by instrumenting
+    // page.on('request'/'requestfinished'/'requestfailed') — nothing was
+    // pending, the wait condition itself just never resolved). That's a
+    // known flaky failure mode of networkidle0 specifically; 'load' (page
+    // + all its initial resources finished) is a simpler, more reliable
+    // lifecycle event, and the explicit data-loaded wait below is what
+    // actually guarantees the content we care about has rendered anyway.
+    await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+
+    // Give in-flight fetches (opportunities/stats/geojson) a moment to
+    // resolve and re-render before capturing — 'load' alone doesn't wait
+    // for these, unlike the networkidle0 condition it replaces above.
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Wait for usePageMeta's useEffect to fire
     await page.waitForFunction(
