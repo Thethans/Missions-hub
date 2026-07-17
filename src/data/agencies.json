@@ -758,5 +758,111 @@
       "roles": "not clearly stated"
     },
     "sourceUrl": "https://avantministries.org/short-term-missions"
+  },
+  {
+    "name": "The Navigators",
+    "url": "https://www.navigators.org/",
+    "tradition": "broadly evangelical",
+    "focus": [
+      "campus ministry"
+    ],
+    "supportRaising": null,
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "mid-term (2-4 years)"
+    ],
+    "regions": [
+      "global / multiple regions"
+    ],
+    "roles": [],
+    "trainingRequired": null,
+    "sourceNotes": {
+      "supportRaising": "not clearly stated",
+      "familyFriendly": "not clearly stated",
+      "roles": "not clearly stated",
+      "trainingRequired": "not clearly stated"
+    },
+    "sourceUrl": "https://www.navigators.org/who-we-are/"
+  },
+  {
+    "name": "Cru",
+    "url": "https://www.cru.org/",
+    "tradition": "broadly evangelical",
+    "focus": [
+      "campus ministry",
+      "leadership development"
+    ],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "career/long-term"
+    ],
+    "regions": [
+      "global / multiple regions"
+    ],
+    "roles": [],
+    "trainingRequired": null,
+    "sourceNotes": {
+      "familyFriendly": "not clearly stated",
+      "roles": "not itemized beyond general mission-trip/internship/career categories",
+      "trainingRequired": "not clearly stated"
+    },
+    "sourceUrl": "https://www.cru.org/us/en/about/who-we-are.html"
+  },
+  {
+    "name": "Converge",
+    "url": "https://converge.org/",
+    "tradition": "broadly evangelical",
+    "focus": [
+      "church planting",
+      "unreached peoples"
+    ],
+    "supportRaising": null,
+    "familyFriendly": null,
+    "termLengths": null,
+    "regions": [
+      "global / multiple regions"
+    ],
+    "roles": [],
+    "trainingRequired": null,
+    "sourceNotes": {
+      "supportRaising": "not clearly stated",
+      "familyFriendly": "not clearly stated",
+      "termLengths": "not clearly stated",
+      "roles": "not clearly stated",
+      "trainingRequired": "not clearly stated"
+    },
+    "sourceUrl": "https://converge.org/about/"
+  },
+  {
+    "name": "Interserve",
+    "url": "https://interserveusa.org/",
+    "tradition": "interdenominational",
+    "focus": [
+      "medical",
+      "community development",
+      "unreached peoples"
+    ],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "career/long-term"
+    ],
+    "regions": [
+      "Middle East / North Africa",
+      "Asia"
+    ],
+    "roles": [
+      "medical",
+      "business as mission"
+    ],
+    "trainingRequired": "two-week Candidate Orientation",
+    "sourceNotes": {
+      "familyFriendly": "not clearly stated"
+    },
+    "sourceUrl": "https://interserveusa.org/"
   }
 ]
