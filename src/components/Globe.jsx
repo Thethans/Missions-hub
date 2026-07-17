@@ -166,8 +166,13 @@ export default function Globe({ progress }) {
 
   return (
     <div className="globe-stage">
-      <canvas ref={canvasRef} className="globe-canvas" />
-      <div ref={planeRef} className="globe-plane">
+      {/* cobe sets width/height directly (reflected canvas attributes) and
+          the plane's position/rotation via el.style.* in its rAF loop — both
+          imperative, neither ever appears in this JSX, so scripts/prerender.js
+          strips them from the snapshot rather than let them show up as
+          hydration mismatches. */}
+      <canvas ref={canvasRef} className="globe-canvas" data-hydration-reset="width height" />
+      <div ref={planeRef} className="globe-plane" data-hydration-reset="style">
         <PlaneIcon size={28} />
       </div>
     </div>

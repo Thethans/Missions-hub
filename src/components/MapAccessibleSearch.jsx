@@ -43,7 +43,6 @@ export default function MapAccessibleSearch({ features, onSelect }) {
         placeholder="e.g. “Amri” or “Sudan”"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        disabled={!features}
       />
       {query.trim() && (
         <div className="map-search-results" role="region" aria-label="Search results">

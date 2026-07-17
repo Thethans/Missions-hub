@@ -7,10 +7,11 @@
 // Generated: '__GENERATED_DATE__'
 // Opportunities: '__OPP_COUNT__' across '__AGENCY_COUNT__' agencies
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
+import { getPreloaded, setPreloaded } from '../utils/preloadedData.js';
 
 // The full opportunities list used to be inlined here as a literal — with
 // 1500+ records that made this one file (and its route chunk) ~650KB before
@@ -170,7 +171,7 @@ function InquiryModal({ opportunity, onClose }) {
 export default function OpportunitiesExplorer({ agencyFilter }) {
   // null = not loaded yet (distinct from "loaded, zero results" so the
   // empty-filters copy doesn't flash for a normal loading heartbeat).
-  const [opportunities, setOpportunities] = useState(null);
+  const [opportunities, setOpportunities] = useState(() => getPreloaded('opportunities') ?? null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
@@ -194,12 +195,15 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     });
   }
 
-  // Saved + inquiry
-  const [savedIds, setSavedIds] = useState(() => {
-    try {
-      return new Set(JSON.parse(localStorage.getItem('fielded_saved_opps') || '[]'));
-    } catch { return new Set(); }
-  });
+  // Saved + inquiry. Starts empty on every render, including the very first
+  // one — localStorage isn't available during scripts/prerender.js's
+  // snapshot (and would differ per-visitor anyway), so reading it during
+  // render would make the first paint diverge from the prerendered HTML.
+  // The savedIdsHydrated effect below reads the real value right after
+  // mount instead, which is a normal client-side update, not a hydration
+  // concern.
+  const [savedIds, setSavedIds] = useState(() => new Set());
+  const savedIdsHydrated = useRef(false);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [inquiryOpp, setInquiryOpp] = useState(null);
 
@@ -207,6 +211,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // nothing has been set yet — if the live Supabase fetch below already won
   // the race, this must never clobber fresher data with the stale snapshot.
   useEffect(() => {
+    if (getPreloaded('opportunities')) return;
     let cancelled = false;
     fetch(FALLBACK_URL)
       .then((res) => {
@@ -216,6 +221,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       .then((data) => {
         if (cancelled) return;
         setOpportunities((prev) => (prev === null ? data : prev));
+        setPreloaded('opportunities', data);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -251,6 +257,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         }
         if (!cancelled && allRows.length > 0) {
           setOpportunities(allRows);
+          setPreloaded('opportunities', allRows);
         }
       } catch (err) {
         if (cancelled) return;
@@ -269,6 +276,16 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   }, []);
 
   useEffect(() => {
+    try {
+      setSavedIds(new Set(JSON.parse(localStorage.getItem('fielded_saved_opps') || '[]')));
+    } catch {
+      // Malformed storage — leave savedIds empty rather than throw.
+    }
+    savedIdsHydrated.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!savedIdsHydrated.current) return;
     localStorage.setItem('fielded_saved_opps', JSON.stringify([...savedIds]));
   }, [savedIds]);
 

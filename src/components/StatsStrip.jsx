@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, animate, useInView } from 'framer-motion';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
+import { getPreloaded, setPreloaded } from '../utils/preloadedData.js';
 
 function CountUp({ value }) {
   const ref = useRef(null);
@@ -27,15 +28,18 @@ function CountUp({ value }) {
 const EASE = [0.16, 1, 0.3, 1];
 
 export default function StatsStrip() {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(() => getPreloaded('stats') ?? null);
 
   useEffect(() => {
+    if (getPreloaded('stats')) return;
     let cancelled = false;
     fetch('/data/stats.json')
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
-        setStats({ groups: data.unreachedGroups, population: data.unreachedPopulation, countries: data.unreachedCountries });
+        const next = { groups: data.unreachedGroups, population: data.unreachedPopulation, countries: data.unreachedCountries };
+        setPreloaded('stats', next);
+        setStats(next);
       })
       .catch(() => {});
     return () => { cancelled = true; };
