@@ -33,8 +33,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T22:01:32.788Z"
-// Opportunities: 1026 across 22 agencies
+// Generated: "2026-07-18T19:53:29.970Z"
+// Opportunities: 1016 across 22 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -162,6 +162,50 @@ const TERM_LENGTHS = [
   "mid-term (2-4 years)",
   "career/long-term"
 ];
+const TRADITIONS = [
+  "Baptist / conservative evangelical",
+  "Reformed / Presbyterian",
+  "broadly evangelical",
+  "interdenominational"
+];
+const AGENCY_TRADITIONS = {
+  "Pioneers": "broadly evangelical",
+  "ABWE": "Baptist / conservative evangelical",
+  "TEAM": "broadly evangelical",
+  "SIM": "broadly evangelical",
+  "WEC International": "interdenominational",
+  "Frontiers": "interdenominational",
+  "Wycliffe Bible Translators": "broadly evangelical",
+  "Ethnos360": "Baptist / conservative evangelical",
+  "OMF International": "broadly evangelical",
+  "Youth With A Mission (YWAM)": "interdenominational",
+  "OM (Operation Mobilisation)": "broadly evangelical",
+  "Assemblies of God World Missions (AGWM)": "Pentecostal/charismatic",
+  "International Mission Board (IMB)": "Baptist / conservative evangelical",
+  "Christar": "broadly evangelical",
+  "ReachGlobal (EFCA)": "broadly evangelical",
+  "World Team": "broadly evangelical",
+  "Africa Inland Mission (AIM)": "broadly evangelical",
+  "Greater Europe Mission (GEM)": "interdenominational",
+  "SEND International": "broadly evangelical",
+  "Pioneer Bible Translators": "broadly evangelical",
+  "Mission Aviation Fellowship (MAF)": "broadly evangelical",
+  "Word of Life Fellowship": "broadly evangelical",
+  "Village Missions": "broadly evangelical",
+  "InterVarsity Missions": "broadly evangelical",
+  "RCA Global Mission": "Reformed / Presbyterian",
+  "Mission to the World (MTW)": "Reformed / Presbyterian",
+  "WorldVenture": "Baptist / conservative evangelical",
+  "Avant Ministries": null,
+  "The Navigators": "broadly evangelical",
+  "Cru": "broadly evangelical",
+  "Converge": "broadly evangelical",
+  "Interserve": "interdenominational"
+};
+
+function getTradition(opportunity) {
+  return AGENCY_TRADITIONS[opportunity.agency] || null;
+}
 
 // "Inquire" needs an object — but agency names are a mix of shapes
 // ("ABWE", "Africa Inland Mission (AIM)", "Cru (Campus Crusade for
@@ -345,6 +389,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // example (`?category=medical`) — it maps to the role_type field.
   const [selectedRoles, setSelectedRoles] = useState(() => parseSetParam(searchParams, 'category'));
   const [selectedTerms, setSelectedTerms] = useState(() => parseSetParam(searchParams, 'term'));
+  const [selectedTraditions, setSelectedTraditions] = useState(() => parseSetParam(searchParams, 'tradition'));
   const [showFilters, setShowFilters] = useState(false);
 
   const [quizScores] = useState(loadQuizAgencyScores);
@@ -530,6 +575,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (skipKey !== 'region' && selectedRegions.size > 0) out = out.filter((o) => selectedRegions.has(o.region));
     if (skipKey !== 'role' && selectedRoles.size > 0) out = out.filter((o) => selectedRoles.has(o.role_type));
     if (skipKey !== 'term' && selectedTerms.size > 0) out = out.filter((o) => selectedTerms.has(o.term_length));
+    if (skipKey !== 'tradition' && selectedTraditions.size > 0) {
+      out = out.filter((o) => {
+        const tradition = getTradition(o);
+        return tradition && selectedTraditions.has(tradition);
+      });
+    }
     return out;
   }
 
@@ -553,11 +604,24 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   );
   const roleCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'role'), 'role_type'),
-    [opportunities, search, selectedAgencies, selectedRegions, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, search, selectedAgencies, selectedRegions, selectedTerms, selectedTraditions, showSavedOnly, savedIds]
   );
   const termCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'term'), 'term_length'),
-    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, showSavedOnly, savedIds]
+    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTraditions, showSavedOnly, savedIds]
+  );
+  const traditionCounts = useMemo(
+    () => {
+      const filtered = baseFilteredList(opportunities || [], 'tradition');
+      const counts = new Map();
+      for (const o of filtered) {
+        const tradition = getTradition(o);
+        if (tradition == null) continue;
+        counts.set(tradition, (counts.get(tradition) || 0) + 1);
+      }
+      return counts;
+    },
+    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
   );
 
   const filtered = useMemo(() => {
@@ -574,7 +638,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     }
 
     return list;
-  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
+  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, showSavedOnly, savedIds, sortMode, quizScores]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = useMemo(
@@ -593,7 +657,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       return;
     }
     setPage(1);
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, sortMode, showSavedOnly]);
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, sortMode, showSavedOnly]);
 
   // Clamp if filters shrank the result set out from under the current page
   // (e.g. on page 5 of "ABWE", then also filter to a term length with none).
@@ -618,12 +682,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (selectedRegions.size > 0) next.set('region', [...selectedRegions].join(','));
     if (selectedRoles.size > 0) next.set('category', [...selectedRoles].join(','));
     if (selectedTerms.size > 0) next.set('term', [...selectedTerms].join(','));
+    if (selectedTraditions.size > 0) next.set('tradition', [...selectedTraditions].join(','));
     if (showSavedOnly) next.set('saved', '1');
     if (sortMode !== SORT_MIXED) next.set('sort', sortMode);
     if (page > 1) next.set('page', String(page));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, sortMode, page]);
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, showSavedOnly, sortMode, page]);
 
   function toggleSave(id) {
     const wasSaved = savedIds.has(id);
@@ -656,10 +721,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     setSelectedRegions(new Set());
     setSelectedRoles(new Set());
     setSelectedTerms(new Set());
+    setSelectedTraditions(new Set());
     setShowSavedOnly(false);
   }
 
-  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size;
+  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size + selectedTraditions.size;
   const hasActiveFilters = search || activeFilterCount > 0 || showSavedOnly;
 
   return (
@@ -766,6 +832,18 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
               {TERM_LENGTHS.map((t) => (
                 <FilterChip key={t} label={t} active={selectedTerms.has(t)} count={termCounts.get(t) || 0}
                   onClick={() => toggleFilter(setSelectedTerms, t)} />
+              ))}
+            </div>
+          </div>
+          <div className="opp-filter-group">
+            <span className="opp-filter-label">
+              Agency tradition
+              {selectedTraditions.size > 0 && <span className="opp-filter-label-count">{selectedTraditions.size}</span>}
+            </span>
+            <div className="opp-chip-row">
+              {TRADITIONS.map((tradition) => (
+                <FilterChip key={tradition} label={tradition} active={selectedTraditions.has(tradition)} count={traditionCounts.get(tradition) || 0}
+                  onClick={() => toggleFilter(setSelectedTraditions, tradition)} />
               ))}
             </div>
           </div>

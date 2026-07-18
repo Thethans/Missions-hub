@@ -31,6 +31,7 @@ const FALLBACK_DATA_PATH = path.join(ROOT, 'public/data/opportunities-fallback.j
 // drift the way it did before ("7+ agencies" in OpportunitiesPage.jsx's
 // meta description, when the real count was already 22).
 const META_PATH = path.join(ROOT, 'src/data/opportunitiesMeta.json');
+const AGENCIES_PATH = path.join(ROOT, 'src/data/agencies.json');
 
 // ── Supabase client ──────────────────────────────────────────────────
 
@@ -84,9 +85,24 @@ function parseTokens() {
   return tokens;
 }
 
+// ── Agencies & traditions ───────────────────────────────────────────
+
+function loadAgencies() {
+  const raw = fs.readFileSync(AGENCIES_PATH, 'utf-8');
+  return JSON.parse(raw);
+}
+
+function buildTraditionMap(agencies) {
+  const map = new Map();
+  for (const agency of agencies) {
+    map.set(agency.name, agency.tradition);
+  }
+  return map;
+}
+
 // ── Component generation ─────────────────────────────────────────────
 
-function generateComponent(opportunities, tokens) {
+function generateComponent(opportunities, tokens, traditionMap) {
   const agencies = [...new Set(opportunities.map((o) => o.agency))].sort();
   const regions = [...new Set(opportunities.map((o) => o.region).filter(Boolean))].sort();
   const roleTypes = [...new Set(opportunities.map((o) => o.role_type).filter(Boolean))].sort();
@@ -99,6 +115,13 @@ function generateComponent(opportunities, tokens) {
     }
   );
 
+  // Extract unique theological traditions from opportunities
+  const traditions = [...new Set(
+    opportunities
+      .map((o) => traditionMap.get(o.agency))
+      .filter(Boolean)
+  )].sort();
+
   const safeJson = (val) => JSON.stringify(val, null, 2);
 
   const tokenComment = Object.entries(tokens)
@@ -107,6 +130,12 @@ function generateComponent(opportunities, tokens) {
 
   const template = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
 
+  // Build agency-to-tradition map for the template
+  const agencyTraditionObj = {};
+  for (const [agencyName, tradition] of traditionMap) {
+    agencyTraditionObj[agencyName] = tradition;
+  }
+
   return template
     .replace('/* __TOKEN_COMMENT__ */', tokenComment)
     .replace("'__GENERATED_DATE__'", JSON.stringify(new Date().toISOString()))
@@ -114,7 +143,9 @@ function generateComponent(opportunities, tokens) {
     .replace("'__AGENCY_COUNT__'", String(agencies.length))
     .replace("'__REGIONS__'", safeJson(regions))
     .replace("'__ROLE_TYPES__'", safeJson(roleTypes))
-    .replace("'__TERM_LENGTHS__'", safeJson(termLengths));
+    .replace("'__TERM_LENGTHS__'", safeJson(termLengths))
+    .replace("'__TRADITIONS__'", safeJson(traditions))
+    .replace("'__AGENCY_TRADITIONS__'", safeJson(agencyTraditionObj));
 }
 
 // ── Main ─────────────────────────────────────────────────────────────
@@ -129,12 +160,17 @@ async function main() {
     process.exit(1);
   }
 
+  console.log('Loading agencies and building tradition map...');
+  const agencies = loadAgencies();
+  const traditionMap = buildTraditionMap(agencies);
+  console.log('  ' + traditionMap.size + ' agencies with traditions');
+
   console.log('Reading design tokens from src/styles/tokens.css...');
   const tokens = parseTokens();
   console.log('  ' + Object.keys(tokens).length + ' tokens parsed');
 
   console.log('Generating OpportunitiesExplorer.jsx...');
-  const component = generateComponent(opportunities, tokens);
+  const component = generateComponent(opportunities, tokens, traditionMap);
 
   fs.writeFileSync(OUTPUT_PATH, component, 'utf-8');
   console.log('  Written to ' + path.relative(ROOT, OUTPUT_PATH));
