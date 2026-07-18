@@ -92,10 +92,34 @@ const REGIONS = '__REGIONS__';
 const ROLE_TYPES = '__ROLE_TYPES__';
 const TERM_LENGTHS = '__TERM_LENGTHS__';
 const TRADITIONS = '__TRADITIONS__';
+const RELIGIONS = '__RELIGIONS__';
 const AGENCY_TRADITIONS = '__AGENCY_TRADITIONS__';
+
+// Map regions to common target religions for those areas
+const REGION_RELIGIONS = {
+  'Sub-Saharan Africa': ['Christian', 'Muslim', 'Animist'],
+  'Middle East / North Africa': ['Muslim', 'Christian'],
+  'Central Asia': ['Muslim', 'Buddhist', 'Christian'],
+  'South Asia': ['Hindu', 'Muslim', 'Buddhist', 'Christian'],
+  'Southeast Asia': ['Buddhist', 'Muslim', 'Christian', 'Animist'],
+  'East Asia': ['Buddhist', 'Atheist/Secular', 'Christian'],
+  'Latin America': ['Christian', 'Animist'],
+  'Western Europe': ['Atheist/Secular', 'Christian', 'Muslim'],
+  'Eastern Europe': ['Christian', 'Atheist/Secular', 'Muslim'],
+  'Balkans': ['Christian', 'Muslim'],
+  'Nordic countries': ['Atheist/Secular', 'Christian'],
+  'North America': ['Christian', 'Atheist/Secular'],
+  'Islands / Oceania': ['Christian', 'Animist'],
+  'Oceania / Asia-Pacific': ['Christian', 'Animist'],
+};
 
 function getTradition(opportunity) {
   return AGENCY_TRADITIONS[opportunity.agency] || null;
+}
+
+function getReligions(opportunity) {
+  const region = opportunity.region;
+  return region ? REGION_RELIGIONS[region] || [] : [];
 }
 
 // "Inquire" needs an object — but agency names are a mix of shapes
@@ -281,6 +305,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [selectedRoles, setSelectedRoles] = useState(() => parseSetParam(searchParams, 'category'));
   const [selectedTerms, setSelectedTerms] = useState(() => parseSetParam(searchParams, 'term'));
   const [selectedTraditions, setSelectedTraditions] = useState(() => parseSetParam(searchParams, 'tradition'));
+  const [selectedReligions, setSelectedReligions] = useState(() => parseSetParam(searchParams, 'religion'));
   const [showFilters, setShowFilters] = useState(false);
 
   const [quizScores] = useState(loadQuizAgencyScores);
@@ -472,6 +497,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         return tradition && selectedTraditions.has(tradition);
       });
     }
+    if (skipKey !== 'religion' && selectedReligions.size > 0) {
+      out = out.filter((o) => {
+        const religions = getReligions(o);
+        return religions.some((r) => selectedReligions.has(r));
+      });
+    }
     return out;
   }
 
@@ -512,7 +543,21 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       }
       return counts;
     },
-    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedReligions, showSavedOnly, savedIds]
+  );
+  const religionCounts = useMemo(
+    () => {
+      const filtered = baseFilteredList(opportunities || [], 'religion');
+      const counts = new Map();
+      for (const o of filtered) {
+        const religions = getReligions(o);
+        for (const religion of religions) {
+          counts.set(religion, (counts.get(religion) || 0) + 1);
+        }
+      }
+      return counts;
+    },
+    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, showSavedOnly, savedIds]
   );
 
   const filtered = useMemo(() => {
@@ -529,7 +574,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     }
 
     return list;
-  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, showSavedOnly, savedIds, sortMode, quizScores]);
+  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, selectedReligions, showSavedOnly, savedIds, sortMode, quizScores]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = useMemo(
@@ -548,7 +593,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       return;
     }
     setPage(1);
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, sortMode, showSavedOnly]);
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, selectedReligions, sortMode, showSavedOnly]);
 
   // Clamp if filters shrank the result set out from under the current page
   // (e.g. on page 5 of "ABWE", then also filter to a term length with none).
@@ -574,12 +619,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (selectedRoles.size > 0) next.set('category', [...selectedRoles].join(','));
     if (selectedTerms.size > 0) next.set('term', [...selectedTerms].join(','));
     if (selectedTraditions.size > 0) next.set('tradition', [...selectedTraditions].join(','));
+    if (selectedReligions.size > 0) next.set('religion', [...selectedReligions].join(','));
     if (showSavedOnly) next.set('saved', '1');
     if (sortMode !== SORT_MIXED) next.set('sort', sortMode);
     if (page > 1) next.set('page', String(page));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, showSavedOnly, sortMode, page]);
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, selectedTraditions, selectedReligions, showSavedOnly, sortMode, page]);
 
   function toggleSave(id) {
     const wasSaved = savedIds.has(id);
@@ -613,10 +659,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     setSelectedRoles(new Set());
     setSelectedTerms(new Set());
     setSelectedTraditions(new Set());
+    setSelectedReligions(new Set());
     setShowSavedOnly(false);
   }
 
-  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size + selectedTraditions.size;
+  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size + selectedTraditions.size + selectedReligions.size;
   const hasActiveFilters = search || activeFilterCount > 0 || showSavedOnly;
 
   return (
@@ -735,6 +782,18 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
               {TRADITIONS.map((tradition) => (
                 <FilterChip key={tradition} label={tradition} active={selectedTraditions.has(tradition)} count={traditionCounts.get(tradition) || 0}
                   onClick={() => toggleFilter(setSelectedTraditions, tradition)} />
+              ))}
+            </div>
+          </div>
+          <div className="opp-filter-group">
+            <span className="opp-filter-label">
+              Target religion
+              {selectedReligions.size > 0 && <span className="opp-filter-label-count">{selectedReligions.size}</span>}
+            </span>
+            <div className="opp-chip-row">
+              {RELIGIONS.map((religion) => (
+                <FilterChip key={religion} label={religion} active={selectedReligions.has(religion)} count={religionCounts.get(religion) || 0}
+                  onClick={() => toggleFilter(setSelectedReligions, religion)} />
               ))}
             </div>
           </div>

@@ -100,6 +100,27 @@ function buildTraditionMap(agencies) {
   return map;
 }
 
+// ── Region to religions mapping ──────────────────────────────────────
+
+function buildRegionReligionsMap() {
+  return {
+    'Sub-Saharan Africa': ['Christian', 'Muslim', 'Animist'],
+    'Middle East / North Africa': ['Muslim', 'Christian'],
+    'Central Asia': ['Muslim', 'Buddhist', 'Christian'],
+    'South Asia': ['Hindu', 'Muslim', 'Buddhist', 'Christian'],
+    'Southeast Asia': ['Buddhist', 'Muslim', 'Christian', 'Animist'],
+    'East Asia': ['Buddhist', 'Atheist/Secular', 'Christian'],
+    'Latin America': ['Christian', 'Animist'],
+    'Western Europe': ['Atheist/Secular', 'Christian', 'Muslim'],
+    'Eastern Europe': ['Christian', 'Atheist/Secular', 'Muslim'],
+    'Balkans': ['Christian', 'Muslim'],
+    'Nordic countries': ['Atheist/Secular', 'Christian'],
+    'North America': ['Christian', 'Atheist/Secular'],
+    'Islands / Oceania': ['Christian', 'Animist'],
+    'Oceania / Asia-Pacific': ['Christian', 'Animist'],
+  };
+}
+
 // ── Component generation ─────────────────────────────────────────────
 
 function generateComponent(opportunities, tokens, traditionMap) {
@@ -119,6 +140,18 @@ function generateComponent(opportunities, tokens, traditionMap) {
   const traditions = [...new Set(
     opportunities
       .map((o) => traditionMap.get(o.agency))
+      .filter(Boolean)
+  )].sort();
+
+  // Extract unique religions based on opportunity regions
+  const regionReligionsMap = buildRegionReligionsMap();
+  const religions = [...new Set(
+    opportunities
+      .map((o) => {
+        const regionsForOpp = regionReligionsMap[o.region];
+        return regionsForOpp || [];
+      })
+      .flat()
       .filter(Boolean)
   )].sort();
 
@@ -145,6 +178,7 @@ function generateComponent(opportunities, tokens, traditionMap) {
     .replace("'__ROLE_TYPES__'", safeJson(roleTypes))
     .replace("'__TERM_LENGTHS__'", safeJson(termLengths))
     .replace("'__TRADITIONS__'", safeJson(traditions))
+    .replace("'__RELIGIONS__'", safeJson(religions))
     .replace("'__AGENCY_TRADITIONS__'", safeJson(agencyTraditionObj));
 }
 
