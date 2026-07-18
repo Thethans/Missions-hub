@@ -102,9 +102,41 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   // consistently across the app.
   const [religionActive, setReligionActive] = useState(() => new Set());
   const [dataError, setDataError] = useState(false);
+  const dataPromiseRef = useRef(null);
   activeRef.current = active;
   religionActiveRef.current = religionActive;
   onDataLoadedRef.current = onDataLoaded;
+
+  // Fetches the geojson independent of MapLibre's WebGL 'load' event, which
+  // never fires in environments without real WebGL support (e.g. the
+  // Puppeteer instance scripts/prerender.js runs at build time) — that used
+  // to leave `counts` null and the "Finding unreached peoples…" message
+  // permanently on screen for crawlers. Stored as a promise (not just fired
+  // in an effect) so the map's own 'load' handler below can await the same
+  // fetch instead of issuing a second one.
+  useEffect(() => {
+    dataPromiseRef.current = fetch(DATA_URL)
+      .then((res) => res.json())
+      .then((data) => {
+        const tally = { unreached: 0, formative: 0, reached: 0 };
+        const religionTally = {};
+        data.features.forEach((f) => {
+          if (tally[f.properties.progressStatus] !== undefined) tally[f.properties.progressStatus] += 1;
+          const r = f.properties.religion;
+          if (r) religionTally[r] = (religionTally[r] || 0) + 1;
+        });
+        setCounts(tally);
+        setReligions(Object.keys(religionTally).sort((a, b) => religionTally[b] - religionTally[a]));
+        setReligionCounts(religionTally);
+        onDataLoadedRef.current?.(data.features);
+        return data;
+      })
+      .catch((e) => {
+        console.error('Could not load people-groups.geojson — run scripts/fetch-joshua-project.mjs first', e);
+        setDataError(true);
+        return null;
+      });
+  }, []);
 
   // Applies whatever's in activeRef/religionActiveRef right now to the map's
   // layers. Reading from refs (rather than closing over state from whichever

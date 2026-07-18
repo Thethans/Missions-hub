@@ -19,7 +19,7 @@ import winston from 'winston';
 import { SCRAPERS, SCRAPER_KEYS, BROWSER_SCRAPERS } from './lib/scrapers/index.js';
 import { dedupeOpportunities } from './lib/scrapers/base.js';
 import { closeBrowser } from './lib/scrapers/browser.js';
-import { sanitizeOpportunities } from './lib/sanitize.js';
+import { sanitizeOpportunities, isPaginationArtifact } from './lib/sanitize.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, '.scraper-cache.json');
@@ -128,7 +128,7 @@ async function deactivateStale(supabase, agency, freshUrls) {
 
 // ── Quality filter ───────────────────────────────────────────────────
 
-const NAV_JUNK = /^(home|about|contact|contact us|menu|search|filter|nav|close|open|clear|donate|give|login|sign|subscribe|privacy|terms|cookie|sitemap|thank you!?|thank you|read more|learn more|view more|get started|apply now|submit)$/i;
+const NAV_JUNK = /^(home|about|contact|contact us|menu|search|filter|nav|close|open|clear|donate|give|login|sign|subscribe|privacy|terms|cookie|sitemap|thank you!?|thank you|read more|learn more|view more|get started|apply now|submit|next|previous|prev|first|last)$/i;
 
 function filterLowQuality(opps) {
   return opps.filter(opp => {
@@ -136,6 +136,7 @@ function filterLowQuality(opps) {
     if (t.length < 6) return false;
     if (t.length > 200) return false;
     if (NAV_JUNK.test(t)) return false;
+    if (isPaginationArtifact(t)) return false;
     if (/^filters?$/i.test(t)) return false;
     if (/^(respond to|pursue |know god|be activated|make him)/.test(t.toLowerCase())) return false;
     if (!opp.url || opp.url.endsWith('#')) return false;

@@ -10,6 +10,8 @@ import {
   collapseNearDuplicates,
   validateCategory,
   classifyListingType,
+  isPaginationArtifact,
+  isSiteChromeTitle,
   sanitizeOpportunity,
   sanitizeOpportunities
 } from './sanitize.js';
@@ -195,7 +197,63 @@ describe('validateCategory', () => {
   });
 });
 
+describe('isPaginationArtifact', () => {
+  // Real observed failure: Global Partners' "Last" pagination link was
+  // scraped in as if it were a job listing, titled "» Last".
+  it('flags pagination controls scraped as listings', () => {
+    expect(isPaginationArtifact('» Last')).toBe(true);
+    expect(isPaginationArtifact('« Prev')).toBe(true);
+    expect(isPaginationArtifact('Next »')).toBe(true);
+    expect(isPaginationArtifact('«')).toBe(true);
+    expect(isPaginationArtifact('» Page 3')).toBe(true);
+  });
+
+  it('does not flag real listing titles that happen to contain nav words', () => {
+    expect(isPaginationArtifact('Next Steps in Discipleship')).toBe(false);
+    expect(isPaginationArtifact('Last Frontier Ministries')).toBe(false);
+    expect(isPaginationArtifact('Church Planting Opportunity')).toBe(false);
+  });
+
+  it('does not flag titles with no arrow glyphs', () => {
+    expect(isPaginationArtifact('Last')).toBe(false);
+    expect(isPaginationArtifact('')).toBe(false);
+    expect(isPaginationArtifact(null)).toBe(false);
+  });
+});
+
+describe('isSiteChromeTitle', () => {
+  // Real observed failures: Global Partners' "Clear Filters" and "Show all"
+  // controls, and a bare "Opportunities" index link (also seen from
+  // WorldVenture), scraped in as if they were job listings.
+  it('flags known site-chrome link text', () => {
+    expect(isSiteChromeTitle('Clear Filters')).toBe(true);
+    expect(isSiteChromeTitle('Show all')).toBe(true);
+    expect(isSiteChromeTitle('Opportunities')).toBe(true);
+    expect(isSiteChromeTitle('Filters')).toBe(true);
+  });
+
+  it('does not flag real listing titles that merely contain those words', () => {
+    expect(isSiteChromeTitle('Opportunities in Kenya')).toBe(false);
+    expect(isSiteChromeTitle('Show all your Support to the Team')).toBe(false);
+  });
+
+  it('handles empty input', () => {
+    expect(isSiteChromeTitle('')).toBe(false);
+    expect(isSiteChromeTitle(null)).toBe(false);
+  });
+});
+
 describe('classifyListingType', () => {
+  // Real observed failure: the pagination/site-chrome bug above should be
+  // excluded from the results grid the same way category pages are — the
+  // component filters on listing_type !== 'category_page'.
+  it('flags pagination artifacts and site-chrome titles as category pages', () => {
+    expect(classifyListingType({ title: '» Last', description: null })).toBe('category_page');
+    expect(classifyListingType({ title: 'Clear Filters', description: null })).toBe('category_page');
+    expect(classifyListingType({ title: 'Show all', description: null })).toBe('category_page');
+    expect(classifyListingType({ title: 'Opportunities', description: null })).toBe('category_page');
+  });
+
   // Real observed failure: Avant "Serve in {Country}" pages are category
   // pages, not individual openings.
   it('flags "Serve in {Country}" titles as category pages', () => {

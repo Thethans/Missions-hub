@@ -264,12 +264,47 @@ export function validateCategory(title, description, currentCategory) {
   return { category: currentCategory, reassigned: false };
 }
 
+// ── Pagination-artifact detection ─────────────────────────────────────────
+
+// Catches pagination controls scraped in as if they were listings — e.g.
+// "» Last", "« Prev", "Next »": a run of arrow glyphs/whitespace around at
+// most one nav word, and nothing else. Real listing titles never match this
+// shape (anchored full-string, so "Next Steps in Discipleship" is untouched).
+const PAGINATION_ONLY_RE = /^[\s»«›‹→←]*(next|prev(?:ious)?|first|last|page\s*\d+)?[\s»«›‹→←]*$/i;
+
+export function isPaginationArtifact(title) {
+  const t = (title || '').trim();
+  if (!t) return false;
+  return /[»«›‹→←]/.test(t) && PAGINATION_ONLY_RE.test(t);
+}
+
+// Site-chrome link text (filter/search controls, "browse all" links) that
+// broad card selectors also sweep up, but without the arrow glyphs
+// isPaginationArtifact keys off — e.g. Global Partners' "Clear Filters" and
+// "Show all", or a bare "Opportunities" link back to the index (also seen
+// from WorldVenture). Exact whole-string match only, so a real title like
+// "Opportunities in Kenya" is untouched.
+const SITE_CHROME_TITLES = new Set([
+  'clear filters', 'clear all filters', 'show all', 'opportunities', 'filters', 'search'
+]);
+
+export function isSiteChromeTitle(title) {
+  const t = (title || '').trim().toLowerCase();
+  if (!t) return false;
+  return SITE_CHROME_TITLES.has(t);
+}
+
 // ── Listing-type flag ─────────────────────────────────────────────────────
 
 const CATEGORY_PAGE_TITLE_RE = /^(serve in|explore)\b/i;
 
 export function classifyListingType(opp) {
   const title = (opp.title || '').trim();
+  // Pagination controls and site-chrome links scraped in as if they were
+  // listings (e.g. Global Partners' "» Last") aren't individual openings
+  // any more than the "Serve in {Country}" category pages below are — same
+  // bucket, same fix, checked first since it's a cheap exact/shape match.
+  if (isPaginationArtifact(title) || isSiteChromeTitle(title)) return 'category_page';
   if (CATEGORY_PAGE_TITLE_RE.test(title)) return 'category_page';
   if (opp.description && /explore mission opportunities/i.test(opp.description)) return 'category_page';
   // The audit names two Avant patterns: "Serve in {Country}" (caught above)

@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { BaseScraper } from './base.js';
+import { isPaginationArtifact } from '../sanitize.js';
 
 const BASE = 'https://serve.globalpartnersonline.org';
 const LISTING_URL = `${BASE}/opportunities`;
@@ -58,6 +59,7 @@ export default class GlobalPartnersScraper extends BaseScraper {
       if (!title || title.length < 6 || title.length > 200) return;
       if (seen.has(title.toLowerCase())) return;
       if (/^(filter|clear|search|back|next|view|show|page)$/i.test(title)) return;
+      if (isPaginationArtifact(title)) return;
       seen.add(title.toLowerCase());
 
       const linkEl = $el.is('a') ? $el : $el.find('a[href]').first();
