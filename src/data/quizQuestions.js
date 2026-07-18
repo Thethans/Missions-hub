@@ -212,7 +212,6 @@ export const TERM_DEFINITIONS = {
   "Bible translation": "Translating Scripture into languages that don't yet have it",
   "creative access": "Ministry in restricted countries where religious work is limited—often through business, education, or cultural programs",
   "leadership development": "Training and mentoring leaders for churches, missions, or Christian organizations",
-  "relief and development": "Responding to humanitarian crises and building sustainable community growth",
   "community development": "Long-term programs to improve education, health, income, and quality of life",
   "campus ministry": "Outreach and discipleship at universities and colleges",
   "youth ministry": "Working with teenagers and young adults to grow faith and life skills",
