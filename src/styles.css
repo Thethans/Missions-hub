@@ -1306,6 +1306,7 @@ a { color: var(--voyage-teal); }
   position: absolute;
   bottom: var(--space-4);
   left: var(--space-4);
+  max-width: min(340px, calc(100vw - var(--space-8)));
   background: var(--glass-light-bg);
   border: 1px solid var(--glass-light-border);
   border-radius: 14px;
@@ -1317,6 +1318,78 @@ a { color: var(--voyage-teal); }
   flex-direction: column;
   gap: var(--space-2);
   font-size: 0.85rem;
+  max-height: calc(100vh - var(--space-16) - var(--space-8));
+  overflow-y: auto;
+}
+
+/* Religion options + counts are whatever the live data actually contains
+   (see WorldMap.jsx) — a wrapping chip row rather than more stacked
+   .map-legend-item rows, since there are more of these than status values
+   and a vertical list that long would make the panel unreasonably tall. */
+.map-legend-religion {
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.map-legend-religion-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+  margin-bottom: var(--space-2);
+}
+
+.map-legend-religion-label-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-size: 0.65rem;
+}
+
+.map-legend-religion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.map-legend-religion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 3px var(--space-3);
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--ink-navy);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.map-legend-religion-chip:hover { border-color: var(--voyage-teal); }
+
+.map-legend-religion-chip--active {
+  background: var(--voyage-teal);
+  border-color: var(--voyage-teal);
+  color: var(--atlas-paper);
+}
+
+.map-legend-religion-chip-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  opacity: 0.75;
 }
 
 .map-loading {
