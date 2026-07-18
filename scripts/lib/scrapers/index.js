@@ -14,11 +14,9 @@ import CrossworldScraper from './crossworld.js';
 import ChristarScraper from './christar.js';
 import CruScraper from './cru.js';
 import WorldVentureScraper from './worldventure.js';
-import AvantScraper from './avant.js';
 import ReachGlobalScraper from './reachglobal.js';
 import ReachBeyondScraper from './reachbeyond.js';
 import GlobalPartnersScraper from './globalpartners.js';
-import SergeScraper from './serge.js';
 import GEMScraper from './gem.js';
 import InterserveScraper from './interserve.js';
 
@@ -39,11 +37,9 @@ export const SCRAPERS = {
   christar:       new ChristarScraper(),
   cru:            new CruScraper(),
   worldventure:   new WorldVentureScraper(),
-  avant:          new AvantScraper(),
   reachglobal:    new ReachGlobalScraper(),
   reachbeyond:    new ReachBeyondScraper(),
   globalpartners: new GlobalPartnersScraper(),
-  serge:          new SergeScraper(),
   gem:            new GEMScraper(),
   interserve:     new InterserveScraper(),
 };

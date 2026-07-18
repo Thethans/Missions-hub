@@ -733,33 +733,6 @@
     "sourceUrl": "https://worldventure.com/about/history/"
   },
   {
-    "name": "Avant Ministries",
-    "url": "https://avantministries.org/",
-    "tradition": null,
-    "focus": [
-      "church planting",
-      "unreached peoples"
-    ],
-    "supportRaising": null,
-    "familyFriendly": true,
-    "termLengths": [
-      "short-term (under 2 years)",
-      "mid-term (2-4 years)",
-      "career/long-term"
-    ],
-    "regions": [
-      "global / multiple regions"
-    ],
-    "roles": [],
-    "trainingRequired": null,
-    "sourceNotes": {
-      "tradition": "not clearly stated",
-      "supportRaising": "not clearly stated",
-      "roles": "not clearly stated"
-    },
-    "sourceUrl": "https://avantministries.org/short-term-missions"
-  },
-  {
     "name": "The Navigators",
     "url": "https://www.navigators.org/",
     "tradition": "broadly evangelical",

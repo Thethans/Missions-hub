@@ -33,7 +33,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-18T20:51:15.726Z"
+// Generated: "2026-07-18T20:56:15.958Z"
 // Opportunities: 1115 across 23 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -204,7 +204,6 @@ const AGENCY_TRADITIONS = {
   "RCA Global Mission": "Reformed / Presbyterian",
   "Mission to the World (MTW)": "Reformed / Presbyterian",
   "WorldVenture": "Baptist / conservative evangelical",
-  "Avant Ministries": null,
   "The Navigators": "broadly evangelical",
   "Cru": "broadly evangelical",
   "Converge": "broadly evangelical",
