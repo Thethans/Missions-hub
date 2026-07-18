@@ -20,6 +20,7 @@ import ReachBeyondScraper from './reachbeyond.js';
 import GlobalPartnersScraper from './globalpartners.js';
 import SergeScraper from './serge.js';
 import GEMScraper from './gem.js';
+import InterserveScraper from './interserve.js';
 
 export const SCRAPERS = {
   imb:            new IMBScraper(),
@@ -44,6 +45,7 @@ export const SCRAPERS = {
   globalpartners: new GlobalPartnersScraper(),
   serge:          new SergeScraper(),
   gem:            new GEMScraper(),
+  interserve:     new InterserveScraper(),
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);

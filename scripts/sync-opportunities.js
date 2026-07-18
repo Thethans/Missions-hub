@@ -188,14 +188,18 @@ async function scrapeOne(key, supabase, dryRun, cache) {
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
   logger.info(`[${key}] Found ${opportunities.length} opportunities across ${pages} page${pages === 1 ? '' : 's'} in ${elapsed}s`);
 
-  cache[key] = { ts: Date.now(), count: opportunities.length };
-
   if (dryRun) {
     for (const opp of opportunities) {
       logger.info(`  [dry] ${opp.title} — ${opp.url}`);
     }
     return { key, error: false, scraped: opportunities.length, upserted: 0, deactivated: 0 };
   }
+
+  // Only a real run marks the agency "fresh" — a --dryRun preview must never
+  // block the next real sync from actually writing (this bit Interserve:
+  // an earlier dry run alone caused a subsequent real run to be skipped as
+  // "already scraped," with nothing ever reaching Supabase).
+  cache[key] = { ts: Date.now(), count: opportunities.length };
 
   if (opportunities.length === 0) {
     return { key, error: false, scraped: 0, upserted: 0, deactivated: 0 };
