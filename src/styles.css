@@ -1776,6 +1776,60 @@ a { color: var(--voyage-teal); }
 .matcher label:has(input:checked) { background: rgba(43, 110, 118, 0.1); }
 .option-label::first-letter { text-transform: uppercase; }
 
+.term-tooltip { position: relative; display: inline-flex; vertical-align: middle; margin-left: var(--space-1); }
+
+.term-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted-text);
+  cursor: help;
+}
+
+.term-tooltip-trigger:hover,
+.term-tooltip-trigger:focus-visible { color: var(--voyage-teal); }
+.term-tooltip-trigger:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.term-tooltip-bubble {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  width: max-content;
+  max-width: min(240px, calc(100vw - var(--space-8)));
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  box-shadow: var(--shadow);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: left;
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.term-tooltip-trigger:hover + .term-tooltip-bubble,
+.term-tooltip-trigger:focus-visible + .term-tooltip-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-tooltip-bubble { transition: none; }
+}
+
 .matcher input[type='checkbox'],
 .matcher input[type='radio'] {
   appearance: none;
