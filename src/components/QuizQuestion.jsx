@@ -1,5 +1,5 @@
 import React from 'react';
-import { NEUTRAL_VALUES } from '../data/quizQuestions.js';
+import { NEUTRAL_VALUES, TERM_DEFINITIONS } from '../data/quizQuestions.js';
 
 // Display only — capitalize the first letter of the option's first word.
 // The raw `opt` string is still what's stored and scored against the agency
@@ -42,7 +42,7 @@ export default function QuizQuestion({ question, value, onChange }) {
                 checked={selected.includes(opt)}
                 onChange={() => toggle(opt)}
               />
-              {' '}<span className="option-label">{displayLabel(opt)}</span>
+              {' '}<span className="option-label" title={TERM_DEFINITIONS[opt]}>{displayLabel(opt)}</span>
             </label>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function QuizQuestion({ question, value, onChange }) {
               checked={value === opt}
               onChange={() => onChange(opt)}
             />
-            {' '}<span className="option-label">{displayLabel(opt)}</span>
+            {' '}<span className="option-label" title={TERM_DEFINITIONS[opt]}>{displayLabel(opt)}</span>
           </label>
         ))}
       </div>

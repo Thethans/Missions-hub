@@ -204,4 +204,46 @@ export const DIMENSIONS = [
   }
 ];
 
+// Hover tooltips for terms that may not be immediately intuitive
+export const TERM_DEFINITIONS = {
+  // Focus areas
+  "church planting": "Starting or establishing new churches in unreached areas",
+  "unreached peoples": "Groups with minimal access to the gospel and few believers",
+  "Bible translation": "Translating Scripture into languages that don't yet have it",
+  "creative access": "Ministry in restricted countries where religious work is limited—often through business, education, or cultural programs",
+  "leadership development": "Training and mentoring leaders for churches, missions, or Christian organizations",
+  "relief and development": "Responding to humanitarian crises and building sustainable community growth",
+  "community development": "Long-term programs to improve education, health, income, and quality of life",
+  "campus ministry": "Outreach and discipleship at universities and colleges",
+  "youth ministry": "Working with teenagers and young adults to grow faith and life skills",
+  "aviation/logistics": "Providing transportation, supplies, and operational support to remote missionary teams",
+
+  // Support-raising models
+  "full personal support raising": "You raise 100% of your budget from churches, individuals, and donors",
+  "faith-support model": "You raise some funding; the agency supplements the rest based on demonstrated need",
+  "fully-funded / salaried (agency pays you)": "The agency covers your salary and expenses—minimal fundraising needed",
+
+  // Theological traditions
+  "broadly evangelical": "Non-denominational focus on salvation through Christ, though denominationally diverse",
+  "Baptist / conservative evangelical": "Baptist tradition emphasizing congregational autonomy, believer's baptism, and evangelical theology",
+  "interdenominational": "Working across multiple denominational traditions without a single theological identity",
+  "Pentecostal/charismatic": "Emphasis on the Holy Spirit's gifts, speaking in tongues, divine healing, and Spirit-empowered ministry",
+  "Reformed / Presbyterian": "Theology emphasizing God's sovereignty, salvation through Christ, and often presbyterian church structure",
+
+  // Role types
+  "Bible translation/linguistics": "Translating Scripture and developing language materials for unreached peoples",
+  "business as mission": "Using business as a platform for ministry and reaching people in restricted areas",
+  "relief and development": "Humanitarian response and long-term community development projects",
+  "support/admin": "Administrative, finance, HR, and operations roles supporting missionary teams",
+  "support care": "Caring for missionaries' spiritual, emotional, and physical wellbeing",
+  "risk management": "Security, crisis response, and safety planning for missionary operations",
+  "mobilization": "Recruiting, training, and deploying new missionaries and teams",
+  "media/creative": "Digital content, photography, video, design, and communication for ministry",
+  "education/TESOL": "Teaching English or academics; often a platform for ministry in restricted areas",
+  "medical": "Healthcare delivery and medical missionary work",
+  "children/youth ministry": "Working with children and teenagers in faith formation and discipleship",
+  "training/leadership": "Training leaders and developing disciples in the church or missions",
+  "theological education": "Teaching theology and Scripture at seminaries or training institutions"
+};
+
 export { NEUTRAL_VALUES };
