@@ -59,7 +59,7 @@ describe('MapPage', () => {
               {
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [10, 15] },
-                properties: { name: 'Test Group', progressStatus: 'unreached', population: 1000 }
+                properties: { name: 'Test Group', progressStatus: 'unreached', population: 1000, religion: 'Islam' }
               }
             ]
           })
@@ -138,5 +138,23 @@ describe('MapPage', () => {
       expect(screen.queryByText(/this week's featured people group/i)).not.toBeInTheDocument();
     });
     expect(screen.getByText(/an estimated 1,000 people/i)).toBeInTheDocument();
+  });
+
+  it('renders a religion filter chip from the loaded data and toggles it on click', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    const chip = await screen.findByRole('button', { name: /islam/i });
+    expect(chip).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 });

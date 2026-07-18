@@ -85,31 +85,52 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   const hoveredId = useRef(null);
   const selectedIdRef = useRef(null);
   const activeRef = useRef(null);
+  const religionActiveRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
   const [counts, setCounts] = useState(null);
   const [active, setActive] = useState(() => new Set(STATUSES));
+  // Religion options + counts come from whatever the live geojson pull
+  // actually contains (set on load, see the tally below) — not a hand-typed
+  // "major world religions" list, so the filter never offers a category with
+  // zero real matches or silently drops one Joshua Project adds later.
+  const [religions, setReligions] = useState([]);
+  const [religionCounts, setReligionCounts] = useState({});
+  // Empty set = no restriction (every religion shown) — unlike `active`
+  // above, where membership means "shown" and the set starts full. Matches
+  // the same "nothing selected = unfiltered" chip semantics already used by
+  // OpportunitiesExplorer's agency filter, so multi-option filters behave
+  // consistently across the app.
+  const [religionActive, setReligionActive] = useState(() => new Set());
   const [dataError, setDataError] = useState(false);
   activeRef.current = active;
+  religionActiveRef.current = religionActive;
   onDataLoadedRef.current = onDataLoaded;
 
-  // Applies whatever's in activeRef right now to the map's layers. Reading
-  // from a ref (rather than closing over `active` from whichever render
-  // scheduled this) means it's always safe to call this the instant a layer
-  // exists — no dependence on the map's one-shot 'load' event having fired
-  // at just the right moment, which is what silently dropped filter updates
-  // before (isStyleLoaded() can go false again well after initial load,
-  // e.g. mid-tile-fetch after a flyTo, and 'load' never fires a second time
-  // to catch up).
-  const applyStatusFilter = (map) => {
+  // Applies whatever's in activeRef/religionActiveRef right now to the map's
+  // layers. Reading from refs (rather than closing over state from whichever
+  // render scheduled this) means it's always safe to call this the instant a
+  // layer exists — no dependence on the map's one-shot 'load' event having
+  // fired at just the right moment, which is what silently dropped filter
+  // updates before (isStyleLoaded() can go false again well after initial
+  // load, e.g. mid-tile-fetch after a flyTo, and 'load' never fires a second
+  // time to catch up).
+  const applyFilters = (map) => {
     const currentActive = activeRef.current;
-    const filter = ['in', ['get', 'progressStatus'], ['literal', Array.from(currentActive)]];
+    const currentReligions = religionActiveRef.current;
+    const statusExpr = ['in', ['get', 'progressStatus'], ['literal', Array.from(currentActive)]];
+    const religionExpr =
+      currentReligions.size === 0
+        ? true
+        : ['in', ['get', 'religion'], ['literal', Array.from(currentReligions)]];
+    const filter = ['all', statusExpr, religionExpr];
+
     if (map.getLayer('people-groups-points')) map.setFilter('people-groups-points', filter);
     if (map.getLayer('people-groups-shadow')) map.setFilter('people-groups-shadow', filter);
     if (map.getLayer('people-groups-pulse')) {
       map.setFilter(
         'people-groups-pulse',
         currentActive.has('unreached')
-          ? ['==', ['get', 'progressStatus'], 'unreached']
+          ? ['all', ['==', ['get', 'progressStatus'], 'unreached'], religionExpr]
           : ['==', ['get', 'progressStatus'], '']
       );
     }
@@ -144,10 +165,17 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
       }
 
       const tally = { unreached: 0, formative: 0, reached: 0 };
+      const religionTally = {};
       data.features.forEach((f) => {
         if (tally[f.properties.progressStatus] !== undefined) tally[f.properties.progressStatus] += 1;
+        const r = f.properties.religion;
+        if (r) religionTally[r] = (religionTally[r] || 0) + 1;
       });
       setCounts(tally);
+      // Most-represented first — reads as "the real major religions in this
+      // dataset" rather than an alphabetical list.
+      setReligions(Object.keys(religionTally).sort((a, b) => religionTally[b] - religionTally[a]));
+      setReligionCounts(religionTally);
 
       // Share the loaded features with the parent (MapAccessibleSearch) so a
       // keyboard-only visitor has a way to find and select a people group
@@ -222,7 +250,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
       // Catch up to whatever the legend's filter state is by the time these
       // layers actually exist (the fetch above may have taken a beat, during
       // which the visitor could already have toggled a status).
-      applyStatusFilter(map);
+      applyFilters(map);
 
       // Fade markers in a beat after the shadow/pulse layers land, instead
       // of everything popping in at once.
@@ -284,8 +312,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   }, [onSelect]);
 
   useEffect(() => {
-    if (mapRef.current) applyStatusFilter(mapRef.current);
-  }, [active]);
+    if (mapRef.current) applyFilters(mapRef.current);
+  }, [active, religionActive]);
 
   // Flies to and highlights whichever point is selected, regardless of
   // whether the selection came from a canvas click or from
@@ -320,6 +348,18 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
     });
   };
 
+  // Empty-set-means-unfiltered (see religionActive above), so toggling the
+  // last active chip back off is always allowed — it just returns to
+  // "show every religion" rather than needing one forced-on category.
+  const toggleReligion = (religion) => {
+    setReligionActive((prev) => {
+      const next = new Set(prev);
+      if (next.has(religion)) next.delete(religion);
+      else next.add(religion);
+      return next;
+    });
+  };
+
   return (
     <div className="map-wrapper">
       <div id="map-container" ref={mapContainer} />
@@ -333,7 +373,15 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
           {counts === null && (
             <p className="map-loading" role="status">Finding unreached peoples&hellip;</p>
           )}
-          <MapLegend counts={counts} active={active} onToggle={toggleStatus} />
+          <MapLegend
+            counts={counts}
+            active={active}
+            onToggle={toggleStatus}
+            religions={religions}
+            religionCounts={religionCounts}
+            religionActive={religionActive}
+            onToggleReligion={toggleReligion}
+          />
         </>
       )}
       {selected && <MapPopupCard properties={selected} onClose={() => onSelect(null)} />}
