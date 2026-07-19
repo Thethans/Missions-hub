@@ -62,6 +62,12 @@ export const QUESTIONS = [
     ]
   },
   {
+    key: 'targetReligion',
+    multi: true,
+    text: 'What religions/people groups do you feel called to? (choose all that apply)',
+    options: ['Christian', 'Muslim', 'Hindu', 'Buddhist', 'Animist', 'Atheist/Secular', 'no strong preference']
+  },
+  {
     key: 'lifeStage',
     text: "What's your family/life stage?",
     options: ['single', 'married, no kids yet', 'married with kids', 'not sure yet']
@@ -168,6 +174,17 @@ export const DIMENSIONS = [
     },
     conflictLabel: (agencyValue, values) => `Their focus regions don't include ${values.join(' or ')}`,
     unconfirmedLabel: () => 'Regional focus not clearly stated'
+  },
+  {
+    key: 'targetReligion',
+    multi: true,
+    weight: 2,
+    field: 'targetReligions',
+    isEmpty: (v) => !Array.isArray(v) || v.length === 0,
+    compare: includesMatch,
+    matchLabel: (values) => `Works with ${values.join(', ')} populations`,
+    conflictLabel: (agencyValue, values) => `Doesn't list ${values.join(' or ')} as a target religious group`,
+    unconfirmedLabel: () => 'Target religious groups not clearly stated'
   },
   {
     key: 'lifeStage',

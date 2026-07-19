@@ -152,7 +152,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
     const statusExpr = ['in', ['get', 'progressStatus'], ['literal', Array.from(currentActive)]];
     const religionExpr =
       currentReligions.size === 0
-        ? true
+        ? ['!=', ['get', 'religion'], null]
         : ['in', ['get', 'religion'], ['literal', Array.from(currentReligions)]];
     const filter = ['all', statusExpr, religionExpr];
 
