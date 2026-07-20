@@ -41,7 +41,7 @@ export default function RouteLine({ variant, containerRef, hovered, pathD, viewB
           strokeWidth="2"
           strokeDasharray="5 7"
           strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
+          initial={prefersReduced ? false : { pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
           transition={{ duration: prefersReduced ? 0 : 1.4, delay: prefersReduced ? 0 : delay, ease: 'easeOut' }}
         />

@@ -40,6 +40,7 @@ function CountUp({ value }) {
 const EASE = [0.16, 1, 0.3, 1];
 
 export default function StatsStrip() {
+  const prefersReduced = usePrefersReducedMotion();
   const stats = {
     groups: statsData.unreachedGroups,
     population: statsData.unreachedPopulation,
@@ -59,7 +60,7 @@ export default function StatsStrip() {
           <motion.div
             key={item.label}
             className="stat"
-            initial={{ opacity: 0, y: 20 }}
+            initial={prefersReduced ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6, delay: i * 0.1, ease: 'easeOut' }}
