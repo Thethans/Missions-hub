@@ -13,9 +13,10 @@ const displayLabel = (opt) => opt.charAt(0).toUpperCase() + opt.slice(1);
 
 // The audit flagged quiz question labels rendering twice (bold, then plain)
 // — verifying rather than assuming this is already fixed: QuizQuestion.jsx
-// renders the question text once as a visually-hidden <legend> (the
-// accessible name) and once as an aria-hidden <p> (the visible heading),
-// so exactly one copy should reach the accessibility tree per question.
+// renders the question text exactly once, as a real <h3> heading (so
+// screen-reader users can jump question to question via heading
+// navigation), with the fieldset's aria-labelledby pointing at that same
+// heading rather than duplicating the text into a second, hidden <legend>.
 describe('QuizQuestion label accessibility', () => {
   it.each(QUESTIONS)('exposes "$text" to assistive tech exactly once', (question) => {
     const { container } = render(
@@ -27,6 +28,16 @@ describe('QuizQuestion label accessibility', () => {
     );
     const exposedToAT = matches.filter((el) => el.closest('[aria-hidden="true"]') === null);
     expect(exposedToAT).toHaveLength(1);
+  });
+
+  it.each(QUESTIONS)('renders "$text" as a real heading that is also the fieldset\'s accessible name', (question) => {
+    const { container } = render(
+      <QuizQuestion question={question} value={question.multi ? [] : undefined} onChange={() => {}} />
+    );
+
+    const heading = screen.getByRole('heading', { level: 3, name: question.text });
+    const fieldset = container.querySelector('fieldset');
+    expect(fieldset.getAttribute('aria-labelledby')).toBe(heading.id);
   });
 });
 

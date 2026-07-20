@@ -34,6 +34,17 @@ describe('MatchQuiz result persistence', () => {
     expect(typeof saved.timestamp).toBe('number');
   });
 
+  it('moves focus to the results heading after submitting, so a keyboard user is not left behind on the button', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
+    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+
+    const resultsHeading = screen.getByRole('heading', { name: /closest matches/i });
+    expect(resultsHeading).toHaveFocus();
+  });
+
   it('shows saved matches from a previous session on mount', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       answers: { tradition: 'broadly evangelical' },

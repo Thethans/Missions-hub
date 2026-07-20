@@ -36,6 +36,16 @@ function TermTooltip({ term, definition }) {
 }
 
 export default function QuizQuestion({ question, value, onChange }) {
+  // Real heading (not a legend) so screen-reader users can jump question to
+  // question via heading navigation — there's no step-by-step wizard here,
+  // all ~7 questions sit on one continuous page, so that's the only way to
+  // orient without tabbing through every field in order. aria-labelledby
+  // (rather than a <legend>, which always straddles the fieldset's own top
+  // edge and so can't double as the visible in-card heading) points the
+  // fieldset's accessible name at this same heading instead of duplicating
+  // the text in a second, hidden element.
+  const headingId = `question-${question.key}`;
+
   if (question.multi) {
     const selected = value || [];
     const toggle = (opt) => {
@@ -54,14 +64,9 @@ export default function QuizQuestion({ question, value, onChange }) {
     };
 
     return (
-      <fieldset className="question">
-        {/* Native <legend> always renders straddling the fieldset's own
-            top edge (outside the box its background paints), so it can't
-            double as the visible card heading — keep it for the group's
-            accessible name only, and show a real heading inside the card. */}
-        <legend className="visually-hidden">{question.text}</legend>
+      <fieldset className="question" aria-labelledby={headingId}>
         <div className="question-card">
-          <p className="question-heading" aria-hidden="true">{question.text}</p>
+          <h3 id={headingId} className="question-heading">{question.text}</h3>
           {question.options.map((opt) => (
             <label key={opt}>
               <input
@@ -81,10 +86,9 @@ export default function QuizQuestion({ question, value, onChange }) {
   }
 
   return (
-    <fieldset className="question">
-      <legend className="visually-hidden">{question.text}</legend>
+    <fieldset className="question" aria-labelledby={headingId}>
       <div className="question-card">
-        <p className="question-heading" aria-hidden="true">{question.text}</p>
+        <h3 id={headingId} className="question-heading">{question.text}</h3>
         {question.options.map((opt) => (
           <label key={opt}>
             <input

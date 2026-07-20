@@ -29,21 +29,42 @@ const ITEMS = [
 
 function FaqItem({ item, index }) {
   const [open, setOpen] = useState(false);
+  // WAI-ARIA APG accordion pattern: trigger is a native button wrapped in a
+  // heading, aria-expanded reflects state, and aria-controls/id tie the
+  // trigger to its panel (role="region" + aria-labelledby the other way).
+  const headerId = `faq-header-${index}`;
+  const panelId = `faq-panel-${index}`;
   return (
     <RevealOnScroll index={index} className="faq-item-wrapper">
       <div className="faq-item">
-        <button className="faq-question" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          <span className="faq-question-text">
-            <span className="faq-number">{String(index + 1).padStart(2, '0')}</span>
-            {item.q}
-          </span>
-          <span className="faq-toggle">{open ? '−' : '+'}</span>
-        </button>
+        <h3 className="faq-question-heading">
+          <button
+            className="faq-question"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-controls={panelId}
+            id={headerId}
+          >
+            <span className="faq-question-text">
+              <span className="faq-number">{String(index + 1).padStart(2, '0')}</span>
+              {item.q}
+            </span>
+            <span className="faq-toggle">{open ? '−' : '+'}</span>
+          </button>
+        </h3>
         {/* Always rendered (not mounted/unmounted) — grid-template-rows
             0fr→1fr is a pure-CSS way to animate to an unknown/auto content
             height without JS-measuring it, more robust than animating a
-            motion.div to height:'auto'. */}
-        <div className={`faq-answer-wrap${open ? ' faq-answer-wrap--open' : ''}`}>
+            motion.div to height:'auto'. aria-hidden (rather than the
+            `hidden` attribute) keeps assistive tech out of the collapsed
+            panel without fighting that CSS-only height animation. */}
+        <div
+          id={panelId}
+          role="region"
+          aria-labelledby={headerId}
+          aria-hidden={!open}
+          className={`faq-answer-wrap${open ? ' faq-answer-wrap--open' : ''}`}
+        >
           <div className="faq-answer-inner">
             <p className="faq-answer">{item.a}</p>
           </div>

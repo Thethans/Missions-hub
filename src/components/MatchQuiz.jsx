@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import agencies from '../data/agencies.json';
 import { QUESTIONS } from '../data/quizQuestions.js';
 import { getMatches } from '../data/scoreAgency.js';
@@ -33,6 +33,17 @@ export default function MatchQuiz() {
 
   const results = submitted ? getMatches(answers, agencies) : [];
   const answered = hasAnyAnswer(answers);
+
+  // There's no per-question "next" step to move focus between — all ~7
+  // questions sit on one continuous page — but submitting is the one real
+  // transition here: the form is replaced by a results list further down
+  // the page. Without this, a keyboard user's focus stays on the button
+  // they just activated while the page changes underneath them, with only
+  // the aria-live region (not focus) marking that anything happened.
+  const resultsHeadingRef = useRef(null);
+  useEffect(() => {
+    if (submitted) resultsHeadingRef.current?.focus();
+  }, [submitted]);
 
   function handleSubmit() {
     if (!answered) {
@@ -103,7 +114,7 @@ export default function MatchQuiz() {
 
       {submitted && (
         <div className="results" aria-live="polite">
-          <h3>Closest matches</h3>
+          <h3 ref={resultsHeadingRef} tabIndex={-1}>Closest matches</h3>
           {results.map((r, i) => (
             <MatchResultCard key={r.name} result={r} index={i} />
           ))}
