@@ -340,9 +340,22 @@ a { color: var(--voyage-teal); }
   contain: layout style paint;
 }
 
-/* "The Living Atlas" — dot-matrix world map, pulse layer (real unreached
-   coordinates), and route layer (illustrative sending arcs). See
-   HeroBackground.jsx and scripts/generate-hero-dots.js. */
+/* "The Living Atlas" — dot-matrix world map (canvas), pulse layer (real
+   unreached coordinates, SVG), and route layer (illustrative sending arcs,
+   SVG). See HeroBackground.jsx and scripts/generate-hero-dots.js. The
+   canvas and svg are stacked via CSS grid (both at grid-area 1/1) rather
+   than each needing its own position:absolute, so they overlay pixel-for-
+   pixel and share the same cursor-parallax transform on .hero-atlas-wrap. */
+.hero-atlas-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.hero-atlas-wrap > * {
+  grid-area: 1 / 1;
+}
+
 .hero-atlas {
   width: 100%;
   height: 100%;
@@ -353,11 +366,6 @@ a { color: var(--voyage-teal); }
 @keyframes hero-atlas-fade {
   from { opacity: 0; }
   to { opacity: 0.8; }
-}
-
-.hero-atlas-dots circle {
-  fill: var(--atlas-paper);
-  opacity: 0.3;
 }
 
 .hero-atlas-pulse {
@@ -1076,15 +1084,10 @@ a { color: var(--voyage-teal); }
   aspect-ratio: 2 / 1;
 }
 
+/* Canvas now (MapPreviewGraphic.jsx draws the status-encoded dots itself,
+   mirroring the unreached/formative/reached fill/stroke rules that used to
+   live here as SVG circle classes) — this just needs to fill its slot. */
 .map-preview-graphic { width: 100%; height: 100%; display: block; }
-
-/* Same solid/faded/ring status encoding as the live map (WorldMap.jsx) —
-   SVG circles need fill/stroke rather than the background/border used for
-   the small status dots elsewhere, so these are their own rules rather than
-   reusing .status-unreached etc. */
-.map-preview-dot.status-unreached { fill: var(--status-unreached); fill-opacity: 0.85; }
-.map-preview-dot.status-formative { fill: var(--status-formative); fill-opacity: 0.55; }
-.map-preview-dot.status-reached { fill: none; stroke: var(--status-reached); stroke-width: 1.5; }
 
 .map-teaser-content { text-align: left; }
 .map-teaser h2 { margin: 0 0 var(--space-3); font-size: clamp(1.5rem, 3vw, 2rem); }
@@ -1155,6 +1158,10 @@ a { color: var(--voyage-teal); }
   border-color: rgba(43, 110, 118, 0.45);
   background: rgba(250, 247, 240, 0.08);
 }
+
+/* Reset the browser's default heading margin/size/weight — the visual
+   look is entirely owned by .faq-question (the button inside it). */
+.faq-question-heading { margin: 0; font-size: inherit; font-weight: inherit; }
 
 .faq-question {
   width: 100%;
@@ -1760,6 +1767,7 @@ a { color: var(--voyage-teal); }
   width: 100%;
   margin: 0 0 var(--space-2);
   padding: 0 var(--space-3);
+  font-size: inherit;
   font-weight: 600;
 }
 

@@ -22,18 +22,24 @@ describe('HeroBackground (Living Atlas)', () => {
     mockMatchMedia({ mobile: false });
     const { container } = render(<HeroBackground />);
 
-    const svg = container.querySelector('.hero-atlas');
+    // The dot field is a single canvas (not one <circle> per dot — see the
+    // file-header comment on why), so the dot count is asserted via the
+    // data-dot-count instrumentation attribute rather than DOM node count.
+    const svg = container.querySelector('svg.hero-atlas');
+    const canvas = container.querySelector('canvas.hero-atlas');
     expect(svg.getAttribute('viewBox')).toBe(atlas.viewBox);
-    expect(container.querySelectorAll('.hero-atlas-dots circle')).toHaveLength(atlas.dots.length);
+    expect(canvas.getAttribute('data-dot-count')).toBe(String(atlas.dots.length));
+    expect(container.querySelectorAll('.hero-atlas-dots circle')).toHaveLength(0);
   });
 
   it('crops to the mobile viewBox and halves the dot count', () => {
     mockMatchMedia({ mobile: true });
     const { container } = render(<HeroBackground />);
 
-    const svg = container.querySelector('.hero-atlas');
+    const svg = container.querySelector('svg.hero-atlas');
+    const canvas = container.querySelector('canvas.hero-atlas');
     expect(svg.getAttribute('viewBox')).not.toBe(atlas.viewBox);
-    expect(container.querySelectorAll('.hero-atlas-dots circle').length).toBeLessThan(atlas.dots.length);
+    expect(Number(canvas.getAttribute('data-dot-count'))).toBeLessThan(atlas.dots.length);
   });
 
   it('renders a pulse per sampled unreached coordinate and a path per route', () => {

@@ -10,10 +10,16 @@ import useMatchMedia from '../hooks/useMatchMedia.js';
 // static, build-time-only output, never computed client-side), with two
 // motion layers: a pulse layer at real unreached-people-group coordinates,
 // and a route layer of illustrative sending-city → unreached-region arcs
-// with IBM Plex Mono coordinate labels. Pure inline SVG + CSS animation —
-// no canvas, no three.js, no new dependency. Replaces the old hand-placed
+// with IBM Plex Mono coordinate labels. Replaces the old hand-placed
 // DotConstellation + cobe Globe composition; Globe.jsx itself is untouched
 // and unused for now, reserved for a future flagship moment per the spec.
+//
+// The static dot field (850 points, none interactive/animated individually)
+// is drawn to a single <canvas> instead of one <circle> per dot — at 1,341
+// SVG circles across the homepage this was ~76% of the prerendered HTML
+// payload and pushed the page past Lighthouse's excessive-DOM-size
+// threshold. The route/pulse layers stay real SVG since they're few (43
+// elements) and each is individually CSS-animated.
 
 // Matches the existing .hero-dots mobile breakpoint in styles.css.
 const MOBILE_QUERY = '(max-width: 768px)';
@@ -57,14 +63,84 @@ function AmbientParticles() {
 // is ~193, so this crop keeps that band roughly centered with padding.
 const MOBILE_VIEWBOX = '0 70 800 260';
 
-function Dots({ dots, mobile }) {
+const DOT_RADIUS = 1.6;
+
+function parseViewBox(viewBox) {
+  const [minX, minY, width, height] = viewBox.split(' ').map(Number);
+  return { minX, minY, width, height };
+}
+
+// Renders the static dot field to a single canvas instead of one <circle>
+// per dot. Manually replicates SVG's preserveAspectRatio="xMidYMid slice"
+// (scale to cover, crop overflow, center both axes) so dots stay
+// pixel-aligned with the pulse/route layer, which shares this same viewBox
+// but stays real SVG (see file-header comment for why).
+function DotCanvas({ dots, mobile, viewBox, className }) {
+  const canvasRef = useRef(null);
   const visible = mobile ? dots.filter((_, i) => i % 2 === 0) : dots;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    // Environments without a real 2d context (some test DOMs, canvas-
+    // fingerprinting-blocking extensions) get an empty decorative layer
+    // instead of a crash — everything else on the hero still renders.
+    if (!ctx) return;
+    const { minX, minY, width: vbWidth, height: vbHeight } = parseViewBox(viewBox);
+    // Reads the live token instead of hardcoding the hex so a change in
+    // tokens.css still takes effect here, same as the old `fill: var(...)`.
+    const dotColor =
+      getComputedStyle(document.documentElement).getPropertyValue('--atlas-paper').trim() || '#faf7f0';
+
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      const cssWidth = rect.width;
+      const cssHeight = rect.height;
+      if (!cssWidth || !cssHeight) return;
+      // Capped at 3x — a literal devicePixelRatio (up to ~4 on some phones)
+      // buys no visible sharpness for 1.6px dots but does multiply the
+      // canvas backing-store pixel count.
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+      canvas.width = Math.round(cssWidth * dpr);
+      canvas.height = Math.round(cssHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+      const scale = Math.max(cssWidth / vbWidth, cssHeight / vbHeight);
+      const offsetX = (cssWidth - vbWidth * scale) / 2;
+      const offsetY = (cssHeight - vbHeight * scale) / 2;
+      const r = DOT_RADIUS * scale;
+
+      ctx.fillStyle = dotColor;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      for (const d of visible) {
+        const x = offsetX + (d.x - minX) * scale;
+        const y = offsetY + (d.y - minY) * scale;
+        ctx.moveTo(x + r, y);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    }
+
+    draw();
+    const ro = new ResizeObserver(draw);
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, [visible, viewBox]);
+
   return (
-    <g className="hero-atlas-dots">
-      {visible.map((d, i) => (
-        <circle key={i} cx={d.x} cy={d.y} r={1.6} />
-      ))}
-    </g>
+    <canvas
+      ref={canvasRef}
+      className={className}
+      aria-hidden="true"
+      // Not read by the draw logic — one attribute (not 850 DOM nodes) so
+      // tests can still assert on the desktop/mobile dot count without
+      // reintroducing a per-dot DOM element.
+      data-dot-count={visible.length}
+    />
   );
 }
 
@@ -137,18 +213,29 @@ export default function HeroBackground() {
     return () => el.removeEventListener('mousemove', handleMove);
   }, [prefersReduced, finePointer, rawX, rawY]);
 
+  const viewBox = mobile ? MOBILE_VIEWBOX : atlas.viewBox;
+
   return (
     <div className="hero-background" ref={containerRef} aria-hidden="true">
-      <motion.svg
-        className={`hero-atlas${prefersReduced ? ' hero-atlas--static' : ''}`}
-        viewBox={mobile ? MOBILE_VIEWBOX : atlas.viewBox}
-        preserveAspectRatio="xMidYMid slice"
+      <motion.div
+        className="hero-atlas-wrap"
         style={prefersReduced || !finePointer ? undefined : { x: springX, y: springY }}
       >
-        <Dots dots={atlas.dots} mobile={mobile} />
-        <Routes routes={atlas.routes} animate={!prefersReduced} />
-        <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
-      </motion.svg>
+        <DotCanvas
+          dots={atlas.dots}
+          mobile={mobile}
+          viewBox={viewBox}
+          className={`hero-atlas${prefersReduced ? ' hero-atlas--static' : ''}`}
+        />
+        <svg
+          className={`hero-atlas${prefersReduced ? ' hero-atlas--static' : ''}`}
+          viewBox={viewBox}
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <Routes routes={atlas.routes} animate={!prefersReduced} />
+          <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
+        </svg>
+      </motion.div>
       {!prefersReduced && <AmbientParticles />}
     </div>
   );
