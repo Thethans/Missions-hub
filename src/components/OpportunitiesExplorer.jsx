@@ -8,6 +8,8 @@
 //   --status-unreached: #b5482f
 //   --status-formative: #d9a441
 //   --status-reached: #4c8a5e
+//   --concern-text: #a6791f
+//   --concern-bg: rgba(217, 164, 65, 0.15)
 //   --line: rgba(22, 35, 59, 0.15)
 //   --muted-text: rgba(22, 35, 59, 0.65)
 //   --font-display: 'Fraunces Variable', Georgia, serif
@@ -33,12 +35,12 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-18T21:14:13.225Z"
+// Generated: "2026-07-20T02:58:17.903Z"
 // Opportunities: 1059 across 21 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending, CaretLeft, CaretRight, Question } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
 
@@ -71,18 +73,35 @@ const SORT_MIXED = 'mixed';
 
 const PAGE_SIZE = 24;
 
+// The sanitize pipeline's generateFallbackDescription always ends with this
+// exact phrase (see scripts/lib/sanitize.js) — a reliable tell for "this
+// listing has no real, agency-written description," as opposed to one that
+// does. Used as a relevance signal below rather than a fabricated "recently
+// posted" claim, since post dates aren't a reliable field (see SORT_MIXED
+// comment above).
+const BOILERPLATE_DESC_RE = /Reach out to the agency directly for full role details\.$/;
+
+function hasRealDescription(o) {
+  return Boolean(o.description) && !BOILERPLATE_DESC_RE.test(o.description);
+}
+
 // One item from each agency bucket per round, cycling until every bucket is
 // exhausted — turns "first 250 rows are all ABWE" into "one ABWE listing
 // every ~22 opportunities." Bucket order follows first-appearance order in
 // `list` (which is itself agency-alphabetical from the source query), so the
-// interleave is still deterministic and stable across renders.
+// interleave is still deterministic and stable across renders. Within each
+// bucket, listings with a real (non-boilerplate) description sort first —
+// a simple, honest relevance heuristic that doesn't require a trustworthy
+// posted-date field.
 function interleaveByAgency(list) {
   const buckets = new Map();
   for (const o of list) {
     if (!buckets.has(o.agency)) buckets.set(o.agency, []);
     buckets.get(o.agency).push(o);
   }
-  const bucketArrays = [...buckets.values()];
+  const bucketArrays = [...buckets.values()].map((bucket) =>
+    [...bucket].sort((a, b) => Number(hasRealDescription(b)) - Number(hasRealDescription(a)))
+  );
   const result = [];
   let i = 0;
   while (result.length < list.length) {
@@ -285,8 +304,12 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
 
         <h2 className="opp-card-title">{opp.title}</h2>
 
-        {opp.description && (
+        {opp.description ? (
           <p className="opp-card-desc">{opp.description}</p>
+        ) : (
+          <p className="opp-card-desc opp-card-desc--unconfirmed">
+            <Question weight="fill" size={14} /> Role details worth asking {shortAgencyName(opp.agency)} about directly
+          </p>
         )}
 
         <div className="opp-card-meta">
@@ -599,7 +622,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         o.title.toLowerCase().includes(q) ||
         (o.description || '').toLowerCase().includes(q) ||
         o.agency.toLowerCase().includes(q) ||
-        (o.location || '').toLowerCase().includes(q)
+        (o.location || '').toLowerCase().includes(q) ||
+        (o.region || '').toLowerCase().includes(q)
       );
     }
     if (skipKey !== 'agency' && selectedAgencies.size > 0) out = out.filter((o) => selectedAgencies.has(o.agency));
@@ -837,7 +861,56 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         </p>
       ) : null}
 
-      {/* Expandable filter panel */}
+      {/* Quick filters: the 3 dimensions that narrow 953+ listings fastest
+          (region, term/duration, role category) stay visible without an
+          extra click — the less-essential facets (agency, tradition,
+          religion — many more values, more of a power-user refinement)
+          stay behind the Filters toggle below. */}
+      <div className="opp-filters opp-quick-filters">
+        <div className="opp-filter-group">
+          <span className="opp-filter-label">
+            Region
+            {selectedRegions.size > 0 && <span className="opp-filter-label-count">{selectedRegions.size}</span>}
+          </span>
+          <div className="opp-chip-row">
+            {REGIONS.map((r) => (
+              <FilterChip key={r} label={r} active={selectedRegions.has(r)} count={regionCounts.get(r) || 0}
+                onClick={() => toggleFilter(setSelectedRegions, r)} />
+            ))}
+          </div>
+        </div>
+        <div className="opp-filter-group">
+          <span className="opp-filter-label">
+            Role type
+            {selectedRoles.size > 0 && <span className="opp-filter-label-count">{selectedRoles.size}</span>}
+          </span>
+          <div className="opp-chip-row">
+            {ROLE_TYPES.map((r) => (
+              <FilterChip key={r} label={r} active={selectedRoles.has(r)} count={roleCounts.get(r) || 0}
+                onClick={() => toggleFilter(setSelectedRoles, r)} />
+            ))}
+          </div>
+        </div>
+        <div className="opp-filter-group">
+          <span className="opp-filter-label">
+            Term length
+            {selectedTerms.size > 0 && <span className="opp-filter-label-count">{selectedTerms.size}</span>}
+          </span>
+          <div className="opp-chip-row">
+            {TERM_LENGTHS.map((t) => (
+              <FilterChip key={t} label={t} active={selectedTerms.has(t)} count={termCounts.get(t) || 0}
+                onClick={() => toggleFilter(setSelectedTerms, t)} />
+            ))}
+          </div>
+        </div>
+        {hasActiveFilters && (
+          <button type="button" className="opp-clear-filters" onClick={clearFilters}>
+            Clear all filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+          </button>
+        )}
+      </div>
+
+      {/* Expandable filter panel — agency, tradition, and target religion */}
       {showFilters && (
         <div className="opp-filters">
           <div className="opp-filter-group">
@@ -849,42 +922,6 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
               {agencies.map((a) => (
                 <FilterChip key={a} label={a} active={selectedAgencies.has(a)} count={agencyCounts.get(a) || 0}
                   onClick={() => toggleFilter(setSelectedAgencies, a)} />
-              ))}
-            </div>
-          </div>
-          <div className="opp-filter-group">
-            <span className="opp-filter-label">
-              Region
-              {selectedRegions.size > 0 && <span className="opp-filter-label-count">{selectedRegions.size}</span>}
-            </span>
-            <div className="opp-chip-row">
-              {REGIONS.map((r) => (
-                <FilterChip key={r} label={r} active={selectedRegions.has(r)} count={regionCounts.get(r) || 0}
-                  onClick={() => toggleFilter(setSelectedRegions, r)} />
-              ))}
-            </div>
-          </div>
-          <div className="opp-filter-group">
-            <span className="opp-filter-label">
-              Role type
-              {selectedRoles.size > 0 && <span className="opp-filter-label-count">{selectedRoles.size}</span>}
-            </span>
-            <div className="opp-chip-row">
-              {ROLE_TYPES.map((r) => (
-                <FilterChip key={r} label={r} active={selectedRoles.has(r)} count={roleCounts.get(r) || 0}
-                  onClick={() => toggleFilter(setSelectedRoles, r)} />
-              ))}
-            </div>
-          </div>
-          <div className="opp-filter-group">
-            <span className="opp-filter-label">
-              Term length
-              {selectedTerms.size > 0 && <span className="opp-filter-label-count">{selectedTerms.size}</span>}
-            </span>
-            <div className="opp-chip-row">
-              {TERM_LENGTHS.map((t) => (
-                <FilterChip key={t} label={t} active={selectedTerms.has(t)} count={termCounts.get(t) || 0}
-                  onClick={() => toggleFilter(setSelectedTerms, t)} />
               ))}
             </div>
           </div>
@@ -912,11 +949,6 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
               ))}
             </div>
           </div>
-          {hasActiveFilters && (
-            <button type="button" className="opp-clear-filters" onClick={clearFilters}>
-              Clear all filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-            </button>
-          )}
         </div>
       )}
 

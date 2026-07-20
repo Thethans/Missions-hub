@@ -1923,8 +1923,8 @@ a { color: var(--voyage-teal); }
 .match-chip--positive { background: rgba(43, 110, 118, 0.08); color: var(--ink-navy); }
 .match-chip--positive svg { color: var(--voyage-teal); }
 
-.match-chip--concern { background: rgba(217, 164, 65, 0.15); color: var(--ink-navy); }
-.match-chip--concern svg { color: #a6791f; }
+.match-chip--concern { background: var(--concern-bg); color: var(--ink-navy); }
+.match-chip--concern svg { color: var(--concern-text); }
 
 .matcher > button {
   background: var(--voyage-teal);
@@ -2559,6 +2559,19 @@ a { color: var(--voyage-teal); }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* No description on file — same "worth asking about" transparency pattern
+   as the quiz match card's concerns list, instead of leaving a blank gap
+   that reads as a broken/missing field. */
+.opp-card-desc--unconfirmed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-style: italic;
+  color: var(--concern-text);
+}
+
+.opp-card-desc--unconfirmed svg { flex-shrink: 0; }
 
 .opp-card-meta {
   display: flex;

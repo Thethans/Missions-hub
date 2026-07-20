@@ -6,6 +6,11 @@
   --status-unreached: #b5482f;
   --status-formative: #d9a441;
   --status-reached: #4c8a5e;
+  /* "worth asking about" — unconfirmed-data indicator (match concerns,
+     missing card fields), same amber family as --status-formative but a
+     darker shade for text/icon contrast against its own light background */
+  --concern-text: #a6791f;
+  --concern-bg: rgba(217, 164, 65, 0.15);
 
   /* neutral hairline, derived from ink-navy rather than a flat gray */
   --line: rgba(22, 35, 59, 0.15);

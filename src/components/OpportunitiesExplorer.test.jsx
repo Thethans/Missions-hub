@@ -291,6 +291,46 @@ describe('OpportunitiesExplorer sorting', () => {
   }, TIMEOUT);
 });
 
+const RELEVANCE_SAMPLE = [
+  {
+    id: 'r-1', agency: 'Solo Agency', title: 'Boilerplate-Only Role', url: 'https://example.org/1',
+    location: null, region: null, role_type: null, term_length: null,
+    description: 'An opportunity. Reach out to the agency directly for full role details.'
+  },
+  {
+    id: 'r-2', agency: 'Solo Agency', title: 'Real Description Role', url: 'https://example.org/2',
+    location: null, region: null, role_type: null, term_length: null,
+    description: 'Lead a team of five nurses running a rural clinic three days a week.'
+  },
+  {
+    id: 'r-3', agency: 'Solo Agency', title: 'No Description Role', url: 'https://example.org/3',
+    location: null, region: null, role_type: null, term_length: null, description: null
+  }
+];
+
+describe('OpportunitiesExplorer default-sort relevance heuristic', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(RELEVANCE_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('ranks a listing with a real description above boilerplate/no-description ones from the same agency', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Real Description Role'));
+
+    const cardTitles = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(cardTitles[0]).toBe('Real Description Role');
+  }, TIMEOUT);
+});
+
 const FAVORITES_SAMPLE = [
   { id: 'opp-local', agency: 'Local Agency', title: 'Locally Saved Opportunity', url: 'https://example.org/local', location: null, region: null, role_type: null, term_length: null, description: null },
   { id: 'opp-remote', agency: 'Remote Agency', title: 'Remotely Saved Opportunity', url: 'https://example.org/remote', location: null, region: null, role_type: null, term_length: null, description: null }
@@ -451,6 +491,47 @@ describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
     expect(new Set(firstThreeAgencies).size).toBe(3);
   }, TIMEOUT);
 
+  it('shows region, role type, and term length quick filters without opening the Filters panel', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    // These three facets narrow the 953-listing/40-page result set fastest,
+    // so they're always visible — no "Filters" click needed, unlike Agency/
+    // tradition/religion which stay behind the toggle below.
+    expect(screen.getByRole('button', { name: /^Sub-Saharan Africa/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^medical/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^short-term \(under 2 years\)/ })).toBeInTheDocument();
+    // Agency, by contrast, is still gated behind the Filters toggle.
+    expect(screen.queryByRole('button', { name: /^Agency A/ })).not.toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('narrows results and keeps the page count in sync when a quick filter is applied', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText(/30 opportunities/));
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+
+    // Sub-Saharan Africa is 15 of the 30 rows — one 24-card page becomes moot.
+    await user.click(screen.getByRole('button', { name: /^Sub-Saharan Africa/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/15 opportunities/)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/page \d of \d/i)).not.toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('matches on region text in the search box', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText(/30 opportunities/));
+
+    await user.type(screen.getByPlaceholderText(/search opportunities/i), 'Sub-Saharan');
+
+    await waitFor(() => {
+      expect(screen.getByText(/15 opportunities matching/)).toBeInTheDocument();
+    });
+  }, TIMEOUT);
+
   it('shows facet counts on filter chips reflecting the other active filters', async () => {
     const user = userEvent.setup();
     renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
@@ -544,5 +625,34 @@ describe('OpportunitiesExplorer category-page exclusion (P1-C listing_type)', ()
 
     expect(screen.queryByText('Serve in Albania — Avant Ministries')).not.toBeInTheDocument();
     expect(screen.getByText(/1 opportunity\b/)).toBeInTheDocument();
+  }, TIMEOUT);
+});
+
+const NO_DESCRIPTION_SAMPLE = [
+  { id: 'nd-1', agency: 'Quiet Agency', title: 'Undocumented Role', url: 'https://example.org/1', location: null, region: null, role_type: null, term_length: null, description: null },
+  { id: 'nd-2', agency: 'Quiet Agency', title: 'Documented Role', url: 'https://example.org/2', location: null, region: null, role_type: null, term_length: null, description: 'Manage the regional office and coordinate visiting teams.' }
+];
+
+describe('OpportunitiesExplorer missing-description card treatment', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(NO_DESCRIPTION_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('shows a "worth asking about" line instead of a blank gap when a listing has no description', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Undocumented Role'));
+
+    expect(screen.getByText(/worth asking Quiet Agency about directly/i)).toBeInTheDocument();
+    // The listing that does have a description still renders it normally.
+    expect(screen.getByText('Manage the regional office and coordinate visiting teams.')).toBeInTheDocument();
   }, TIMEOUT);
 });
