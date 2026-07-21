@@ -1414,10 +1414,19 @@
   cursor: not-allowed;
 }
 
+.pm-admin-subheading {
+  font-size: 1rem;
+  margin: var(--space-8) 0 var(--space-3);
+}
+.pm-admin-subheading:first-child {
+  margin-top: 0;
+}
+
 .pm-admin-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  margin-bottom: var(--space-6);
 }
 .pm-admin-table th {
   text-align: left;
@@ -1434,7 +1443,15 @@
   border-bottom: 1px solid var(--line);
   color: var(--ink-navy);
 }
-.pm-admin-revoke {
+.pm-admin-actions {
+  display: flex;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.pm-admin-revoke,
+.pm-admin-delete,
+.pm-admin-deny {
   border: 1px solid var(--status-unreached);
   cursor: pointer;
   background: transparent;
@@ -1444,6 +1461,28 @@
   font-size: 0.8rem;
   font-weight: 600;
 }
-.pm-admin-revoke:hover {
+.pm-admin-revoke:hover,
+.pm-admin-delete:hover,
+.pm-admin-deny:hover {
   background: rgba(181, 72, 47, 0.08);
+}
+
+.pm-admin-accept {
+  border: 1px solid var(--voyage-teal);
+  cursor: pointer;
+  background: transparent;
+  color: var(--voyage-teal);
+  border-radius: 6px;
+  padding: 4px var(--space-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pm-admin-accept:hover {
+  background: rgba(43, 110, 118, 0.08);
+}
+
+.pm-admin-accept:disabled,
+.pm-admin-deny:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

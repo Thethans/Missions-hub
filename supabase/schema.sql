@@ -154,12 +154,22 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- Same idempotency issue as the policies below: `create trigger` has no
+-- `if not exists` form either, so this needs its own drop-first guard.
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function link_verified_member();
 
 alter table missionary_sensitive_requests enable row level security;
 
+-- Postgres has no `create policy if not exists`, so a plain `create policy`
+-- errors "policy already exists" on a database that already has one under
+-- this name — e.g. if only the pre-fix version of the two verified_members
+-- policies below (see the is_active_verified_admin comment) was ever
+-- applied to this database. The `drop ... if exists` makes re-running this
+-- file safe to pick up a fixed definition regardless of what's already live.
+drop policy if exists "Only verified members can read sensitive prayer requests" on missionary_sensitive_requests;
 create policy "Only verified members can read sensitive prayer requests"
   on missionary_sensitive_requests for select
   using (
@@ -187,6 +197,7 @@ $$ language sql security definer set search_path = public;
 
 -- Everyone can see their own row (for "pending verification" UI) or, if
 -- they're an active admin, every row (for the admin UI's member list).
+drop policy if exists "Own row, or every row if you're an active admin" on verified_members;
 create policy "Own row, or every row if you're an active admin"
   on verified_members for select
   using (
@@ -196,12 +207,22 @@ create policy "Own row, or every row if you're an active admin"
 
 -- Only active admins can add or revoke members — never the client
 -- directly on its own say-so.
+drop policy if exists "Active admins can add verified members" on verified_members;
 create policy "Active admins can add verified members"
   on verified_members for insert
   with check (is_active_verified_admin(auth.uid()));
 
+drop policy if exists "Active admins can revoke/update verified members" on verified_members;
 create policy "Active admins can revoke/update verified members"
   on verified_members for update
+  using (is_active_verified_admin(auth.uid()));
+
+-- Separate from revoke (soft: sets revoked_at, reversible, keeps history).
+-- Delete is a hard removal — an admin cleaning up a row entirely, not just
+-- cutting off access.
+drop policy if exists "Active admins can delete verified members" on verified_members;
+create policy "Active admins can delete verified members"
+  on verified_members for delete
   using (is_active_verified_admin(auth.uid()));
 
 -- Bootstrapping: the insert policy above requires an *existing* admin, so
@@ -214,6 +235,48 @@ create policy "Active admins can revoke/update verified members"
 --
 --   insert into verified_members (church_email, user_id, is_admin, verified_at)
 --   values ('admin@yourchurch.org', '<their auth.users.id>', true, now());
+
+-- Access requests: anyone who has signed in (via the same magic-link flow
+-- Checklist.jsx and this feature both use) but has no verified_members row
+-- yet shows up here as an implicit request — no separate "request access"
+-- action needed, since signing in once is enough. Note this is signed-in
+-- app-wide, not prayer-map-specific: someone who only ever used the
+-- Checklist feature will also appear here once. That's an accepted
+-- tradeoff of not requiring a dedicated request step; harmless since an
+-- admin can just deny/ignore an unrelated email.
+create table if not exists denied_access_requests (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  denied_by uuid references auth.users,
+  denied_at timestamptz default now()
+);
+
+alter table denied_access_requests enable row level security;
+
+drop policy if exists "Active admins can view denied requests" on denied_access_requests;
+create policy "Active admins can view denied requests"
+  on denied_access_requests for select
+  using (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "Active admins can deny access requests" on denied_access_requests;
+create policy "Active admins can deny access requests"
+  on denied_access_requests for insert
+  with check (is_active_verified_admin(auth.uid()));
+
+-- auth.users isn't exposed through the REST API, so listing pending
+-- requests needs a security-definer function (same reasoning as
+-- is_active_verified_admin above) — it reads auth.users as its owner, but
+-- the inline admin check means a non-admin caller gets zero rows back,
+-- not an error, matching this file's existing fail-closed pattern.
+create or replace function list_access_requests()
+returns table (request_user_id uuid, email text, requested_at timestamptz) as $$
+  select u.id, u.email, u.created_at
+  from auth.users u
+  where is_active_verified_admin(auth.uid())
+    and not exists (select 1 from verified_members vm where vm.user_id = u.id)
+    and not exists (select 1 from denied_access_requests d where d.email = u.email)
+  order by u.created_at desc;
+$$ language sql security definer set search_path = public;
 
 -- Opportunities: auth-linked favorites -----------------------------------
 -- Favorites used to live only in localStorage (fielded_saved_opps), so they
