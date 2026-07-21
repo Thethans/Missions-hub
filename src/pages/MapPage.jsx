@@ -1,8 +1,16 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import WorldMap from '../components/WorldMap.jsx';
+import React, { useState, useRef, useEffect, useMemo, Suspense, lazy } from 'react';
 import MapAccessibleSearch from '../components/MapAccessibleSearch.jsx';
 import MapDetailPanel from '../components/MapDetailPanel.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
+
+// Lazy, separate from the MapPage route chunk: WorldMap pulls in maplibre-gl
+// (the heaviest dependency in the app), and bundling it inline meant the
+// whole route chunk had to finish evaluating — maplibre included — before
+// React could paint even the static hero heading/paragraph above it.
+// Lighthouse traced ~4.4s of LCP "element render delay" to exactly this.
+// Splitting it into its own chunk lets the hero text and search box paint
+// immediately while the map streams in behind its own loading state.
+const WorldMap = lazy(() => import('../components/WorldMap.jsx'));
 
 // Same rotation every visitor gets this week (not per-visitor random), so
 // it reads as "this week's featured group" rather than a flickery reload
@@ -56,7 +64,9 @@ export default function MapPage() {
         <MapAccessibleSearch features={features} onSelect={setSelected} />
       </section>
       <div className="page-map">
-        <WorldMap selected={selected} onSelect={setSelected} onDataLoaded={setFeatures} />
+        <Suspense fallback={<p className="map-loading" role="status">Loading map&hellip;</p>}>
+          <WorldMap selected={selected} onSelect={setSelected} onDataLoaded={setFeatures} />
+        </Suspense>
       </div>
       <div ref={detailRef}>
         <MapDetailPanel selected={selected} featured={featured} onExploreFeatured={setSelected} />

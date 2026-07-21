@@ -1228,7 +1228,7 @@ a { color: var(--voyage-teal); }
 
 /* min-height (not just flex:1) so this never collapses when the detail
    panel below pushes total page content past the viewport height. */
-.page-map { flex: 1; display: flex; min-height: 70vh; }
+.page-map { flex: 1; display: flex; min-height: 70vh; position: relative; }
 .map-wrapper { position: relative; flex: 1; display: flex; }
 #map-container { width: 100%; flex: 1; }
 

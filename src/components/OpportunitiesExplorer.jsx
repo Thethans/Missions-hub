@@ -33,8 +33,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-16T22:01:32.788Z"
-// Opportunities: 1026 across 22 agencies
+// Generated: "2026-07-21T13:59:06.531Z"
+// Opportunities: 1059 across 21 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -183,6 +183,7 @@ function FilterChip({ label, active, count, onClick }) {
     <button
       type="button"
       className={`opp-filter-chip${active ? ' opp-filter-chip--active' : ''}`}
+      aria-pressed={active}
       onClick={onClick}
     >
       <span>{label}</span>
@@ -680,6 +681,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           type="button"
           className={`opp-filter-toggle${showFilters ? ' opp-filter-toggle--open' : ''}`}
           onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          aria-controls="opp-filters-panel"
         >
           <Funnel size={16} weight="bold" />
           Filters
@@ -720,7 +723,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
       {/* Expandable filter panel */}
       {showFilters && (
-        <div className="opp-filters">
+        <div className="opp-filters" id="opp-filters-panel">
           <div className="opp-filter-group">
             <span className="opp-filter-label">
               Agency

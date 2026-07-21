@@ -112,6 +112,7 @@ function FilterChip({ label, active, count, onClick }) {
     <button
       type="button"
       className={`opp-filter-chip${active ? ' opp-filter-chip--active' : ''}`}
+      aria-pressed={active}
       onClick={onClick}
     >
       <span>{label}</span>
@@ -609,6 +610,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           type="button"
           className={`opp-filter-toggle${showFilters ? ' opp-filter-toggle--open' : ''}`}
           onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          aria-controls="opp-filters-panel"
         >
           <Funnel size={16} weight="bold" />
           Filters
@@ -649,7 +652,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
       {/* Expandable filter panel */}
       {showFilters && (
-        <div className="opp-filters">
+        <div className="opp-filters" id="opp-filters-panel">
           <div className="opp-filter-group">
             <span className="opp-filter-label">
               Agency

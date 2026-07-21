@@ -71,7 +71,7 @@ describe('MapPage', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the map hero and legend without crashing', () => {
+  it('renders the map hero and legend without crashing', async () => {
     render(
       <MemoryRouter initialEntries={['/map']}>
         <MapPage />
@@ -79,7 +79,10 @@ describe('MapPage', () => {
     );
 
     expect(screen.getByRole('heading', { name: /the world map/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /unreached/i })).toBeInTheDocument();
+    // WorldMap is behind a Suspense boundary (its own chunk, split out so
+    // maplibre-gl doesn't block the hero text painting) — findBy* waits for
+    // it to resolve instead of asserting on the fallback.
+    expect(await screen.findByRole('button', { name: /unreached/i })).toBeInTheDocument();
   });
 
   it('shows a data-error message instead of crashing when the geojson fetch fails', async () => {

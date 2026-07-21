@@ -46,16 +46,19 @@ function HeroHeadline() {
   );
 }
 
-// Big, slow, staggered entrance for the hero — each line rises and clears
-// in sequence for a deliberate, cinematic open.
+// Staggered entrance for the hero — each line rises and clears in sequence
+// for a deliberate, cinematic open. Kept snappy (not the original 0.22s/1.4s
+// stagger/duration) because the hero tagline is this page's LCP element:
+// Lighthouse traced ~3.5s of "element render delay" directly to this
+// choreography holding it at opacity 0 while earlier siblings animated in.
 const heroContainer = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.22, delayChildren: 0.15 } }
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } }
 };
 
 const heroRise = {
   hidden: { opacity: 0, y: 48, scale: 0.985 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 1.4, ease: DRAMATIC } }
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.7, ease: DRAMATIC } }
 };
 
 export default function HomePage() {
