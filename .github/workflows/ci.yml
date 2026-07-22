@@ -26,3 +26,24 @@ jobs:
 
       - name: Build + prerender
         run: npm run build:prerender
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Runs against the live production URL (see lighthouserc.json), not a
+      # per-PR preview — so this tracks production's current standing rather
+      # than this PR's own changes in isolation. Accessibility is a hard
+      # gate (fails the job below 0.9); performance/best-practices/SEO only
+      # warn, since those move for reasons unrelated to any one PR (CDN
+      # variance, third-party data freshness) and shouldn't block merges.
+      - name: Lighthouse CI
+        run: npx lhci autorun

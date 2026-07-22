@@ -1,7 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import AdminPage from './AdminPage';
+
+// AdminPage now renders PrototypeBadge, which uses <Link> — needs a Router
+// context, hence MemoryRouter here (matching MapPage.test.jsx's pattern).
+function renderAdminPage() {
+  return render(
+    <MemoryRouter>
+      <AdminPage />
+    </MemoryRouter>
+  );
+}
 
 interface VerifiedMemberRow {
   id: string;
@@ -128,14 +139,14 @@ describe('AdminPage', () => {
   });
 
   it('shows a sign-in prompt for a guest, and never touches supabase', () => {
-    render(<AdminPage />);
+    renderAdminPage();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     expect(rpcSpy).not.toHaveBeenCalled();
   });
 
   it('shows a distinct message for pending-verification, with no admin content', () => {
     mockSession.authState = 'pending-verification';
-    render(<AdminPage />);
+    renderAdminPage();
     expect(screen.getByText(/isn't on the verified list yet/i)).toBeInTheDocument();
     expect(screen.queryByText(/access requests/i)).not.toBeInTheDocument();
   });
@@ -143,7 +154,7 @@ describe('AdminPage', () => {
   it('shows an access-denied message for a verified non-admin, and never loads member data', () => {
     mockSession.authState = 'verified';
     mockSession.isAdmin = false;
-    render(<AdminPage />);
+    renderAdminPage();
     expect(screen.getByText(/verified member, but not an admin/i)).toBeInTheDocument();
     expect(rpcSpy).not.toHaveBeenCalled();
   });
@@ -160,7 +171,7 @@ describe('AdminPage', () => {
       ];
       requestsData = [{ request_user_id: 'u1', email: 'newcomer@example.com', requested_at: '2026-02-01' }];
 
-      render(<AdminPage />);
+      renderAdminPage();
 
       expect(await screen.findByText('jane@church.org')).toBeInTheDocument();
       expect(screen.getByText('newcomer@example.com')).toBeInTheDocument();
@@ -168,26 +179,26 @@ describe('AdminPage', () => {
     });
 
     it('shows empty-state copy when both lists are empty', async () => {
-      render(<AdminPage />);
+      renderAdminPage();
       expect(await screen.findByText(/no verified members yet/i)).toBeInTheDocument();
       expect(screen.getByText(/no pending access requests/i)).toBeInTheDocument();
     });
 
     it('shows an error message if loading members fails', async () => {
       membersError = { message: 'boom' };
-      render(<AdminPage />);
+      renderAdminPage();
       expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't load the member list/i);
     });
 
     it('shows an error message if loading access requests fails', async () => {
       requestsError = { message: 'boom' };
-      render(<AdminPage />);
+      renderAdminPage();
       expect(await screen.findByText(/couldn't load access requests/i)).toBeInTheDocument();
     });
 
     it('adds a new member through the form and reloads the list', async () => {
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText(/no verified members yet/i);
 
       await user.type(screen.getByLabelText(/new member email/i), 'new@church.org');
@@ -199,7 +210,7 @@ describe('AdminPage', () => {
     it('shows an error if adding a member fails', async () => {
       insertError = { message: 'church_email already exists' };
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText(/no verified members yet/i);
 
       await user.type(screen.getByLabelText(/new member email/i), 'dupe@church.org');
@@ -219,7 +230,7 @@ describe('AdminPage', () => {
           revoked_at: '2026-01-01'
         }
       ];
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText('active@church.org');
 
       const revokeButtons = screen.getAllByRole('button', { name: /^revoke$/i });
@@ -233,7 +244,7 @@ describe('AdminPage', () => {
         { id: 'm1', church_email: 'jane@church.org', is_admin: false, verified_at: 't', revoked_at: null }
       ];
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText('jane@church.org');
 
       await user.click(screen.getByRole('button', { name: /^revoke$/i }));
@@ -247,7 +258,7 @@ describe('AdminPage', () => {
       ];
       vi.spyOn(window, 'confirm').mockReturnValue(true);
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText('jane@church.org');
 
       await user.click(screen.getByRole('button', { name: /^delete$/i }));
@@ -262,7 +273,7 @@ describe('AdminPage', () => {
       ];
       vi.spyOn(window, 'confirm').mockReturnValue(false);
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText('jane@church.org');
 
       await user.click(screen.getByRole('button', { name: /^delete$/i }));
@@ -273,7 +284,7 @@ describe('AdminPage', () => {
     it('accepts an access request, inserting it with the already-known user_id', async () => {
       requestsData = [{ request_user_id: 'u1', email: 'newcomer@example.com', requested_at: '2026-02-01' }];
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText('newcomer@example.com');
 
       await user.click(screen.getByRole('button', { name: /accept/i }));
@@ -290,7 +301,7 @@ describe('AdminPage', () => {
     it('denies an access request, inserting into the denylist and reloading only the requests', async () => {
       requestsData = [{ request_user_id: 'u1', email: 'spammer@example.com', requested_at: '2026-02-01' }];
       const user = userEvent.setup();
-      render(<AdminPage />);
+      renderAdminPage();
       await screen.findByText('spammer@example.com');
       rpcSpy.mockClear();
 

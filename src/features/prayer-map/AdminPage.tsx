@@ -4,6 +4,7 @@ import usePageMeta from '../../hooks/usePageMeta.js';
 import { supabase } from '../../supabaseClient.js';
 import useMemberSession from './hooks/useMemberSession';
 import MemberLoginSheet from './components/sheets/MemberLoginSheet';
+import PrototypeBadge from './components/PrototypeBadge';
 import './prayer-map.css';
 
 interface VerifiedMemberRow {
@@ -165,6 +166,7 @@ export default function AdminPage() {
         <section className="page-hero page-hero--compact">
           <h1>Verified members</h1>
           <p>Sign in to manage who can see confidential prayer requests.</p>
+          <PrototypeBadge />
         </section>
         <div className="pm-admin-body">
           <button type="button" className="pm-login-btn pm-admin-signin" onClick={() => setLoginOpen(true)}>
@@ -186,6 +188,7 @@ export default function AdminPage() {
         <section className="page-hero page-hero--compact">
           <h1>Verified members</h1>
           <p>Your email isn't on the verified list yet — an existing admin needs to add you first.</p>
+          <PrototypeBadge />
         </section>
       </div>
     );
@@ -197,6 +200,7 @@ export default function AdminPage() {
         <section className="page-hero page-hero--compact">
           <h1>Verified members</h1>
           <p>You're a verified member, but not an admin — you don't have access to manage this list.</p>
+          <PrototypeBadge />
         </section>
       </div>
     );
@@ -207,6 +211,7 @@ export default function AdminPage() {
       <section className="page-hero page-hero--compact">
         <h1>Verified members</h1>
         <p>Manage who can see confidential prayer requests on the missionary support map.</p>
+        <PrototypeBadge />
       </section>
 
       <div className="pm-admin-body">

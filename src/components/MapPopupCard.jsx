@@ -18,6 +18,30 @@ export default function MapPopupCard({ properties, onClose }) {
     closeRef.current?.focus();
   }, []);
 
+  // Escape is the standard way to dismiss any dialog — this one had no
+  // keyboard path to close it at all beyond tabbing to the ✕ button.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  // Restore focus to the search input on close, rather than capturing
+  // "whatever was previously focused": the search result button that
+  // opened this is unmounted (query clears, collapsing the results list)
+  // in the same React commit that mounts this card, so by the time any
+  // effect here could read document.activeElement, it's already decayed to
+  // <body> — there's nothing meaningful left to capture. The search input
+  // is the next-most-sensible, always-present place for a keyboard user's
+  // focus to land instead of being dropped to <body>.
+  useEffect(() => {
+    return () => {
+      document.getElementById('map-search-input')?.focus();
+    };
+  }, []);
+
   return (
     <div className="map-popup-card" role="dialog" aria-label={`${properties.name} profile`}>
       <button ref={closeRef} className="map-popup-close" onClick={onClose} aria-label="Close">✕</button>

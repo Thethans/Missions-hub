@@ -3,6 +3,7 @@ import usePageMeta from '../../hooks/usePageMeta.js';
 import PrayerWorldMap from './components/PrayerWorldMap';
 import MissionaryCard from './components/MissionaryCard';
 import MemberStatusBadge from './components/MemberStatusBadge';
+import PrototypeBadge from './components/PrototypeBadge';
 import IdleToast from './components/IdleToast';
 import MemberLoginSheet from './components/sheets/MemberLoginSheet';
 import PaySheet from './components/sheets/PaySheet';
@@ -66,6 +67,7 @@ export default function PrayerMapPage() {
           Every pin is a missionary serving overseas. Tap one to read their ministry, pray over
           their requests, and — if you feel led — support their monthly needs.
         </p>
+        <PrototypeBadge />
       </section>
 
       <div className="page-map">
