@@ -519,6 +519,95 @@ describe('OpportunitiesExplorer card CTAs (P2-C)', () => {
   }, TIMEOUT);
 });
 
+const SEARCH_SAMPLE = [
+  { id: 's-1', agency: 'Wycliffe Bible Translators', title: 'Linguistics Consultant', url: 'https://example.org/s1', location: 'Papua New Guinea', region: 'Sub-Saharan Africa', role_type: 'administration', term_length: null, description: 'Support Bible translation teams with linguistic analysis.' },
+  { id: 's-2', agency: 'ABWE', title: 'Nurse Practitioner', url: 'https://example.org/s2', location: 'Chad', region: 'Europe', role_type: 'medical', term_length: null, description: 'Provide medical care in a rural clinic.' },
+  { id: 's-3', agency: 'ABWE', title: 'Accountant', url: 'https://example.org/s3', location: 'Remote', region: 'Europe', role_type: 'administration', term_length: null, description: 'Manage agency finances and reporting.' }
+];
+
+describe('OpportunitiesExplorer fuzzy search', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(SEARCH_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('narrows to titles/agency/description/location matching the query', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Nurse Practitioner'));
+
+    await user.type(screen.getByPlaceholderText(/search opportunities/i), 'nurse');
+
+    await waitFor(() => {
+      expect(screen.getByText('Nurse Practitioner')).toBeInTheDocument();
+      expect(screen.queryByText('Linguistics Consultant')).not.toBeInTheDocument();
+      expect(screen.queryByText('Accountant')).not.toBeInTheDocument();
+    });
+  }, TIMEOUT);
+
+  it('still matches on a near-miss/misspelled query (fuzzy, not exact substring)', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Nurse Practitioner'));
+
+    await user.type(screen.getByPlaceholderText(/search opportunities/i), 'practicioner');
+
+    await waitFor(() => {
+      expect(screen.getByText('Nurse Practitioner')).toBeInTheDocument();
+    });
+  }, TIMEOUT);
+
+  it('narrows within the current filter selection rather than replacing it', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Nurse Practitioner'));
+
+    await user.click(screen.getByRole('button', { name: /filters/i }));
+    await user.click(screen.getByRole('button', { name: /^Wycliffe Bible Translators/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Linguistics Consultant')).toBeInTheDocument();
+      expect(screen.queryByText('Nurse Practitioner')).not.toBeInTheDocument();
+    });
+
+    // A search term matching an ABWE listing should stay empty, since the
+    // Wycliffe filter is still active and search only narrows within it.
+    await user.type(screen.getByPlaceholderText(/search opportunities/i), 'nurse');
+
+    await waitFor(() => {
+      expect(screen.getByText(/no opportunities match/i)).toBeInTheDocument();
+    });
+  }, TIMEOUT);
+
+  it('restores all results once the search box is cleared', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Nurse Practitioner'));
+
+    const searchBox = screen.getByPlaceholderText(/search opportunities/i);
+    await user.type(searchBox, 'nurse');
+    await waitFor(() => {
+      expect(screen.queryByText('Accountant')).not.toBeInTheDocument();
+    });
+
+    await user.clear(searchBox);
+
+    await waitFor(() => {
+      expect(screen.getByText('Nurse Practitioner')).toBeInTheDocument();
+      expect(screen.getByText('Linguistics Consultant')).toBeInTheDocument();
+      expect(screen.getByText('Accountant')).toBeInTheDocument();
+    });
+  }, TIMEOUT);
+});
+
 const LISTING_TYPE_SAMPLE = [
   { id: 'lt-1', agency: 'Avant Ministries', title: 'Serve in Albania — Avant Ministries', url: 'https://example.org/1', location: null, region: null, role_type: null, term_length: null, description: null, listing_type: 'category_page' },
   { id: 'lt-2', agency: 'ABWE', title: 'Accountant and Bookkeeper', url: 'https://example.org/2', location: null, region: null, role_type: null, term_length: null, description: null, listing_type: 'opening' }

@@ -10,8 +10,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import Fuse from 'fuse.js';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
+import useDebouncedValue from '../hooks/useDebouncedValue.js';
 
 // Reuses the quiz's own scoring output (src/data/scoreAgency.js via
 // MatchQuiz.jsx) rather than a second scoring system — CLAUDE.md is explicit
@@ -434,6 +436,41 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     [opportunities]
   );
 
+  // Debounced so a Fuse re-search over 1,000+ records runs once per pause in
+  // typing rather than on every keystroke — the list is already in memory
+  // (static snapshot fetched once on mount), so this is purely to avoid
+  // re-scoring the whole set on each keypress, not to avoid a network call.
+  const debouncedSearch = useDebouncedValue(search, 200);
+
+  // One Fuse index over the full in-memory list, rebuilt only when the
+  // opportunities set itself changes (initial load / live-fetch swap) — not
+  // on every keystroke or filter change. Weighted so a title/agency match
+  // ranks above a match buried in the description.
+  const searchIndex = useMemo(
+    () =>
+      new Fuse(opportunities || [], {
+        keys: [
+          { name: 'title', weight: 0.4 },
+          { name: 'agency', weight: 0.3 },
+          { name: 'location', weight: 0.15 },
+          { name: 'description', weight: 0.15 }
+        ],
+        threshold: 0.32,
+        ignoreLocation: true
+      }),
+    [opportunities]
+  );
+
+  // null = no active search (every row passes); otherwise the set of ids
+  // Fuse matched, so `search` can be intersected with every other filter via
+  // a plain Set.has() the same way agency/region/role/term already are —
+  // that's what makes search narrow within the current filter selection
+  // rather than replace it.
+  const matchedIds = useMemo(() => {
+    if (!debouncedSearch.trim()) return null;
+    return new Set(searchIndex.search(debouncedSearch).map((r) => r.item.id));
+  }, [searchIndex, debouncedSearch]);
+
   // Every filter dimension applied except `search`/`showSavedOnly` (which
   // apply everywhere) and whichever dimension `skipKey` names — that's what
   // makes a facet count reflect "how many results if I also picked this
@@ -447,15 +484,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     // entries that don't represent a real, distinct role.
     let out = list.filter((o) => o.listing_type !== 'category_page');
     if (showSavedOnly) out = out.filter((o) => savedIds.has(o.id));
-    if (search) {
-      const q = search.toLowerCase();
-      out = out.filter((o) =>
-        o.title.toLowerCase().includes(q) ||
-        (o.description || '').toLowerCase().includes(q) ||
-        o.agency.toLowerCase().includes(q) ||
-        (o.location || '').toLowerCase().includes(q)
-      );
-    }
+    if (matchedIds) out = out.filter((o) => matchedIds.has(o.id));
     if (skipKey !== 'agency' && selectedAgencies.size > 0) out = out.filter((o) => selectedAgencies.has(o.agency));
     if (skipKey !== 'region' && selectedRegions.size > 0) out = out.filter((o) => selectedRegions.has(o.region));
     if (skipKey !== 'role' && selectedRoles.size > 0) out = out.filter((o) => selectedRoles.has(o.role_type));
@@ -475,19 +504,19 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
   const agencyCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'agency'), 'agency'),
-    [opportunities, search, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
   );
   const regionCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'region'), 'region'),
-    [opportunities, search, selectedAgencies, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedAgencies, selectedRoles, selectedTerms, showSavedOnly, savedIds]
   );
   const roleCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'role'), 'role_type'),
-    [opportunities, search, selectedAgencies, selectedRegions, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedTerms, showSavedOnly, savedIds]
   );
   const termCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'term'), 'term_length'),
-    [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, showSavedOnly, savedIds]
   );
 
   const filtered = useMemo(() => {
@@ -504,7 +533,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     }
 
     return list;
-  }, [opportunities, search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
+  }, [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = useMemo(
