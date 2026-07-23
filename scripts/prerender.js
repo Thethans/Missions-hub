@@ -121,71 +121,37 @@ async function prerender() {
       });
   const page = await browser.newPage();
 
+  // One route (e.g. /map) legitimately takes longer than the others to
+  // reach 'load': it lazy-imports the ~800KB maplibre-gl chunk, and
+  // Vercel's build sandbox runs Chrome with --single-process (required for
+  // @sparticuz/chromium's serverless-compatible build), which is much
+  // slower per-operation than a normal multi-process Chrome. 45s gives that
+  // real slow case headroom; a stuck/hung page still gets caught well
+  // before it could threaten the build's own time budget.
+  const NAV_TIMEOUT = 45000;
+  const NAV_RETRIES = 2;
+  const failedRoutes = [];
+
   for (const route of ROUTES) {
     const url = `http://${HOST}:${PORT}${route}`;
     console.log(`  Prerendering ${route}…`);
 
-    // 'networkidle0' turned out to hang for the entire timeout in CI even
-    // with zero requests actually in flight (confirmed by instrumenting
-    // page.on('request'/'requestfinished'/'requestfailed') — nothing was
-    // pending, the wait condition itself just never resolved). That's a
-    // known flaky failure mode of networkidle0 specifically; 'load' (page
-    // + all its initial resources finished) is a simpler, more reliable
-    // lifecycle event, and the explicit data-loaded wait below is what
-    // actually guarantees the content we care about has rendered anyway.
-    await page.goto(url, { waitUntil: 'load', timeout: 30000 });
-
-    // Give in-flight fetches (opportunities/stats/geojson) a moment to
-    // resolve and re-render before capturing — 'load' alone doesn't wait
-    // for these, unlike the networkidle0 condition it replaces above.
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Wait for usePageMeta's useEffect to fire — detected by the og:url tag
-    // changing away from index.html's static initial value. That literal
-    // must match index.html's own hardcoded og:url (see the comment there);
-    // both need updating together when the domain changes (P3-A).
-    await page.waitForFunction(
-      () => document.title && document.title !== 'Fielded — Get to the Field' || document.querySelector('meta[property="og:url"]')?.content !== 'https://missions-hub.vercel.app/',
-      { timeout: 5000 }
-    ).catch(() => {
-      // Homepage keeps the default title — that's fine
-    });
-
-    // Embed whatever public data the page accumulated in window.__PRELOADED__
-    // (see src/utils/preloadedData.js) so a real visitor's first hydration
-    // render — which happens before any fetch effect resolves — already
-    // matches this snapshot instead of racing it.
-    //
-    // Also reset any element flagged data-hydration-reset: third-party
-    // libraries (MapLibre, cobe) attach real DOM children/attributes to
-    // these containers imperatively, well after React's own render. Those
-    // additions are meaningless as static markup (a WebGL canvas has no
-    // useful serialized form) and would otherwise show up in this capture
-    // as extra nodes React's own first render never produces, which is a
-    // structural hydration mismatch, not a data one — resetting them keeps
-    // the snapshot matching React's pre-effect output, same as an untouched
-    // container coming from a fresh mount.
-    await page.evaluate(() => {
-      const script = document.createElement('script');
-      script.id = '__PRELOADED_DATA__';
-      script.type = 'application/json';
-      script.textContent = JSON.stringify(window.__PRELOADED__ || {});
-      document.body.appendChild(script);
-
-      // Value is a space-separated list of what to strip: "children",
-      // "class", "style", or any other attribute name (e.g. "width").
-      // Elements only need "class"/"style" stripped when that particular
-      // attribute is applied imperatively by the third-party library and
-      // never appears in this element's own JSX — stripping an attribute
-      // React's own render DOES set would just create a new mismatch.
-      document.querySelectorAll('[data-hydration-reset]').forEach((el) => {
-        const parts = (el.getAttribute('data-hydration-reset') || '').split(/\s+/).filter(Boolean);
-        for (const part of parts) {
-          if (part === 'children') el.replaceChildren();
-          else el.removeAttribute(part);
-        }
-      });
-    });
+    try {
+      await withRetries(NAV_RETRIES, () => prerenderRoute(page, url, NAV_TIMEOUT));
+    } catch (err) {
+      // A single route's environment flake (slow network, CI CPU
+      // contention) used to take the whole build down with it — which
+      // blocked every OTHER route's content (including plain page-copy
+      // changes with nothing to do with the failing route) from ever
+      // reaching production. Warn loudly and move on instead: that route
+      // just falls back to the generic index.html <title>/meta for direct
+      // hits and crawlers (same graceful degradation already documented
+      // above for a route missing from ROUTES entirely), while every
+      // other route still ships.
+      console.error(`  ✗ ${route} failed after ${NAV_RETRIES} attempt(s), skipping:`, err.message);
+      failedRoutes.push(route);
+      continue;
+    }
 
     const html = await page.content();
 
@@ -202,7 +168,89 @@ async function prerender() {
 
   await browser.close();
   server.close();
-  console.log(`Prerendered ${ROUTES.length} routes.`);
+
+  if (failedRoutes.length > 0) {
+    console.warn(`Prerendered ${ROUTES.length - failedRoutes.length}/${ROUTES.length} routes — failed: ${failedRoutes.join(', ')}`);
+  } else {
+    console.log(`Prerendered ${ROUTES.length} routes.`);
+  }
+}
+
+async function withRetries(attempts, fn) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      console.warn(`    attempt ${i}/${attempts} failed: ${err.message}`);
+    }
+  }
+  throw lastErr;
+}
+
+async function prerenderRoute(page, url, navTimeout) {
+  // 'networkidle0' turned out to hang for the entire timeout in CI even
+  // with zero requests actually in flight (confirmed by instrumenting
+  // page.on('request'/'requestfinished'/'requestfailed') — nothing was
+  // pending, the wait condition itself just never resolved). That's a
+  // known flaky failure mode of networkidle0 specifically; 'load' (page
+  // + all its initial resources finished) is a simpler, more reliable
+  // lifecycle event, and the explicit data-loaded wait below is what
+  // actually guarantees the content we care about has rendered anyway.
+  await page.goto(url, { waitUntil: 'load', timeout: navTimeout });
+
+  // Give in-flight fetches (opportunities/stats/geojson) a moment to
+  // resolve and re-render before capturing — 'load' alone doesn't wait
+  // for these, unlike the networkidle0 condition it replaces above.
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  // Wait for usePageMeta's useEffect to fire — detected by the og:url tag
+  // changing away from index.html's static initial value. That literal
+  // must match index.html's own hardcoded og:url (see the comment there);
+  // both need updating together when the domain changes (P3-A).
+  await page.waitForFunction(
+    () => document.title && document.title !== 'Fielded — Get to the Field' || document.querySelector('meta[property="og:url"]')?.content !== 'https://missions-hub.vercel.app/',
+    { timeout: 5000 }
+  ).catch(() => {
+    // Homepage keeps the default title — that's fine
+  });
+
+  // Embed whatever public data the page accumulated in window.__PRELOADED__
+  // (see src/utils/preloadedData.js) so a real visitor's first hydration
+  // render — which happens before any fetch effect resolves — already
+  // matches this snapshot instead of racing it.
+  //
+  // Also reset any element flagged data-hydration-reset: third-party
+  // libraries (MapLibre, cobe) attach real DOM children/attributes to
+  // these containers imperatively, well after React's own render. Those
+  // additions are meaningless as static markup (a WebGL canvas has no
+  // useful serialized form) and would otherwise show up in this capture
+  // as extra nodes React's own first render never produces, which is a
+  // structural hydration mismatch, not a data one — resetting them keeps
+  // the snapshot matching React's pre-effect output, same as an untouched
+  // container coming from a fresh mount.
+  await page.evaluate(() => {
+    const script = document.createElement('script');
+    script.id = '__PRELOADED_DATA__';
+    script.type = 'application/json';
+    script.textContent = JSON.stringify(window.__PRELOADED__ || {});
+    document.body.appendChild(script);
+
+    // Value is a space-separated list of what to strip: "children",
+    // "class", "style", or any other attribute name (e.g. "width").
+    // Elements only need "class"/"style" stripped when that particular
+    // attribute is applied imperatively by the third-party library and
+    // never appears in this element's own JSX — stripping an attribute
+    // React's own render DOES set would just create a new mismatch.
+    document.querySelectorAll('[data-hydration-reset]').forEach((el) => {
+      const parts = (el.getAttribute('data-hydration-reset') || '').split(/\s+/).filter(Boolean);
+      for (const part of parts) {
+        if (part === 'children') el.replaceChildren();
+        else el.removeAttribute(part);
+      }
+    });
+  });
 }
 
 prerender().catch((err) => {
