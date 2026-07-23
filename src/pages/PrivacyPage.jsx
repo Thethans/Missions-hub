@@ -199,7 +199,7 @@ export default function PrivacyPage() {
               <tr><td><strong>Complaint</strong></td><td>Lodge a complaint with a supervisory authority</td></tr>
             </tbody>
           </table>
-          <p>To exercise any of these rights, contact us at <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a>. We will respond within 30 days (or within the timeframe required by applicable law).</p>
+          <p>To exercise any of these rights, contact us at <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a>. We will respond within 30 days (or within the timeframe required by applicable law).</p>
           <p>We will not discriminate against you for exercising any of these rights.</p>
         </section>
 
@@ -224,7 +224,7 @@ export default function PrivacyPage() {
             <li><strong>Right to Opt-Out of Sale/Sharing:</strong> Not applicable — we do not sell or share personal information.</li>
             <li><strong>Right to Non-Discrimination:</strong> We will not discriminate against you for exercising your CCPA/CPRA rights.</li>
           </ul>
-          <p>To exercise these rights, contact us at <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a>.</p>
+          <p>To exercise these rights, contact us at <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a>.</p>
 
           <h3>9.4 Authorized Agents</h3>
           <p>You may designate an authorized agent to submit requests on your behalf. The agent must provide written authorization from you, and we may require you to verify your identity directly.</p>
@@ -246,7 +246,7 @@ export default function PrivacyPage() {
         <section id="s11">
           <h2>11. Children's Privacy</h2>
           <p>The Service is not directed at children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal data from a child under 13 without parental consent, we will take steps to delete that information promptly.</p>
-          <p>If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a>.</p>
+          <p>If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a>.</p>
         </section>
 
         <section id="s12">
@@ -286,7 +286,7 @@ export default function PrivacyPage() {
 
           <h3>15.1 Contact Us</h3>
           <p>For questions, concerns, or requests regarding this Privacy Policy or your personal data, contact us at:</p>
-          <p><strong>Email:</strong> <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a></p>
+          <p><strong>Email:</strong> <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a></p>
 
           <h3>15.2 Complaints</h3>
           <p>If you believe your data protection rights have been violated, you have the right to lodge a complaint with:</p>

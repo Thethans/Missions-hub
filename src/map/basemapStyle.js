@@ -20,7 +20,14 @@ const basemapStyle = {
   version: 8,
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   sources: {
-    maplibre: { type: 'vector', url: TILE_SOURCE_URL }
+    // Attribution kept explicit here since we hand-build this style rather than
+    // fetching demotiles' own style.json (which carries it, if blank, upstream) —
+    // MapLibre's default AttributionControl reads this straight off the source.
+    maplibre: {
+      type: 'vector',
+      url: TILE_SOURCE_URL,
+      attribution: '© <a href="https://maplibre.org/" target="_blank" rel="noreferrer">MapLibre</a>'
+    }
   },
   layers: [
     {

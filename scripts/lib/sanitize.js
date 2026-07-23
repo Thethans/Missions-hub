@@ -77,6 +77,19 @@ export function isBoilerplate(text) {
   return BOILERPLATE_DENYLIST.some((re) => re.test(trimmed));
 }
 
+// Above this length, a scraped description reads as the agency's own
+// original recruiting copy (multiple sentences, its own phrasing) rather
+// than a short factual snippet — reproducing that much of it verbatim is a
+// copyright risk, so the pipeline falls back to a generated one-liner
+// instead of truncating-and-keeping it. Roughly 15–20 words, in line with
+// how short a quote of someone else's writing has to be to read as a
+// snippet rather than a reproduction.
+export const MAX_QUOTED_DESCRIPTION_LENGTH = 100;
+
+export function isTooLongToQuote(text) {
+  return Boolean(text) && text.length > MAX_QUOTED_DESCRIPTION_LENGTH;
+}
+
 export function generateFallbackDescription(category, location) {
   const what = category ? `A ${category} opportunity` : 'An opportunity';
   const where = location ? ` based in ${location}` : '';
@@ -299,7 +312,7 @@ export function sanitizeOpportunity(opp, referenceDate = new Date()) {
   const deduped = dedupeTitleFromDescription(opp.title, opp.description, opp.agency);
   const contactStripped = stripContactBlocks(deduped);
   const stale_flag = isStale(`${opp.title} ${contactStripped || ''}`, referenceDate);
-  const description_full = isBoilerplate(contactStripped)
+  const description_full = (isBoilerplate(contactStripped) || isTooLongToQuote(contactStripped))
     ? generateFallbackDescription(category, opp.location)
     : contactStripped;
   const description = truncateDescription(description_full, 200);

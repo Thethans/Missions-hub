@@ -157,7 +157,7 @@ export default function TermsPage() {
         <section id="s12">
           <h2>12. Termination</h2>
           <h3>12.1 By You</h3>
-          <p>You may stop using the Service at any time. If you wish to delete your account and associated data, contact us at <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a>.</p>
+          <p>You may stop using the Service at any time. If you wish to delete your account and associated data, contact us at <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a>.</p>
 
           <h3>12.2 By Us</h3>
           <p>We reserve the right to suspend or terminate your access to the Service at any time, with or without cause and with or without notice, including for any violation of these Terms. Upon termination, your right to use the Service will immediately cease.</p>
@@ -172,7 +172,7 @@ export default function TermsPage() {
           <p>These Terms shall be governed by and construed in accordance with the laws of the State of South Carolina, United States, without regard to its conflict-of-law provisions.</p>
 
           <h3>13.2 Informal Resolution</h3>
-          <p>Before filing any formal legal action, you agree to first contact us at <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a> and attempt to resolve the dispute informally for at least thirty (30) days.</p>
+          <p>Before filing any formal legal action, you agree to first contact us at <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a> and attempt to resolve the dispute informally for at least thirty (30) days.</p>
 
           <h3>13.3 Jurisdiction</h3>
           <p>If informal resolution is unsuccessful, any legal action or proceeding shall be brought exclusively in the state or federal courts located in South Carolina, United States, and you consent to the personal jurisdiction of such courts.</p>
@@ -196,7 +196,7 @@ export default function TermsPage() {
         <section id="s17">
           <h2>17. Contact Information</h2>
           <p>For questions about these Terms, contact us at:</p>
-          <p><strong>Email:</strong> <a href="mailto:ethansantana2004@gmail.com">ethansantana2004@gmail.com</a></p>
+          <p><strong>Email:</strong> <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a></p>
         </section>
       </div>
     </div>

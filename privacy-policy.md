@@ -163,7 +163,7 @@ Depending on your location, you may have some or all of the following rights reg
 | **Withdraw consent** | Withdraw consent at any time where processing is based on consent |
 | **Complaint** | Lodge a complaint with a supervisory authority |
 
-To exercise any of these rights, contact us at [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com). We will respond within 30 days (or within the timeframe required by applicable law).
+To exercise any of these rights, contact us at [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com). We will respond within 30 days (or within the timeframe required by applicable law).
 
 We will not discriminate against you for exercising any of these rights.
 
@@ -190,7 +190,7 @@ We do **not** sell your personal information. We do **not** share your personal 
 - **Right to Opt-Out of Sale/Sharing**: Not applicable — we do not sell or share personal information.
 - **Right to Non-Discrimination**: We will not discriminate against you for exercising your CCPA/CPRA rights.
 
-To exercise these rights, contact us at [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com).
+To exercise these rights, contact us at [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com).
 
 ### 9.4 Authorized Agents
 
@@ -212,7 +212,7 @@ No method of transmission over the Internet or electronic storage is 100% secure
 
 The Service is not directed at children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal data from a child under 13 without parental consent, we will take steps to delete that information promptly.
 
-If you are a parent or guardian and believe your child has provided us with personal information, please contact us at [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com).
+If you are a parent or guardian and believe your child has provided us with personal information, please contact us at [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com).
 
 ## 12. International Data Transfers
 
@@ -247,7 +247,7 @@ Your continued use of the Service after any changes constitutes acceptance of th
 
 For questions, concerns, or requests regarding this Privacy Policy or your personal data, contact us at:
 
-**Email:** [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com)
+**Email:** [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com)
 
 ### 15.2 Complaints
 

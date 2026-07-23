@@ -4,6 +4,7 @@ import {
   dedupeTitleFromDescription,
   truncateDescription,
   isBoilerplate,
+  isTooLongToQuote,
   generateFallbackDescription,
   isStale,
   isNearDuplicateTitle,
@@ -96,6 +97,12 @@ describe('isBoilerplate / generateFallbackDescription', () => {
 
   it('does not flag a normal, substantive description', () => {
     expect(isBoilerplate('Support church planting teams across Southeast Asia with logistics and hospitality.')).toBe(false);
+  });
+
+  it('flags a description longer than the quotable snippet length', () => {
+    expect(isTooLongToQuote('Support church planting teams across Southeast Asia with logistics and hospitality.')).toBe(false);
+    const longRecruitingCopy = 'What? Though this is primarily a support role, you’ll also need an understanding of recruitment and be able to complete some light work in marketing. Why? Help support/facilitate the training of the team.';
+    expect(isTooLongToQuote(longRecruitingCopy)).toBe(true);
   });
 
   it('generates a one-liner from category + location', () => {
@@ -272,6 +279,21 @@ describe('sanitizeOpportunity (full pipeline, one record)', () => {
     );
     expect(opportunity.role_type).toBe('administration');
     expect(categoryReassigned).toEqual({ agency: 'Ethnos360', title: 'Finance Manager', from: 'media/creative', to: 'administration' });
+  });
+
+  it('replaces long scraped recruiting copy with a generated one-liner (copyright: no verbatim reproduction of agency prose)', () => {
+    const opp = {
+      agency: 'Christar',
+      title: 'Supporting the Team: Philippines',
+      description: 'What? Though this is primarily a support role, you’ll also need an understanding of recruitment and be able to complete some light work in marketing. Why? Help support/facilitate the training of the team.',
+      role_type: 'administration',
+      location: 'Philippines'
+    };
+    const { opportunity } = sanitizeOpportunity(opp, new Date('2026-07-16'));
+    expect(opportunity.description_full).toBe(
+      'A administration opportunity based in Philippines. Reach out to the agency directly for full role details.'
+    );
+    expect(opportunity.description_full).not.toContain('recruitment');
   });
 
   it('flags a listing mentioning a date over 12 months old', () => {

@@ -83,12 +83,35 @@ const SECTIONS = [
   {
     title: 'What this is not',
     body: (
-      <p>
-        Fielded is not affiliated with, and does not receive any benefit from, any sending
-        agency it lists. It doesn't place missionaries, guarantee a fit, or replace a real
-        conversation with an agency's own recruiting team — it's a starting point for that
-        conversation, not the end of it.
-      </p>
+      <>
+        <p>
+          Fielded is not affiliated with, and does not receive any benefit from, any sending
+          agency it lists. It doesn't place missionaries, guarantee a fit, or replace a real
+          conversation with an agency's own recruiting team — it's a starting point for that
+          conversation, not the end of it.
+        </p>
+        <p>
+          Plainly: no agency pays to be listed, ranked higher, or shown as a better match. The
+          quiz scores every agency the same way, using only what that agency has published
+          publicly.
+        </p>
+      </>
+    )
+  },
+  {
+    title: 'Who runs Fielded',
+    body: (
+      <>
+        <p>
+          Fielded is built and maintained by Ted Jones, a pen name used for security rather than
+          a real name, working independently and not on behalf of any sending agency or company.
+        </p>
+        <p>
+          Questions, corrections, or something looks wrong: email{' '}
+          <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a> for any
+          inquiries.
+        </p>
+      </>
     )
   }
 ];

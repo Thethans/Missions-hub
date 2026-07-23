@@ -142,7 +142,7 @@ You agree to defend, indemnify, and hold harmless Fielded and its operators, con
 
 ### 12.1 By You
 
-You may stop using the Service at any time. If you wish to delete your account and associated data, contact us at [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com).
+You may stop using the Service at any time. If you wish to delete your account and associated data, contact us at [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com).
 
 ### 12.2 By Us
 
@@ -160,7 +160,7 @@ These Terms shall be governed by and construed in accordance with the laws of th
 
 ### 13.2 Informal Resolution
 
-Before filing any formal legal action, you agree to first contact us at [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com) and attempt to resolve the dispute informally for at least thirty (30) days.
+Before filing any formal legal action, you agree to first contact us at [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com) and attempt to resolve the dispute informally for at least thirty (30) days.
 
 ### 13.3 Jurisdiction
 
@@ -182,7 +182,7 @@ These Terms, together with the [Privacy Policy](/privacy), constitute the entire
 
 For questions about these Terms, contact us at:
 
-**Email:** [ethansantana2004@gmail.com](mailto:ethansantana2004@gmail.com)
+**Email:** [emailfieldedhub@gmail.com](mailto:emailfieldedhub@gmail.com)
 
 ---
 
