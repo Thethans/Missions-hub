@@ -33,8 +33,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-24T14:48:41.580Z"
-// Opportunities: 851 across 21 agencies
+// Generated: "2026-07-24T17:03:57.228Z"
+// Opportunities: 1063 across 27 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';

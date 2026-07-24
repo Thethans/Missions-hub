@@ -20,6 +20,13 @@ import ReachBeyondScraper from './reachbeyond.js';
 import GlobalPartnersScraper from './globalpartners.js';
 import SergeScraper from './serge.js';
 import GEMScraper from './gem.js';
+import WECScraper from './wec.js';
+import FrontiersScraper from './frontiers.js';
+import OMScraper from './om.js';
+import InterserveScraper from './interserve.js';
+import BaptistMidMissionsScraper from './bmm.js';
+import GFAScraper from './gfa.js';
+import TeamExpansionScraper from './teamexpansion.js';
 
 export const SCRAPERS = {
   imb:            new IMBScraper(),
@@ -44,10 +51,17 @@ export const SCRAPERS = {
   globalpartners: new GlobalPartnersScraper(),
   serge:          new SergeScraper(),
   gem:            new GEMScraper(),
+  wec:            new WECScraper(),
+  frontiers:      new FrontiersScraper(),
+  om:             new OMScraper(),
+  interserve:     new InterserveScraper(),
+  bmm:            new BaptistMidMissionsScraper(),
+  gfa:            new GFAScraper(),
+  teamexpansion:  new TeamExpansionScraper(),
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);
 
 export const BROWSER_SCRAPERS = new Set([
-  'imb', 'pioneers', 'ywam', 'worldventure', 'reachglobal',
+  'imb', 'pioneers', 'ywam', 'worldventure', 'reachglobal', 'om', 'bmm',
 ]);
