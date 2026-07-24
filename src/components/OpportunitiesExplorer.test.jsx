@@ -517,6 +517,127 @@ describe('OpportunitiesExplorer card CTAs (P2-C)', () => {
     expect(detailsLinks.length).toBeGreaterThan(0);
     expect(detailsLinks[0].textContent).not.toMatch(/Inquire/);
   }, TIMEOUT);
+
+  it('gives the search box an accessible name beyond just its placeholder', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Field Role'));
+
+    expect(screen.getByRole('searchbox', { name: 'Search opportunities' })).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('moves focus into the inquiry modal on open, marks it aria-modal, and returns focus to the trigger on close', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Field Role'));
+
+    const trigger = screen.getByRole('button', { name: 'Inquire with ABWE' });
+    await user.click(trigger);
+
+    const dialog = screen.getByRole('dialog', { name: /send inquiry/i });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  }, TIMEOUT);
+
+  it('wraps Tab focus at the edges of the inquiry modal instead of escaping into the page behind it', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Field Role'));
+
+    await user.click(screen.getByRole('button', { name: 'Inquire with ABWE' }));
+    const closeButton = screen.getByRole('button', { name: 'Close' });
+    expect(closeButton).toHaveFocus();
+
+    // Shift+Tab from the first focusable element (Close) should wrap to the
+    // last one (Send inquiry), not escape to whatever's behind the modal.
+    await user.tab({ shift: true });
+    expect(screen.getByRole('button', { name: /send inquiry/i })).toHaveFocus();
+
+    await user.tab();
+    expect(closeButton).toHaveFocus();
+  }, TIMEOUT);
+});
+
+// Real fields, real scraped description — a fully-detailed listing.
+// Same literal fallback text sanitize.js's generateFallbackDescription()
+// produces for a stub — this is what marks a listing "thin" client-side.
+const THIN_SAMPLE = [
+  {
+    id: 'thin-1',
+    agency: 'ABWE',
+    title: 'Registered Nurse',
+    url: 'https://example.org/detailed',
+    location: 'Chad',
+    region: null,
+    role_type: 'medical',
+    term_length: 'career/long-term',
+    description: 'Provide clinical care in a rural mission hospital, supporting a small resident medical team.'
+  },
+  {
+    id: 'thin-2',
+    agency: 'ABWE',
+    title: 'Lead Mason',
+    url: 'https://example.org/stub',
+    location: null,
+    region: null,
+    role_type: null,
+    term_length: null,
+    description: 'A construction opportunity. Reach out to the agency directly for full role details.'
+  },
+  {
+    id: 'thin-3',
+    agency: 'ABWE',
+    title: 'No Description At All',
+    url: 'https://example.org/no-desc',
+    location: 'Togo',
+    region: null,
+    role_type: 'administration',
+    term_length: 'short-term (under 2 years)',
+    description: null
+  }
+];
+
+describe('OpportunitiesExplorer completeness indicator', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(THIN_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('does not flag a listing with a real scraped description', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Registered Nurse'));
+
+    const card = screen.getByText('Registered Nurse').closest('.opp-card');
+    expect(within(card).queryByText(/few details/i)).not.toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('flags a listing whose description is the generated fallback one-liner', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Lead Mason'));
+
+    const card = screen.getByText('Lead Mason').closest('.opp-card');
+    expect(within(card).getByText(/few details/i)).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('flags a listing with no description at all, even with other fields present', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('No Description At All'));
+
+    const card = screen.getByText('No Description At All').closest('.opp-card');
+    expect(within(card).getByText(/few details/i)).toBeInTheDocument();
+  }, TIMEOUT);
 });
 
 const SEARCH_SAMPLE = [

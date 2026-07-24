@@ -11,6 +11,9 @@ import {
   collapseNearDuplicates,
   validateCategory,
   classifyListingType,
+  isNonOpportunityTitle,
+  validateOpportunity,
+  partitionByValidity,
   sanitizeOpportunity,
   sanitizeOpportunities
 } from './sanitize.js';
@@ -246,6 +249,126 @@ describe('classifyListingType', () => {
       title: 'Serge Medical Missions Coordinator',
       description: 'A real individual role.'
     })).toBe('opening');
+  });
+});
+
+describe('isNonOpportunityTitle', () => {
+  // Real observed failure: this exact title was scraped by ReachGlobal
+  // (EFCA)'s generic card-selector scrape as if it were a listing.
+  it('flags the real EFCA "Presidential Nominee" announcement', () => {
+    expect(isNonOpportunityTitle('2027 EFCA Presidential Nominee: Rev. Carlton P. Harris')).toBe(true);
+  });
+
+  it('flags other leadership/personnel-announcement patterns', () => {
+    expect(isNonOpportunityTitle('Jane Doe Elected to Board of Directors')).toBe(true);
+    expect(isNonOpportunityTitle('In Memoriam: Founder Passes Away')).toBe(true);
+    expect(isNonOpportunityTitle('Ministry Celebrates 50 Years of Service')).toBe(true);
+  });
+
+  it('does not flag real role titles, including ones with "director" or "board" in a job sense', () => {
+    expect(isNonOpportunityTitle('Pilot — Wycliffe')).toBe(false);
+    expect(isNonOpportunityTitle('Regional Director of Operations')).toBe(false);
+    expect(isNonOpportunityTitle('Church Planter')).toBe(false);
+  });
+});
+
+describe('validateOpportunity / partitionByValidity', () => {
+  // Real observed failure: a news/announcement page scraped as if it were
+  // a listing because it shared card-shaped markup with real openings. It
+  // fails on two independent signals: the title itself reads as
+  // leadership/personnel news, and there is nothing structured beyond that
+  // title (checked against the live table — see sanitize.js's comment on
+  // why "nothing at all" rather than "missing location AND term" is the
+  // actual reject bar: requiring both would reject 63% of real listings).
+  it('rejects the real EFCA "Presidential Nominee" announcement on both signals', () => {
+    const opp = {
+      agency: 'ReachGlobal (EFCA)',
+      title: '2027 EFCA Presidential Nominee: Rev. Carlton P. Harris',
+      url: 'https://www.efca.org/presidential-nominee',
+      location: null,
+      region: null,
+      role_type: null,
+      term_length: null,
+      listing_type: 'opening'
+    };
+    const { valid, reasons } = validateOpportunity(opp);
+    expect(valid).toBe(false);
+    expect(reasons).toContain('title matches a known non-opportunity pattern (e.g. leadership/personnel announcement)');
+    expect(reasons).toContain('no location, region, role type, or commitment length — nothing structured beyond a title');
+  });
+
+  it('accepts a real opening with a title, a location, and a term length', () => {
+    const opp = {
+      title: 'Registered Nurse',
+      location: 'Kenya',
+      region: null,
+      role_type: 'medical',
+      term_length: 'career/long-term',
+      listing_type: 'opening'
+    };
+    expect(validateOpportunity(opp)).toEqual({ valid: true, reasons: [] });
+  });
+
+  // Real observed case: most agencies don't expose per-listing location or
+  // term length even for genuinely distinct real roles — an inferred
+  // role_type alone (from the title/description, same as every scraper
+  // already attempts) is enough to keep it out of the reject pile. It still
+  // surfaces to users as a thin/stub listing client-side (isThinListing),
+  // just isn't dropped from ingestion entirely.
+  it('accepts a real role with only role_type set (no location, no term length)', () => {
+    const opp = {
+      title: 'Pilot — Wycliffe',
+      location: null,
+      region: null,
+      role_type: 'aviation/logistics',
+      term_length: null,
+      listing_type: 'opening'
+    };
+    expect(validateOpportunity(opp).valid).toBe(true);
+  });
+
+  it('rejects a missing/too-short title even with other fields present', () => {
+    const opp = { title: 'Hi', location: 'Kenya', term_length: 'career/long-term', listing_type: 'opening' };
+    const { valid, reasons } = validateOpportunity(opp);
+    expect(valid).toBe(false);
+    expect(reasons).toContain('missing or too-short title');
+  });
+
+  it('exempts category_page rows from the structured-fields requirement', () => {
+    const opp = {
+      title: 'Serve in Albania',
+      location: null,
+      region: null,
+      role_type: null,
+      term_length: null,
+      listing_type: 'category_page'
+    };
+    expect(validateOpportunity(opp)).toEqual({ valid: true, reasons: [] });
+  });
+
+  it('still requires category_page rows to have a real title', () => {
+    const opp = { title: 'Hi', listing_type: 'category_page' };
+    expect(validateOpportunity(opp).valid).toBe(false);
+  });
+
+  it('partitions a mixed batch into valid and rejected, keeping the original record on rejects', () => {
+    const good = { title: 'Nurse Practitioner', location: 'Uganda', role_type: 'medical', term_length: 'career/long-term', listing_type: 'opening' };
+    const bad = {
+      title: '2027 EFCA Presidential Nominee: Rev. Carlton P. Harris',
+      location: null,
+      region: null,
+      role_type: null,
+      term_length: null,
+      listing_type: 'opening'
+    };
+    const { valid, rejected } = partitionByValidity([good, bad]);
+    expect(valid).toEqual([good]);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].opportunity).toBe(bad);
+    expect(rejected[0].reasons).toEqual([
+      'title matches a known non-opportunity pattern (e.g. leadership/personnel announcement)',
+      'no location, region, role type, or commitment length — nothing structured beyond a title'
+    ]);
   });
 });
 

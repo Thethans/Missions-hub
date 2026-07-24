@@ -16,7 +16,7 @@
 
 import 'dotenv/config';
 import { supabase } from './lib/supabase-client.js';
-import { sanitizeOpportunities } from './lib/sanitize.js';
+import { sanitizeOpportunities, partitionByValidity } from './lib/sanitize.js';
 
 const PAGE_SIZE = 1000;
 
@@ -57,6 +57,20 @@ async function run() {
     console.log(`  … and ${categoryReassignments.length - 25} more`);
   }
 
+  // Existing rows that predate the minimum-viable-fields validation (see
+  // sanitize.js's validateOpportunity — a real observed case was a
+  // ReachGlobal/EFCA presidential-nominee announcement scraped as if it
+  // were a listing) get soft-deactivated the same way a merged near-dupe
+  // does: `active: false`, never deleted, so nothing here is irreversible.
+  const { rejected } = partitionByValidity(sanitized);
+  console.log(`Minimum-viable-fields check: ${rejected.length} existing row(s) fail it and will be deactivated.`);
+  for (const { opportunity, reasons } of rejected.slice(0, 25)) {
+    console.log(`  ✗ [${opportunity.agency}] "${opportunity.title}" — ${reasons.join(', ')}`);
+  }
+  if (rejected.length > 25) {
+    console.log(`  … and ${rejected.length - 25} more`);
+  }
+
   if (dryRun) {
     console.log('\nDry run — no writes performed.');
     return;
@@ -92,8 +106,18 @@ async function run() {
     if (error) console.error('Failed to deactivate merged near-dupe rows:', error.message);
   }
 
+  const rejectedIds = rejected.map(({ opportunity }) => opportunity.id).filter(Boolean);
+  if (rejectedIds.length > 0) {
+    const { error } = await supabase
+      .from('opportunities')
+      .update({ active: false })
+      .in('id', rejectedIds);
+    if (error) console.error('Failed to deactivate rows failing minimum-viable-fields:', error.message);
+  }
+
   console.log(`\nUpdated ${updated} rows${failed > 0 ? `, ${failed} failed` : ''}.`);
   console.log(`Deactivated ${mergedIds.length} merged near-dupe rows.`);
+  console.log(`Deactivated ${rejectedIds.length} rows failing minimum-viable-fields.`);
   console.log('Backfill complete.');
 }
 

@@ -19,10 +19,11 @@ import winston from 'winston';
 import { SCRAPERS, SCRAPER_KEYS, BROWSER_SCRAPERS } from './lib/scrapers/index.js';
 import { dedupeOpportunities } from './lib/scrapers/base.js';
 import { closeBrowser } from './lib/scrapers/browser.js';
-import { sanitizeOpportunities } from './lib/sanitize.js';
+import { sanitizeOpportunities, partitionByValidity } from './lib/sanitize.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, '.scraper-cache.json');
+const REJECTED_PATH = join(__dirname, '.rejected-opportunities.json');
 const FRESHNESS_HOURS = 24;
 const STATIC_CONCURRENCY = 6;
 const BROWSER_CONCURRENCY = 2;
@@ -93,6 +94,33 @@ function isFresh(cache, key) {
   if (!entry) return false;
   const age = (Date.now() - entry.ts) / (1000 * 60 * 60);
   return age < FRESHNESS_HOURS;
+}
+
+// ── Rejected-entry log ───────────────────────────────────────────────
+
+// Persists every entry a scrape rejected for lacking minimum viable fields
+// (see sanitize.js's validateOpportunity) so a human can spot-check the
+// filter afterward — overwritten per agency each run rather than appended
+// forever, so it always reflects the most recent scrape rather than
+// accumulating stale entries a later re-scrape already fixed.
+function recordRejected(key, rejected) {
+  let log = {};
+  try {
+    log = JSON.parse(readFileSync(REJECTED_PATH, 'utf8'));
+  } catch {
+    log = {};
+  }
+  log[key] = {
+    checkedAt: new Date().toISOString(),
+    entries: rejected.map(({ opportunity, reasons }) => ({
+      agency: opportunity.agency,
+      title: opportunity.title,
+      url: opportunity.url,
+      reasons
+    }))
+  };
+  mkdirSync(dirname(REJECTED_PATH), { recursive: true });
+  writeFileSync(REJECTED_PATH, JSON.stringify(log, null, 2));
 }
 
 // ── Supabase (lazy — skipped in dry-run if env vars missing) ──────────
@@ -189,13 +217,6 @@ async function scrapeOne(key, supabase, dryRun, cache) {
 
   cache[key] = { ts: Date.now(), count: opportunities.length };
 
-  if (dryRun) {
-    for (const opp of opportunities) {
-      logger.info(`  [dry] ${opp.title} — ${opp.url}`);
-    }
-    return { key, error: false, scraped: opportunities.length, upserted: 0, deactivated: 0 };
-  }
-
   if (opportunities.length === 0) {
     return { key, error: false, scraped: 0, upserted: 0, deactivated: 0 };
   }
@@ -204,13 +225,40 @@ async function scrapeOne(key, supabase, dryRun, cache) {
   // freshness/deactivation below still uses that list's own URLs (not the
   // sanitized/collapsed one), since collapsing near-dupe titles into one
   // canonical record must never make a still-live variant's URL look like
-  // it disappeared from this scrape and get marked inactive.
+  // it disappeared from this scrape and get marked inactive. Sanitizing
+  // ahead of the dry-run branch too (it's pure/cheap, no I/O) so --dryRun
+  // previews the same validation a real run would apply, not just the
+  // nav-junk filter above it.
   const { opportunities: sanitized, categoryReassignments } = sanitizeOpportunities(opportunities);
   for (const r of categoryReassignments) {
     logger.info(`[${key}] Category reassigned for "${r.title}": ${r.from} → ${r.to}`);
   }
 
-  const rows = sanitized.map((opp) => ({
+  // Entries lacking a role title, location/region, or commitment length
+  // aren't real opportunities — flagged and logged, never silently
+  // dropped, so a rejection can be spot-checked (recordRejected below
+  // persists the full list to disk for exactly that).
+  const { valid, rejected } = partitionByValidity(sanitized);
+  if (rejected.length > 0) {
+    logger.warn(`[${key}] Rejected ${rejected.length} entr${rejected.length === 1 ? 'y' : 'ies'} lacking minimum viable fields:`);
+    for (const { opportunity, reasons } of rejected) {
+      logger.warn(`  ✗ "${opportunity.title}" (${opportunity.url}) — ${reasons.join(', ')}`);
+    }
+    recordRejected(key, rejected);
+  }
+
+  if (dryRun) {
+    for (const opp of valid) {
+      logger.info(`  [dry] ${opp.title} — ${opp.url}`);
+    }
+    return { key, error: false, scraped: valid.length, upserted: 0, deactivated: 0 };
+  }
+
+  if (valid.length === 0) {
+    return { key, error: false, scraped: 0, upserted: 0, deactivated: 0 };
+  }
+
+  const rows = valid.map((opp) => ({
     ...opp,
     scraped_at: new Date().toISOString(),
     active: true
@@ -222,7 +270,7 @@ async function scrapeOne(key, supabase, dryRun, cache) {
 
   if (error) {
     logger.error(`[${key}] Supabase upsert error: ${error.message}`);
-    return { key, error: true, scraped: opportunities.length, upserted: 0, deactivated: 0 };
+    return { key, error: true, scraped: valid.length, upserted: 0, deactivated: 0 };
   }
 
   const deactivated = await deactivateStale(

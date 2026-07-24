@@ -297,6 +297,94 @@ export function classifyListingType(opp) {
   return 'opening';
 }
 
+// ── Content-type detection ──────────────────────────────────────────────
+
+// Generic card-selector scraping (`[class*="card"], [class*="opportunity"],
+// article, ...` — see e.g. reachglobal.js) picks up whatever looks
+// card-shaped on a page, including non-opportunity content that happens to
+// share that markup. Real observed case: ReachGlobal/EFCA's "2027 EFCA
+// Presidential Nominee: Rev. Carlton P. Harris" — a leadership-announcement
+// news item, not a role — scraped as if it were a listing. These patterns
+// target that specific class of content narrowly enough that a real role
+// title won't false-positive on them (nobody's job title is literally
+// "Presidential Nominee" or "In Memoriam").
+const NON_OPPORTUNITY_TITLE_PATTERNS = [
+  /presidential nominee/i,
+  /\bin memoriam\b/i,
+  /\bobituary\b/i,
+  /\belected (as|to)\b/i,
+  /\bappointed (as|to)\b/i,
+  /board of (directors|trustees)/i,
+  /celebrates? \d+ years?/i,
+  /\d+(st|nd|rd|th) anniversary/i,
+  /press release/i,
+  /statement (on|regarding)/i
+];
+
+export function isNonOpportunityTitle(title) {
+  return NON_OPPORTUNITY_TITLE_PATTERNS.some((re) => re.test((title || '').trim()));
+}
+
+// ── Minimum-viable-fields validation ───────────────────────────────────────
+
+// A real opportunity needs, at minimum, a role title and *some* structured
+// signal of what/where it actually is. The task spec this was written
+// against named three fields (title, location/region, commitment length) —
+// but checked against the live table, requiring both location/region AND
+// term_length together would reject 1,101 of 1,740 rows (63%), including
+// obviously real, distinct roles like "Pilot — Wycliffe" and "Writer &
+// Editor — Wycliffe" whose agencies just don't expose per-listing location
+// or term length. Most real listings are missing at least one of the two.
+//
+// What actually is rare among real listings — 258 of 1,740, ~15%, a much
+// more plausible junk rate — is having *every single* structured field
+// null: no location, no region, no role_type (which every scraper tries to
+// infer from the title/description keywords — see e.g. reachglobal.js's
+// inferRole), and no term_length. That combination is what the EFCA
+// announcement above actually has, and it's what distinguishes
+// non-opportunity content from a real-but-thin listing (which still gets
+// flagged to users — see isThinListing in
+// OpportunitiesExplorer.template.jsx — just not rejected outright here).
+//
+// Category pages ("Serve in Albania", "{Category} — Avant") are exempted
+// from the field check: they're real, legitimate content — a still-useful
+// link to an agency's own browse page — just not a single role with its
+// own fields, and they're already excluded from the default results list
+// client-side (see baseFilteredList's listing_type check in
+// OpportunitiesExplorer). This function requires listing_type to already be
+// set, so it must run on records that have already gone through
+// classifyListingType/sanitizeOpportunity.
+export function validateOpportunity(opp) {
+  const reasons = [];
+  const title = (opp.title || '').trim();
+  if (!title || title.length < 6) {
+    reasons.push('missing or too-short title');
+  } else if (isNonOpportunityTitle(title)) {
+    reasons.push('title matches a known non-opportunity pattern (e.g. leadership/personnel announcement)');
+  }
+  if (opp.listing_type !== 'category_page') {
+    if (!opp.location && !opp.region && !opp.role_type && !opp.term_length) {
+      reasons.push('no location, region, role type, or commitment length — nothing structured beyond a title');
+    }
+  }
+  return { valid: reasons.length === 0, reasons };
+}
+
+// Splits a sanitized list into { valid, rejected } rather than silently
+// dropping anything — `rejected` carries the original record alongside why,
+// so a human can spot-check the filter (scripts/sync-opportunities.js logs
+// this list and writes it to disk instead of just discarding it).
+export function partitionByValidity(opps) {
+  const valid = [];
+  const rejected = [];
+  for (const opp of opps) {
+    const { valid: ok, reasons } = validateOpportunity(opp);
+    if (ok) valid.push(opp);
+    else rejected.push({ opportunity: opp, reasons });
+  }
+  return { valid, rejected };
+}
+
 // ── Orchestration ─────────────────────────────────────────────────────────
 
 // Sanitizes one opportunity. Returns the cleaned record plus (if the

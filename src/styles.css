@@ -66,6 +66,24 @@ a { color: var(--voyage-teal); }
 
 .app-shell > main { flex: 1; display: flex; flex-direction: column; }
 
+/* ==== ERROR BOUNDARY ==== */
+
+.error-boundary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+}
+
+.error-boundary-message {
+  max-width: 420px;
+  color: var(--muted-text);
+}
+
 /* ==== NAV ==== */
 
 .site-nav {
@@ -2525,6 +2543,15 @@ a { color: var(--voyage-teal); }
 }
 
 .opp-card-tag svg { flex-shrink: 0; }
+
+/* Distinguishes a completeness note (nothing scraped beyond the generated
+   one-liner — see isThinListing in OpportunitiesExplorer.template.jsx) from
+   the location/role/term tags above it, which are always real listing
+   fields. Dashed border reads as "informational," not another fact. */
+.opp-card-tag--thin {
+  background: transparent;
+  border: 1px dashed var(--line);
+}
 
 .opp-card-footer {
   margin-top: auto;

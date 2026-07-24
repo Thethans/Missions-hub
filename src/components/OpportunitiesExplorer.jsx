@@ -33,12 +33,12 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-23T12:19:41.498Z"
-// Opportunities: 1059 across 21 agencies
+// Generated: "2026-07-24T14:41:07.820Z"
+// Opportunities: 851 across 21 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, X, CaretDown, SortAscending, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, Info, X, CaretDown, SortAscending, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import Fuse from 'fuse.js';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
@@ -180,6 +180,21 @@ function shortAgencyName(agency) {
   return /^[A-Z]{2,6}$/.test(paren) ? paren : before.trim();
 }
 
+// Mirrors the literal generateFallbackDescription() produces in
+// scripts/lib/sanitize.js — a listing whose description IS that generated
+// one-liner has real fields (it already passed ingestion validation) but no
+// actual scraped text, either because the agency page never had any or
+// because what it did have was too long to quote without reproducing the
+// agency's own copy verbatim (see isTooLongToQuote). Either way, there's
+// nothing here beyond "click through and ask" — worth telling users that
+// before they click, not after. Both need updating together if that
+// generated string ever changes.
+const THIN_DESCRIPTION_MARKER = 'Reach out to the agency directly for full role details.';
+
+function isThinListing(opp) {
+  return !opp.description || opp.description.includes(THIN_DESCRIPTION_MARKER);
+}
+
 function FilterChip({ label, active, count, onClick }) {
   return (
     <button
@@ -195,6 +210,7 @@ function FilterChip({ label, active, count, onClick }) {
 }
 
 function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
+  const thin = isThinListing(opp);
   return (
     <RevealOnScroll className="opp-card-wrapper">
       <article className="opp-card">
@@ -234,6 +250,11 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
               <Clock size={14} weight="bold" /> {opp.term_length}
             </span>
           )}
+          {thin && (
+            <span className="opp-card-tag opp-card-tag--thin">
+              <Info size={14} weight="bold" /> Few details — check the agency's site
+            </span>
+          )}
         </div>
 
         <div className="opp-card-footer">
@@ -258,6 +279,21 @@ function InquiryModal({ opportunity, onClose }) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  // Opens: move focus into the dialog (the close button, always present
+  // whether or not `sent`) and remember whatever had focus before, since
+  // that's what "Inquire with {agency}" was. Closes: focus goes back there —
+  // without this, a keyboard/screen-reader user closing the modal lands
+  // wherever the DOM cursor happens to be, not back where they were.
+  useEffect(() => {
+    if (!opportunity) return;
+    triggerRef.current = document.activeElement;
+    closeButtonRef.current?.focus();
+    return () => triggerRef.current?.focus?.();
+  }, [opportunity]);
 
   if (!opportunity) return null;
 
@@ -276,11 +312,36 @@ function InquiryModal({ opportunity, onClose }) {
     setSent(true);
   };
 
+  // Escape closes (as before); Tab/Shift+Tab wraps focus at the dialog's own
+  // edges instead of escaping into the page behind it — a modal with
+  // aria-modal="true" but no actual focus trap tells assistive tech one
+  // thing and lets sighted-mouse-free keyboard users do another.
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const focusable = modalRef.current?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable || focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
-    <div className="opp-modal-overlay" role="presentation" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
+    <div className="opp-modal-overlay" role="presentation" onClick={onClose} onKeyDown={handleKeyDown}>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
-      <div className="opp-modal" role="dialog" aria-label="Send inquiry" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="opp-modal-close" onClick={onClose} aria-label="Close">
+      <div className="opp-modal" role="dialog" aria-modal="true" aria-label="Send inquiry" ref={modalRef} onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="opp-modal-close" onClick={onClose} aria-label="Close" ref={closeButtonRef}>
           <X size={20} />
         </button>
 
@@ -702,6 +763,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             type="search"
             className="opp-search"
             placeholder="Search opportunities..."
+            aria-label="Search opportunities"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
