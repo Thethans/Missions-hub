@@ -28,7 +28,10 @@ interface AccessRequestRow {
 // regardless of what this page shows them — the authState/isAdmin checks
 // below are a UX nicety on top of that, not the security boundary.
 export default function AdminPage() {
-  const session = useMemberSession();
+  // Leave-screen sign-out is a good fit for the public /prayer-map kiosk
+  // view, but not here — an admin alt-tabbing to check email or the
+  // Supabase dashboard mid-task shouldn't get logged out instantly.
+  const session = useMemberSession({ leaveScreenSignOut: false });
   const [loginOpen, setLoginOpen] = useState(false);
   const [members, setMembers] = useState<VerifiedMemberRow[] | null>(null);
   const [loadError, setLoadError] = useState(false);

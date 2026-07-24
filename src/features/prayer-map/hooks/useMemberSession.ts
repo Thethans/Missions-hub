@@ -42,6 +42,18 @@ export interface MemberSession {
   extend: () => void;
 }
 
+export interface MemberSessionOptions {
+  /**
+   * Leave-screen sign-out (window blur / tab hidden) makes sense on the
+   * public /prayer-map kiosk view (SPEC's shared-device threat model), but
+   * it's actively hostile on /prayer-map/admin — an admin who alt-tabs to
+   * check email or the Supabase dashboard mid-task gets logged out
+   * instantly, with no warning, unlike the idle/absolute timeouts below.
+   * Defaults to on to keep the public page's existing behavior.
+   */
+  leaveScreenSignOut?: boolean;
+}
+
 /**
  * Owns the real member session: Supabase Auth state, the verified_members
  * allowlist check, the three sign-out triggers (idle, absolute,
@@ -49,7 +61,7 @@ export interface MemberSession {
  * (or dropping out of `verified_members`) flips `authState`, which
  * re-renders the card and re-locks the sensitive block.
  */
-export default function useMemberSession(): MemberSession {
+export default function useMemberSession({ leaveScreenSignOut = true }: MemberSessionOptions = {}): MemberSession {
   const [authState, setAuthState] = useState<AuthState>('guest');
   const [isAdmin, setIsAdmin] = useState(false);
   const [remainingMs, setRemainingMs] = useState(0);
@@ -188,23 +200,29 @@ export default function useMemberSession(): MemberSession {
     const onActivity = () => resetIdle();
     ACTIVITY_EVENTS.forEach((e) => document.addEventListener(e, onActivity, { passive: true }));
 
-    // Leave-screen sign-out: window blur or the tab becoming hidden.
-    const onBlur = () => signOut('You were signed out because you left the page.');
-    const onVisibility = () => {
-      if (document.hidden) signOut('You were signed out because you left the page.');
-    };
-    window.addEventListener('blur', onBlur);
-    document.addEventListener('visibilitychange', onVisibility);
+    // Leave-screen sign-out: window blur or the tab becoming hidden. Opt-out
+    // per leaveScreenSignOut (see MemberSessionOptions) — idle/absolute
+    // timeouts above still apply regardless.
+    let onBlur: (() => void) | undefined;
+    let onVisibility: (() => void) | undefined;
+    if (leaveScreenSignOut) {
+      onBlur = () => signOut('You were signed out because you left the page.');
+      onVisibility = () => {
+        if (document.hidden) signOut('You were signed out because you left the page.');
+      };
+      window.addEventListener('blur', onBlur);
+      document.addEventListener('visibilitychange', onVisibility);
+    }
 
     return () => {
       window.clearTimeout(absolute);
       window.clearInterval(countdown);
       clearIdleTimers();
       ACTIVITY_EVENTS.forEach((e) => document.removeEventListener(e, onActivity));
-      window.removeEventListener('blur', onBlur);
-      document.removeEventListener('visibilitychange', onVisibility);
+      if (onBlur) window.removeEventListener('blur', onBlur);
+      if (onVisibility) document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [authState, resetIdle, signOut, clearIdleTimers]);
+  }, [authState, resetIdle, signOut, clearIdleTimers, leaveScreenSignOut]);
 
   // Clear the info-toast timer on unmount.
   useEffect(() => () => window.clearTimeout(infoToastTimer.current), []);
