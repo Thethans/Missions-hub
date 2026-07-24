@@ -16,15 +16,19 @@ import MapPage from './MapPage.jsx';
 // give it) — WorldMap.jsx gates every setFilter call on `if
 // (map.getLayer(id))`, and a vi.fn() called with no mockImplementation
 // returns undefined, which would silently skip every setFilter call and
-// mask a real filtering bug as a passing test. `once('idle', cb)` must
-// also actually capture its callback — WorldMap.jsx waits for it to clear
-// the "Updating map…" indicator, and a real MapLibre map can take several
-// seconds to repaint a large GeoJSON source after setFilter(), which is
-// exactly the bug that indicator exists to surface instead of hide.
+// mask a real filtering bug as a passing test.
+//
+// `queryRenderedFeatures` needs to be a controllable stand-in too:
+// WorldMap.jsx polls it after a filter change to detect when the repaint
+// has actually caught up (both MapLibre's 'idle' event and a debounced
+// 'sourcedata' were tried first and both proved unreliable on a real map —
+// see the comment in WorldMap.jsx), rather than trusting any single event.
+// `__setRenderedFeatures` lets a test control what it returns between
+// polls, to simulate the repaint catching up over time.
 function createMockMap() {
   const loadHandlers = [];
   const errorHandlers = [];
-  const idleHandlers = [];
+  let renderedFeatures = [];
   const map = new Proxy(
     {},
     {
@@ -36,26 +40,14 @@ function createMockMap() {
             return map;
           };
         }
-        if (prop === 'once') {
-          return (event, cb) => {
-            if (event === 'idle' && typeof cb === 'function') idleHandlers.push(cb);
-            return map;
-          };
-        }
+        if (prop === 'once') return () => map;
         if (prop === 'getCanvas') return () => ({ style: {} });
         if (prop === 'getZoom') return () => 1.4;
         if (prop === 'getLayer') return () => ({});
+        if (prop === 'queryRenderedFeatures') return () => renderedFeatures;
         if (prop === '__triggerLoad') return () => loadHandlers.forEach((cb) => cb());
         if (prop === '__triggerError') return (error) => errorHandlers.forEach((cb) => cb({ error }));
-        if (prop === '__triggerIdle') {
-          return () => {
-            // Real MapLibre's `once` semantics: each registered handler
-            // fires exactly once, so draining the queue (not just calling
-            // every handler still in it) matters if this is invoked twice.
-            const handlers = idleHandlers.splice(0, idleHandlers.length);
-            handlers.forEach((cb) => cb());
-          };
-        }
+        if (prop === '__setRenderedFeatures') return (features) => { renderedFeatures = features; };
         if (!(prop in target)) target[prop] = vi.fn();
         return target[prop];
       }
@@ -210,40 +202,14 @@ describe('MapPage', () => {
     expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('shows an "Updating map…" indicator while a filtered repaint is still pending, and clears it once MapLibre reports idle', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter initialEntries={['/map']}>
-        <MapPage />
-      </MemoryRouter>
-    );
-
-    await waitFor(() => expect(lastMockMap).not.toBeNull());
-    await lastMockMap.__triggerLoad();
-
-    const chip = await screen.findByRole('button', { name: /islam/i });
-    await user.click(chip);
-
-    // setFilter() itself is synchronous, but on a real map, repainting the
-    // filtered result can take several seconds — this indicator is what
-    // stops that gap from reading as "the filter doesn't do anything."
-    expect(screen.getByText(/updating map/i)).toBeInTheDocument();
-
-    lastMockMap.__triggerIdle();
-
-    await waitFor(() => {
-      expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
-    });
-  });
-
-  it('clears the "Updating map…" indicator via a fallback timeout even if MapLibre\'s idle event never fires', async () => {
-    // The pulse-ring layer's rAF loop calls setPaintProperty on every
-    // frame for as long as the map is mounted — MapLibre's 'idle' only
-    // fires once nothing is queued to render, so it may never fire while
-    // that's running. This is the regression case that mattered: without
-    // a fallback, the indicator (and the underlying "why doesn't the
-    // filter do anything" confusion it exists to prevent) could get stuck
-    // forever.
+  it('shows an "Updating map…" indicator until the rendered markers actually match the new filter, not just on a timer/event guess', async () => {
+    // Regression coverage for the real bug: both a MapLibre 'idle'
+    // listener and a debounced 'sourcedata' listener were tried first and
+    // each produced a real, measured case of clearing while the canvas
+    // still showed the old, unfiltered markers. The only signal that
+    // can't lie is checking reality — polling queryRenderedFeatures for
+    // whether what's on screen actually satisfies the filter that was
+    // just set.
     vi.useFakeTimers();
     try {
       render(
@@ -255,13 +221,58 @@ describe('MapPage', () => {
       await vi.waitFor(() => expect(lastMockMap).not.toBeNull());
       await lastMockMap.__triggerLoad();
 
+      // Still showing the old unfiltered mix at first — this is the
+      // "repaint hasn't caught up yet" state the indicator must cover.
+      lastMockMap.__setRenderedFeatures([
+        { properties: { progressStatus: 'unreached', religion: 'Islam' } },
+        { properties: { progressStatus: 'unreached', religion: 'Christianity' } }
+      ]);
+
       const chip = await vi.waitFor(() => screen.getByRole('button', { name: /islam/i }));
       fireEvent.click(chip);
 
       expect(screen.getByText(/updating map/i)).toBeInTheDocument();
 
-      // Never call __triggerIdle() — only the fallback should clear this.
-      await vi.advanceTimersByTimeAsync(5000);
+      // A poll interval passes, but the canvas still hasn't caught up —
+      // the indicator must still be showing, not cleared on a timer alone.
+      await vi.advanceTimersByTimeAsync(250);
+      expect(screen.getByText(/updating map/i)).toBeInTheDocument();
+
+      // Now the repaint actually catches up to the filter.
+      lastMockMap.__setRenderedFeatures([{ properties: { progressStatus: 'unreached', religion: 'Islam' } }]);
+      await vi.advanceTimersByTimeAsync(250);
+
+      expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears the "Updating map…" indicator via an absolute cap if the repaint never catches up', async () => {
+    // Defensive floor: if the rendered markers somehow never converge to
+    // match the filter (extreme load, a stalled worker), the indicator
+    // must not get stuck showing forever — that's worse than the gap it
+    // exists to explain.
+    vi.useFakeTimers();
+    try {
+      render(
+        <MemoryRouter initialEntries={['/map']}>
+          <MapPage />
+        </MemoryRouter>
+      );
+
+      await vi.waitFor(() => expect(lastMockMap).not.toBeNull());
+      await lastMockMap.__triggerLoad();
+
+      // Never matches the Islam-only filter, no matter how long we wait.
+      lastMockMap.__setRenderedFeatures([{ properties: { progressStatus: 'unreached', religion: 'Christianity' } }]);
+
+      const chip = await vi.waitFor(() => screen.getByRole('button', { name: /islam/i }));
+      fireEvent.click(chip);
+
+      expect(screen.getByText(/updating map/i)).toBeInTheDocument();
+
+      await vi.advanceTimersByTimeAsync(20000);
 
       expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
     } finally {

@@ -354,22 +354,58 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     if (map.getLayer('people-groups-points')) {
       const myGeneration = ++filterGenerationRef.current;
       setFiltering(true);
-      const clear = () => {
-        // A newer filter change superseded this one before it finished —
-        // don't let a late-arriving 'idle'/timeout from the OLD change
-        // clear the indicator for whatever's filtering now.
-        if (filterGenerationRef.current !== myGeneration) return;
+
+      // Every MapLibre event tried here ('idle', a debounced 'sourcedata'
+      // quiet-period) turned out unreliable on this dataset under real
+      // load: 'idle' can go indefinitely unfired at all (the pulse layer's
+      // rAF loop keeps calling setPaintProperty every frame, so the map
+      // never has "nothing left to render"), and 'sourcedata' can go quiet
+      // for 500ms+ in the *middle* of re-bucketing ~16,400 features,
+      // firing a false "done" while the canvas still shows the old,
+      // unfiltered set — measured directly, both produced a real case of
+      // the indicator clearing while stale markers were still on screen.
+      // The only signal that's actually correct by construction is
+      // checking reality: does every currently-rendered point actually
+      // satisfy the filter that was just set. Polling is more expensive
+      // than listening for an event, but it can't lie the way those did.
+      const currentActive = activeRef.current;
+      const currentReligions = religionActiveRef.current;
+      const stillCurrent = () => filterGenerationRef.current === myGeneration;
+
+      let pollId = null;
+      let capId = null;
+
+      const finish = () => {
+        if (!stillCurrent()) return;
+        clearTimeout(pollId);
+        clearTimeout(capId);
         setFiltering(false);
       };
-      map.once('idle', clear);
-      // Fallback, not just a nicety: the pulse-ring layer's rAF loop below
-      // calls setPaintProperty on every frame for as long as the map is
-      // mounted, so MapLibre's 'idle' — which only fires once nothing is
-      // queued to render — may never fire at all while that's running.
-      // Without this, the indicator could get stuck showing forever, which
-      // is worse than the silent multi-second gap it exists to explain.
-      const timeoutId = setTimeout(clear, 5000);
-      return () => clearTimeout(timeoutId);
+
+      const poll = () => {
+        if (!stillCurrent()) return;
+        const rendered = map.queryRenderedFeatures({ layers: ['people-groups-points'] });
+        const matchesFilter = rendered.every(
+          (f) =>
+            currentActive.has(f.properties.progressStatus) &&
+            (currentReligions.size === 0 || currentReligions.has(f.properties.religion))
+        );
+        if (matchesFilter) {
+          finish();
+        } else {
+          pollId = setTimeout(poll, 250);
+        }
+      };
+      pollId = setTimeout(poll, 250);
+      // Absolute cap: if the repaint genuinely never catches up (extreme
+      // load, tab backgrounded), don't let the indicator get stuck
+      // showing forever — that's worse than the gap it exists to explain.
+      capId = setTimeout(finish, 20000);
+
+      return () => {
+        clearTimeout(pollId);
+        clearTimeout(capId);
+      };
     }
   }, [active, religionActive]);
 
