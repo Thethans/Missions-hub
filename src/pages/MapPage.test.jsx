@@ -280,7 +280,13 @@ describe('MapPage', () => {
     }
   });
 
-  it('actually calls map.setFilter with a religion clause when a religion chip is toggled, not just a visual toggle', async () => {
+  it('toggles per-religion layer visibility when a religion chip is clicked, not just a visual chip toggle', async () => {
+    // Religion is now expressed as a setLayoutProperty visibility flip on
+    // that religion's own layers (see WorldMap.jsx for why: a setFilter()
+    // narrowing the old single shared source took 4-9+s under real load,
+    // since it forced a full worker-thread re-bucket of ~16,400 features —
+    // splitting into one source per religion turns "toggle a religion"
+    // into an instant, no-re-bucket layout change instead).
     global.fetch = vi.fn(() =>
       Promise.resolve({
         json: () =>
@@ -313,18 +319,15 @@ describe('MapPage', () => {
     await lastMockMap.__triggerLoad();
 
     const chip = await screen.findByRole('button', { name: /islam/i });
-    lastMockMap.setFilter.mockClear();
+    lastMockMap.setLayoutProperty.mockClear();
 
     await user.click(chip);
 
-    // The most recent setFilter call for the points layer must actually
-    // narrow by religion — not just re-apply the status filter with the
-    // religion clause silently dropped.
-    const pointsCalls = lastMockMap.setFilter.mock.calls.filter((args) => args[0] === 'people-groups-points');
-    expect(pointsCalls.length).toBeGreaterThan(0);
-    const [, appliedFilter] = pointsCalls[pointsCalls.length - 1];
-    expect(JSON.stringify(appliedFilter)).toContain('Islam');
-    expect(JSON.stringify(appliedFilter)).not.toContain('Christianity');
+    const visibilityCalls = lastMockMap.setLayoutProperty.mock.calls.filter((args) => args[1] === 'visibility');
+    const islamPointsCall = visibilityCalls.find((args) => args[0] === 'people-groups-islam-points');
+    const christianityPointsCall = visibilityCalls.find((args) => args[0] === 'people-groups-christianity-points');
+    expect(islamPointsCall?.[2]).toBe('visible');
+    expect(christianityPointsCall?.[2]).toBe('none');
   });
 
   it('lands pre-filtered by religion when opened via a ?religion= deep link (from the quiz)', async () => {
@@ -366,11 +369,11 @@ describe('MapPage', () => {
     const chip = await screen.findByRole('button', { name: /islam/i });
     expect(chip).toHaveAttribute('aria-pressed', 'true');
 
-    // The very first filter application (right after layers are added, not
-    // a later toggle) must already carry the religion clause from the URL.
-    const pointsCalls = lastMockMap.setFilter.mock.calls.filter((args) => args[0] === 'people-groups-points');
-    expect(pointsCalls.length).toBeGreaterThan(0);
-    expect(JSON.stringify(pointsCalls[0][1])).toContain('Islam');
-    expect(JSON.stringify(pointsCalls[0][1])).not.toContain('Hinduism');
+    // The very first visibility application (right after layers are
+    // added, not a later toggle) must already reflect the URL's religion.
+    const visibilityCalls = lastMockMap.setLayoutProperty.mock.calls.filter((args) => args[1] === 'visibility');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-islam-points')?.[2]).toBe('visible');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-christianity-points')?.[2]).toBe('none');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-hinduism-points')?.[2]).toBe('none');
   });
 });

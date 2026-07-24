@@ -16,9 +16,9 @@ const WorldMap = lazy(() => import('../components/WorldMap.jsx'));
 // Same rotation every visitor gets this week (not per-visitor random), so
 // it reads as "this week's featured group" rather than a flickery reload
 // lottery — and it's stable enough to reason about/link to. Index into
-// `features` (not feature.id) is what WorldMap's own generateId:true source
-// assigns internally in this same array order, so this lines up with a real
-// map click on the same point.
+// `features` is what WorldMap.jsx bakes onto each feature as `id` before
+// splitting them across its per-religion sources, so this lines up with a
+// real map click on the same point regardless of which religion it's in.
 function weekOfYear(date) {
   const start = new Date(date.getFullYear(), 0, 1);
   return Math.floor((date - start) / (7 * 24 * 60 * 60 * 1000));

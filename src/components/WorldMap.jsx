@@ -80,15 +80,48 @@ function buildGraticule() {
   return { type: 'FeatureCollection', features };
 }
 
+// A feature with no religion recorded still needs somewhere to live —
+// grouped under this sentinel so it's shown whenever no religion filter is
+// active (matching the old single-source behavior) and hidden whenever any
+// specific religion is picked (since it can't match a named one). Real data
+// currently has zero such features, but the source is refreshed weekly by
+// an external pipeline, so this shouldn't silently vanish them if that
+// ever changes.
+const UNCLASSIFIED_RELIGION = null;
+
+// One MapLibre source (and matching shadow/pulse/points layers) per
+// religion category, instead of one giant source for all ~16,400 points.
+// Splitting means toggling a religion is a setLayoutProperty visibility
+// flip — a synchronous change MapLibre can apply without re-bucketing any
+// geometry — instead of a setFilter() call, which forces a worker-thread
+// re-walk of the whole source. Measured directly against the old single-
+// source approach: setFilter-driven religion narrowing took 4-9+s
+// depending on load; this is why. Status filtering still uses setFilter,
+// just against each (much smaller) per-religion source instead of one
+// 16,400-feature one.
+function religionSourceId(religion) {
+  const key = religion || 'unclassified';
+  return 'people-groups-' + key.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '');
+}
+
 export default function WorldMap({ selected, onSelect, onDataLoaded, initialReligions }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
-  const hoveredId = useRef(null);
-  const selectedIdRef = useRef(null);
+  // { id, source } of the currently-hovered/selected feature — both are
+  // needed (not just id) because setFeatureState/clearing it must target
+  // the specific per-religion source that feature actually lives in.
+  const hoveredRef = useRef(null);
+  const selectedRef = useRef(null);
   const activeRef = useRef(null);
   const religionActiveRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
   const filterGenerationRef = useRef(0);
+  // One entry per religion bucket, built once the data loads:
+  // { religion, sourceId, pointsLayer, shadowLayer, pulseLayer }. Every
+  // per-bucket operation (filtering, visibility, click/hover attachment,
+  // the completion-polling query) is driven off this instead of a single
+  // hardcoded layer/source name.
+  const bucketsRef = useRef([]);
   // The full loaded feature set, kept for computing exactly how many
   // points *should* be on screen for a given filter — see the polling
   // logic below, which needs that as a floor. Checking "every rendered
@@ -125,46 +158,40 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // failure was previously unhandled entirely, leaving a blank/broken canvas
   // with no message at all.
   const [tileError, setTileError] = useState(false);
-  // setFilter() itself is synchronous and instant, but re-evaluating which
-  // of ~16,400 GeoJSON features pass the new filter and repainting them is
-  // not — measured at 2-4s on this dataset. Without this, a status/religion
-  // toggle looks completely broken for several seconds: the chip highlights
-  // immediately but the markers on screen don't change at all until
-  // MapLibre's next 'idle' event, which is what actually confirms the
-  // re-filtered tiles have finished rendering.
+  // Status changes still cost a setFilter() re-bucket (now against much
+  // smaller per-religion sources rather than one 16,400-feature one, but
+  // not free) — this indicator covers that gap. Religion-only changes now
+  // resolve almost immediately, since they're just a visibility flip.
   const [filtering, setFiltering] = useState(false);
   activeRef.current = active;
   religionActiveRef.current = religionActive;
   onDataLoadedRef.current = onDataLoaded;
 
-  // Applies whatever's in activeRef/religionActiveRef right now to the map's
-  // layers. Reading from refs (rather than closing over state from whichever
-  // render scheduled this) means it's always safe to call this the instant a
-  // layer exists — no dependence on the map's one-shot 'load' event having
-  // fired at just the right moment, which is what silently dropped filter
-  // updates before (isStyleLoaded() can go false again well after initial
-  // load, e.g. mid-tile-fetch after a flyTo, and 'load' never fires a second
-  // time to catch up).
+  // Applies whatever's in activeRef/religionActiveRef right now to every
+  // religion bucket's layers. Reading from refs (rather than closing over
+  // state from whichever render scheduled this) means it's always safe to
+  // call this the instant a bucket's layers exist — no dependence on the
+  // map's one-shot 'load' event having fired at just the right moment.
   const applyFilters = (map) => {
     const currentActive = activeRef.current;
     const currentReligions = religionActiveRef.current;
     const statusExpr = ['in', ['get', 'progressStatus'], ['literal', Array.from(currentActive)]];
-    const religionExpr =
-      currentReligions.size === 0
-        ? true
-        : ['in', ['get', 'religion'], ['literal', Array.from(currentReligions)]];
-    const filter = ['all', statusExpr, religionExpr];
+    const pulseExpr = currentActive.has('unreached')
+      ? ['==', ['get', 'progressStatus'], 'unreached']
+      : ['==', ['get', 'progressStatus'], ''];
 
-    if (map.getLayer('people-groups-points')) map.setFilter('people-groups-points', filter);
-    if (map.getLayer('people-groups-shadow')) map.setFilter('people-groups-shadow', filter);
-    if (map.getLayer('people-groups-pulse')) {
-      map.setFilter(
-        'people-groups-pulse',
-        currentActive.has('unreached')
-          ? ['all', ['==', ['get', 'progressStatus'], 'unreached'], religionExpr]
-          : ['==', ['get', 'progressStatus'], '']
-      );
-    }
+    bucketsRef.current.forEach(({ religion, pointsLayer, shadowLayer, pulseLayer }) => {
+      if (!map.getLayer(pointsLayer)) return; // this bucket's layers aren't added yet
+      map.setFilter(pointsLayer, statusExpr);
+      map.setFilter(shadowLayer, statusExpr);
+      map.setFilter(pulseLayer, pulseExpr);
+
+      const visible = currentReligions.size === 0 || (religion != null && currentReligions.has(religion));
+      const visibility = visible ? 'visible' : 'none';
+      map.setLayoutProperty(pointsLayer, 'visibility', visibility);
+      map.setLayoutProperty(shadowLayer, 'visibility', visibility);
+      map.setLayoutProperty(pulseLayer, 'visibility', visibility);
+    });
   };
 
   useEffect(() => {
@@ -204,12 +231,28 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         return;
       }
 
+      // Bake a stable global id (this array's index) onto each feature
+      // BEFORE grouping by religion below — MapAccessibleSearch and
+      // MapPage's weekly featured-group both already use "index into this
+      // exact array" as the id contract for setFeatureState/selection, and
+      // splitting into per-religion sources must not break that. Explicit
+      // ids (rather than each per-religion source's own generateId:true,
+      // which would restart from 0 in every bucket) keep it intact.
+      data.features.forEach((f, i) => {
+        f.id = i;
+      });
+
       const tally = { unreached: 0, formative: 0, reached: 0 };
       const religionTally = {};
+      const byBucket = new Map(); // sourceId -> { religion, features: [] }
       data.features.forEach((f) => {
         if (tally[f.properties.progressStatus] !== undefined) tally[f.properties.progressStatus] += 1;
-        const r = f.properties.religion;
+        const r = f.properties.religion || UNCLASSIFIED_RELIGION;
         if (r) religionTally[r] = (religionTally[r] || 0) + 1;
+
+        const sourceId = religionSourceId(r);
+        if (!byBucket.has(sourceId)) byBucket.set(sourceId, { religion: r, features: [] });
+        byBucket.get(sourceId).features.push(f);
       });
       setPreloaded('mapCounts', tally);
       setCounts(tally);
@@ -223,9 +266,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       // Share the loaded features with the parent (MapAccessibleSearch) so a
       // keyboard-only visitor has a way to find and select a people group
       // without needing to click a point on the canvas — MapLibre's canvas
-      // layer has no native keyboard path. `generateId: true` below assigns
-      // each feature's internal id by its position in this exact array, so
-      // the array index doubles as the id needed for setFeatureState.
+      // layer has no native keyboard path. The baked-in `id` above (this
+      // array's index) is what setFeatureState/selection use.
       onDataLoadedRef.current?.(data.features);
 
       map.addSource('graticule', { type: 'geojson', data: buildGraticule() });
@@ -239,95 +281,106 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         'countries-label'
       );
 
-      map.addSource('people-groups', { type: 'geojson', data, generateId: true });
+      const buckets = [];
+      byBucket.forEach(({ religion, features }, sourceId) => {
+        map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features } });
 
-      // Soft drop-shadow approximation: a larger, lower-opacity circle layer
-      // beneath the main markers (MapLibre circle layers have no native
-      // blur/shadow paint property).
-      map.addLayer({
-        id: 'people-groups-shadow',
-        type: 'circle',
-        source: 'people-groups',
-        paint: {
-          'circle-radius': ['+', CIRCLE_RADIUS, 3],
-          'circle-color': '#16233b',
-          'circle-opacity': 0.12,
-          'circle-blur': 0.6
-        }
-      });
+        const shadowLayer = `${sourceId}-shadow`;
+        const pulseLayer = `${sourceId}-pulse`;
+        const pointsLayer = `${sourceId}-points`;
 
-      // A duplicate, wider ring behind unreached points only — animated via
-      // rAF below into a slow pulse, drawing the eye to the greatest need.
-      map.addLayer({
-        id: 'people-groups-pulse',
-        type: 'circle',
-        source: 'people-groups',
-        filter: ['==', ['get', 'progressStatus'], 'unreached'],
-        paint: {
-          'circle-radius': CIRCLE_RADIUS,
-          'circle-color': '#b5482f',
-          'circle-opacity': 0.35,
-          'circle-blur': 0.4
-        }
-      });
+        // Soft drop-shadow approximation: a larger, lower-opacity circle
+        // layer beneath the main markers (MapLibre circle layers have no
+        // native blur/shadow paint property).
+        map.addLayer({
+          id: shadowLayer,
+          type: 'circle',
+          source: sourceId,
+          paint: {
+            'circle-radius': ['+', CIRCLE_RADIUS, 3],
+            'circle-color': '#16233b',
+            'circle-opacity': 0.12,
+            'circle-blur': 0.6
+          }
+        });
 
-      map.addLayer({
-        id: 'people-groups-points',
-        type: 'circle',
-        source: 'people-groups',
-        paint: {
-          'circle-radius': [
-            'case',
-            ['any', ['boolean', ['feature-state', 'hover'], false], ['boolean', ['feature-state', 'select'], false]],
-            ['+', CIRCLE_RADIUS, 4],
-            CIRCLE_RADIUS
-          ],
-          'circle-color': CIRCLE_COLOR,
-          'circle-opacity': 0,
-          'circle-opacity-transition': { duration: 900 },
-          'circle-stroke-width': CIRCLE_STROKE_WIDTH,
-          'circle-stroke-color': CIRCLE_STROKE_COLOR
-        }
+        // A duplicate, wider ring behind unreached points only — animated
+        // via rAF below into a slow pulse, drawing the eye to the greatest
+        // need.
+        map.addLayer({
+          id: pulseLayer,
+          type: 'circle',
+          source: sourceId,
+          filter: ['==', ['get', 'progressStatus'], 'unreached'],
+          paint: {
+            'circle-radius': CIRCLE_RADIUS,
+            'circle-color': '#b5482f',
+            'circle-opacity': 0.35,
+            'circle-blur': 0.4
+          }
+        });
+
+        map.addLayer({
+          id: pointsLayer,
+          type: 'circle',
+          source: sourceId,
+          paint: {
+            'circle-radius': [
+              'case',
+              ['any', ['boolean', ['feature-state', 'hover'], false], ['boolean', ['feature-state', 'select'], false]],
+              ['+', CIRCLE_RADIUS, 4],
+              CIRCLE_RADIUS
+            ],
+            'circle-color': CIRCLE_COLOR,
+            'circle-opacity': 0,
+            'circle-opacity-transition': { duration: 900 },
+            'circle-stroke-width': CIRCLE_STROKE_WIDTH,
+            'circle-stroke-color': CIRCLE_STROKE_COLOR
+          }
+        });
+
+        buckets.push({ religion, sourceId, pointsLayer, shadowLayer, pulseLayer });
       });
+      bucketsRef.current = buckets;
+      const pointsLayerIds = buckets.map((b) => b.pointsLayer);
+      const pulseLayerIds = buckets.map((b) => b.pulseLayer);
 
       // Catch up to whatever the legend's filter state is by the time these
       // layers actually exist (the fetch above may have taken a beat, during
-      // which the visitor could already have toggled a status).
+      // which the visitor could already have toggled a status/religion).
       applyFilters(map);
 
       // Fade markers in a beat after the shadow/pulse layers land, instead
       // of everything popping in at once.
       requestAnimationFrame(() => {
-        map.setPaintProperty('people-groups-points', 'circle-opacity', CIRCLE_FILL_OPACITY);
+        pointsLayerIds.forEach((layerId) => map.setPaintProperty(layerId, 'circle-opacity', CIRCLE_FILL_OPACITY));
       });
 
-      // Slow pulse: radius and opacity breathe via a sine wave. Reduced to a
-      // single static ring if the visitor prefers reduced motion.
+      // Slow pulse: radius and opacity breathe via a sine wave, applied to
+      // every religion's pulse layer each tick. Reduced to a single static
+      // ring if the visitor prefers reduced motion.
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!prefersReduced) {
         let raf;
         let lastPaintUpdate = 0;
         const start = performance.now();
-        // Full sine cycle is ~4.5s (2π / 1.4 rad/s) — throttled to ~15fps
-        // (a 66ms gate, not every rAF frame) is visually indistinguishable
-        // for a breath that slow, but cuts setPaintProperty calls on this
-        // layer by ~75%. Measured directly: at the untouched 60fps rate,
-        // this alone fires ~20 'sourcedata' events/sec on the shared
-        // 'people-groups' source with zero user interaction — churn that
-        // competes with, and measurably slows down, the real re-bucketing
-        // work a status/religion filter change needs to do on the same
-        // source (see the filter-completion polling below).
+        // Full sine cycle is ~4.5s (2π / 1.4 rad/s) — throttled to ~12fps
+        // (an ~85ms gate, not every rAF frame) is visually indistinguishable
+        // for a breath that slow, and keeps the *aggregate* setPaintProperty
+        // call rate across all religion buckets in the same ballpark as the
+        // old single-layer version at ~15fps, despite there now being one
+        // pulse layer per religion instead of one shared layer.
         const tick = (now) => {
-          if (now - lastPaintUpdate >= 66) {
+          if (now - lastPaintUpdate >= 85) {
             lastPaintUpdate = now;
             const t = (now - start) / 1000;
             const pulse = (Math.sin(t * 1.4) + 1) / 2; // 0..1
-            map.setPaintProperty('people-groups-pulse', 'circle-radius', [
-              '+',
-              CIRCLE_RADIUS,
-              6 + pulse * 10
-            ]);
-            map.setPaintProperty('people-groups-pulse', 'circle-opacity', 0.12 + pulse * 0.18);
+            const radius = ['+', CIRCLE_RADIUS, 6 + pulse * 10];
+            const opacity = 0.12 + pulse * 0.18;
+            pulseLayerIds.forEach((layerId) => {
+              map.setPaintProperty(layerId, 'circle-radius', radius);
+              map.setPaintProperty(layerId, 'circle-opacity', opacity);
+            });
           }
           raf = requestAnimationFrame(tick);
         };
@@ -335,7 +388,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         map.once('remove', () => cancelAnimationFrame(raf));
       }
 
-      map.on('click', 'people-groups-points', (e) => {
+      map.on('click', pointsLayerIds, (e) => {
         const feature = e.features[0];
         // flyTo + highlight both happen in the `selected`-driven effect below,
         // so a click and a keyboard-search selection (which also just calls
@@ -343,21 +396,22 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         onSelect({ ...feature.properties, coordinates: feature.geometry.coordinates, id: feature.id });
       });
 
-      map.on('mousemove', 'people-groups-points', (e) => {
+      map.on('mousemove', pointsLayerIds, (e) => {
         if (!e.features.length) return;
-        if (hoveredId.current !== null) {
-          map.setFeatureState({ source: 'people-groups', id: hoveredId.current }, { hover: false });
+        const next = e.features[0];
+        if (hoveredRef.current) {
+          map.setFeatureState({ source: hoveredRef.current.source, id: hoveredRef.current.id }, { hover: false });
         }
-        hoveredId.current = e.features[0].id;
-        map.setFeatureState({ source: 'people-groups', id: hoveredId.current }, { hover: true });
+        hoveredRef.current = { id: next.id, source: next.source };
+        map.setFeatureState({ source: next.source, id: next.id }, { hover: true });
       });
-      map.on('mouseenter', 'people-groups-points', () => (map.getCanvas().style.cursor = 'pointer'));
-      map.on('mouseleave', 'people-groups-points', () => {
+      map.on('mouseenter', pointsLayerIds, () => (map.getCanvas().style.cursor = 'pointer'));
+      map.on('mouseleave', pointsLayerIds, () => {
         map.getCanvas().style.cursor = '';
-        if (hoveredId.current !== null) {
-          map.setFeatureState({ source: 'people-groups', id: hoveredId.current }, { hover: false });
+        if (hoveredRef.current) {
+          map.setFeatureState({ source: hoveredRef.current.source, id: hoveredRef.current.id }, { hover: false });
         }
-        hoveredId.current = null;
+        hoveredRef.current = null;
       });
     });
 
@@ -371,28 +425,28 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     const map = mapRef.current;
     if (!map) return;
     applyFilters(map);
-    // Only meaningful once the points layer actually exists — the very
-    // first run of this effect can fire before 'load' has added any
-    // layers yet (applyFilters' own per-layer getLayer() guards make that
-    // call a harmless no-op), and there's nothing to wait on repainting in
-    // that case.
-    if (map.getLayer('people-groups-points')) {
+    // Only meaningful once the layers actually exist — the very first run
+    // of this effect can fire before 'load' has added any buckets yet
+    // (applyFilters' own per-layer getLayer() guard makes that call a
+    // harmless no-op), and there's nothing to wait on repainting in that
+    // case.
+    const pointsLayerIds = bucketsRef.current.map((b) => b.pointsLayer);
+    if (pointsLayerIds.length > 0 && map.getLayer(pointsLayerIds[0])) {
       const myGeneration = ++filterGenerationRef.current;
       setFiltering(true);
 
       // Every MapLibre event tried here ('idle', a debounced 'sourcedata'
       // quiet-period) turned out unreliable on this dataset under real
-      // load: 'idle' can go indefinitely unfired at all (the pulse layer's
-      // rAF loop keeps calling setPaintProperty every frame, so the map
-      // never has "nothing left to render"), and 'sourcedata' can go quiet
-      // for 500ms+ in the *middle* of re-bucketing ~16,400 features,
-      // firing a false "done" while the canvas still shows the old,
-      // unfiltered set — measured directly, both produced a real case of
-      // the indicator clearing while stale markers were still on screen.
-      // The only signal that's actually correct by construction is
-      // checking reality: does what's on screen actually satisfy the
-      // filter that was just set. Polling is more expensive than listening
-      // for an event, but it can't lie the way those did.
+      // load: 'idle' can go indefinitely unfired at all (the pulse layers'
+      // rAF loop keeps calling setPaintProperty), and 'sourcedata' can go
+      // quiet for 500ms+ in the *middle* of re-bucketing, firing a false
+      // "done" while the canvas still shows the old, unfiltered set —
+      // measured directly, both produced a real case of the indicator
+      // clearing while stale markers were still on screen. The only
+      // signal that's actually correct by construction is checking
+      // reality: does what's on screen actually satisfy the filter that
+      // was just set. Polling is more expensive than listening for an
+      // event, but it can't lie the way those did.
       const currentActive = activeRef.current;
       const currentReligions = religionActiveRef.current;
       const matchesActiveFilter = (f) =>
@@ -401,13 +455,12 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       // "Every rendered point matches" alone isn't sufficient — right
       // after setFilter(), queryRenderedFeatures() can transiently return
       // an empty array before any new tiles have painted anything, and
-      // .every() on an empty array is vacuously true. That false positive
-      // is exactly what let the indicator clear while the canvas still
-      // showed the fully unfiltered set (confirmed live: cleared in under
-      // 1s against a real map, screenshot still showing every religion).
-      // Requiring the rendered count to reach the real expected count
-      // (computed from the actual loaded data, not guessed) rules that
-      // out — completeness, not just correctness.
+      // .every() on an empty array is vacuously true. Requiring the
+      // rendered count to reach the real expected count (computed from the
+      // actual loaded data, not guessed) rules that false-positive out —
+      // completeness, not just correctness. A hidden (religion-filtered-
+      // out) layer's own layout visibility means queryRenderedFeatures
+      // naturally excludes it here without any extra bookkeeping.
       const expectedCount = allFeaturesRef.current.filter(matchesActiveFilter).length;
       const stillCurrent = () => filterGenerationRef.current === myGeneration;
 
@@ -423,7 +476,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
 
       const poll = () => {
         if (!stillCurrent()) return;
-        const rendered = map.queryRenderedFeatures({ layers: ['people-groups-points'] });
+        const rendered = map.queryRenderedFeatures({ layers: pointsLayerIds });
         const caughtUp = rendered.length >= expectedCount && rendered.every(matchesActiveFilter);
         if (caughtUp) {
           finish();
@@ -452,15 +505,17 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     const map = mapRef.current;
     if (!map) return;
 
-    if (selectedIdRef.current !== null) {
-      map.setFeatureState({ source: 'people-groups', id: selectedIdRef.current }, { select: false });
-      selectedIdRef.current = null;
+    if (selectedRef.current) {
+      map.setFeatureState({ source: selectedRef.current.source, id: selectedRef.current.id }, { select: false });
+      selectedRef.current = null;
     }
 
-    if (!selected || selected.id == null || !map.getSource('people-groups')) return;
+    if (!selected || selected.id == null) return;
+    const sourceId = religionSourceId(selected.religion || UNCLASSIFIED_RELIGION);
+    if (!map.getSource(sourceId)) return;
 
-    selectedIdRef.current = selected.id;
-    map.setFeatureState({ source: 'people-groups', id: selected.id }, { select: true });
+    selectedRef.current = { id: selected.id, source: sourceId };
+    map.setFeatureState({ source: sourceId, id: selected.id }, { select: true });
     map.flyTo({ center: selected.coordinates, zoom: Math.max(map.getZoom(), 3.5), speed: 0.8 });
   }, [selected]);
 
