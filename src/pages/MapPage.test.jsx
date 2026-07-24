@@ -14,6 +14,7 @@ import MapPage from './MapPage.jsx';
 // callback so tests can drive the load lifecycle.
 function createMockMap() {
   const loadHandlers = [];
+  const errorHandlers = [];
   const map = new Proxy(
     {},
     {
@@ -21,12 +22,14 @@ function createMockMap() {
         if (prop === 'on') {
           return (event, cb) => {
             if (event === 'load' && typeof cb === 'function') loadHandlers.push(cb);
+            if (event === 'error' && typeof cb === 'function') errorHandlers.push(cb);
             return map;
           };
         }
         if (prop === 'getCanvas') return () => ({ style: {} });
         if (prop === 'getZoom') return () => 1.4;
         if (prop === '__triggerLoad') return () => loadHandlers.forEach((cb) => cb());
+        if (prop === '__triggerError') return (error) => errorHandlers.forEach((cb) => cb({ error }));
         if (!(prop in target)) target[prop] = vi.fn();
         return target[prop];
       }
@@ -102,6 +105,26 @@ describe('MapPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/couldn't load people-group data/i);
     });
+
+    consoleError.mockRestore();
+  });
+
+  it('shows a map-level error message instead of a blank canvas when MapLibre itself fires an error (tile/style/glyph fetch failure)', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    lastMockMap.__triggerError(new Error('tile fetch failed'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/couldn't load the map/i);
+    });
+    expect(consoleError).toHaveBeenCalledWith('MapLibre error:', expect.any(Error));
 
     consoleError.mockRestore();
   });

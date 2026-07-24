@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import RevealOnScroll from './RevealOnScroll.jsx';
 import SpotlightOverlay from './SpotlightOverlay.jsx';
+import useJsonLd from '../hooks/useJsonLd.js';
 
 // Real, honest Q&A about how this specific site works — no invented stats
 // or claims, just a plain description of what's actually built.
@@ -29,10 +30,18 @@ const ITEMS = [
 
 function FaqItem({ item, index }) {
   const [open, setOpen] = useState(false);
+  // useId (not index-based) so the id/aria-controls pairing stays unique and
+  // stable even if items are ever reordered or filtered.
+  const panelId = useId();
   return (
     <RevealOnScroll index={index} className="faq-item-wrapper">
       <div className="faq-item">
-        <button className="faq-question" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <button
+          className="faq-question"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls={panelId}
+        >
           <span className="faq-question-text">
             <span className="faq-number">{String(index + 1).padStart(2, '0')}</span>
             {item.q}
@@ -43,7 +52,7 @@ function FaqItem({ item, index }) {
             0fr→1fr is a pure-CSS way to animate to an unknown/auto content
             height without JS-measuring it, more robust than animating a
             motion.div to height:'auto'. */}
-        <div className={`faq-answer-wrap${open ? ' faq-answer-wrap--open' : ''}`}>
+        <div id={panelId} className={`faq-answer-wrap${open ? ' faq-answer-wrap--open' : ''}`}>
           <div className="faq-answer-inner">
             <p className="faq-answer">{item.a}</p>
           </div>
@@ -53,7 +62,21 @@ function FaqItem({ item, index }) {
   );
 }
 
+// Structured data straight from the same ITEMS array rendered above — no
+// separate copy to drift out of sync, and nothing here says anything the
+// visible FAQ doesn't already say.
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: ITEMS.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a }
+  }))
+};
+
 export default function Faq() {
+  useJsonLd('faq', faqSchema);
   return (
     <section className="faq">
       <SpotlightOverlay />

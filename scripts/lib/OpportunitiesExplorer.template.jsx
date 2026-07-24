@@ -828,7 +828,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             </p>
           )}
           <div className="opp-results-header">
-            <p className="opp-results-count">
+            {/* aria-live so a search/filter change is announced to screen-
+                reader users — content still isn't spoken on first mount
+                since browsers only announce mutations to an existing live
+                region, not its initial render. */}
+            <p className="opp-results-count" aria-live="polite">
               {filtered.length.toLocaleString()} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
               {hasActiveFilters ? ' matching your filters' : ''}
               {loading ? ' (refreshing…)' : ''}
@@ -836,7 +840,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="opp-empty">
+            <div className="opp-empty" role="status">
               <p>No opportunities match your current filters.</p>
               {hasActiveFilters && (
                 <button type="button" className="cta-button" onClick={clearFilters}>

@@ -6,6 +6,7 @@ import '@fontsource-variable/inter';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import App from './App.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './styles/tokens.css';
 import './styles.css';
 
@@ -34,7 +35,11 @@ if (preloadEl) {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      {/* Outermost net — catches a throw in RootLayout/TopNav itself,
+          outside what the route-level boundary in RootLayout.jsx covers. */}
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </BrowserRouter>
   </React.StrictMode>
 );

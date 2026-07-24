@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // Fraunces/Inter load via @fontsource's `font-display: swap`, so the
 // browser paints with a fallback font first and reflows once the webfont
@@ -30,8 +31,16 @@ function preloadCriticalFonts() {
   };
 }
 
+// Opt-in via `ANALYZE=true npm run build` — a stats.html bundle breakdown is
+// dev/audit tooling, not something every production build should pay the
+// extra plugin cost for.
+const plugins = [react(), preloadCriticalFonts()];
+if (process.env.ANALYZE === 'true') {
+  plugins.push(visualizer({ filename: 'dist/stats.html', gzipSize: true, brotliSize: true, template: 'treemap' }));
+}
+
 export default defineConfig({
-  plugins: [react(), preloadCriticalFonts()],
+  plugins,
   server: {
     port: Number(process.env.PORT) || 5173
   },

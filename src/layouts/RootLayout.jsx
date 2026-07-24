@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import TopNav from '../components/TopNav.jsx';
 import RouteLoadingBar from '../components/RouteLoadingBar.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
 
 const TITLES = {
   '/': 'Fielded — Get to the Field',
@@ -44,7 +45,13 @@ export default function RootLayout() {
       <TopNav />
       <main ref={mainRef} tabIndex={-1}>
         <Suspense fallback={<RouteLoadingBar />}>
-          <Outlet />
+          {/* Keyed by pathname so a crash on one route doesn't keep showing
+              the fallback after the visitor navigates elsewhere via
+              TopNav — nav/footer stay live either way since this boundary
+              only wraps the routed page content, not the whole shell. */}
+          <ErrorBoundary key={pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </Suspense>
       </main>
       <footer className="app-footer">

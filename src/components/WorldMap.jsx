@@ -103,6 +103,13 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   // consistently across the app.
   const [religionActive, setReligionActive] = useState(() => new Set());
   const [dataError, setDataError] = useState(false);
+  // Distinct from dataError: this is MapLibre itself failing (basemap tiles/
+  // style/glyphs unreachable), not the people-groups.geojson fetch — the map
+  // canvas is unusable either way, but the two have different causes and
+  // different copy, and the 'error' event MapLibre fires for a tile/style
+  // failure was previously unhandled entirely, leaving a blank/broken canvas
+  // with no message at all.
+  const [tileError, setTileError] = useState(false);
   activeRef.current = active;
   religionActiveRef.current = religionActive;
   onDataLoadedRef.current = onDataLoaded;
@@ -145,6 +152,15 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
       zoom: 1.4
     });
     mapRef.current = map;
+
+    // MapLibre fires 'error' for tile/style/glyph fetch failures — none of
+    // which reject a promise or throw anywhere React would see them, so
+    // without this the canvas just sits blank or half-rendered with nothing
+    // telling the visitor (or error monitoring) that anything went wrong.
+    map.on('error', (e) => {
+      console.error('MapLibre error:', e.error);
+      setTileError(true);
+    });
 
     // The container isn't always settled to its final layout size the
     // instant the map constructs (e.g. right after a route change) — a
@@ -366,7 +382,11 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
     <div className="map-wrapper">
       <div id="map-container" ref={mapContainer} data-hydration-reset="children class style" />
       <div className="map-vignette" aria-hidden="true" />
-      {dataError ? (
+      {tileError ? (
+        <p className="map-data-error" role="alert">
+          Couldn't load the map right now — try refreshing the page.
+        </p>
+      ) : dataError ? (
         <p className="map-data-error" role="alert">
           Couldn't load people-group data right now — try refreshing the page.
         </p>
