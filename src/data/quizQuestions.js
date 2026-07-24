@@ -92,6 +92,33 @@ export const QUESTIONS = [
       'community development',
       'not sure yet'
     ]
+  },
+  {
+    key: 'religions',
+    multi: true,
+    text: 'Which unreached religious groups are you most drawn to reaching? (choose all that apply)',
+    // Real, most-represented-first list of every religion category actually
+    // present in public/data/people-groups.geojson (Joshua Project data) —
+    // same source and ordering rationale as the map's own legend. Not scored
+    // against agencies below: no agency in agencies.json has a confirmed
+    // field for which religious groups it specializes in reaching, and
+    // CLAUDE.md's non-negotiable #1 is explicit that unconfirmed fields are
+    // never guessed or scored. This answer instead drives a "see where
+    // they are" link to the map, filtered by real per-people-group data —
+    // see the map-deep-link block in MatchQuiz.jsx.
+    options: [
+      'Christianity',
+      'Islam',
+      'Ethnic Religions',
+      'Hinduism',
+      'Buddhism',
+      'Non-Religious',
+      'Unknown',
+      'Judaism',
+      'Sikhism',
+      'Other / Small',
+      'no strong preference'
+    ]
   }
 ];
 

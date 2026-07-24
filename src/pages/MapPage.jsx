@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, Suspense, lazy } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import MapAccessibleSearch from '../components/MapAccessibleSearch.jsx';
 import MapDetailPanel from '../components/MapDetailPanel.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
@@ -27,6 +28,17 @@ export default function MapPage() {
   const [selected, setSelected] = useState(null);
   const [features, setFeatures] = useState(null);
   const detailRef = useRef(null);
+
+  // Read once on mount — lets the quiz's "see where they are" link
+  // (/map?religion=Islam,Christianity) land pre-filtered, the same
+  // read-once-as-initial-state pattern OpportunitiesExplorer uses for its
+  // own URL-driven filters.
+  const [searchParams] = useSearchParams();
+  const initialReligions = useMemo(() => {
+    const raw = searchParams.get('religion');
+    return raw ? raw.split(',').filter(Boolean) : undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const featured = useMemo(() => {
     if (!features || features.length === 0) return null;
@@ -65,7 +77,12 @@ export default function MapPage() {
       </section>
       <div className="page-map">
         <Suspense fallback={<p className="map-loading" role="status">Loading map&hellip;</p>}>
-          <WorldMap selected={selected} onSelect={setSelected} onDataLoaded={setFeatures} />
+          <WorldMap
+            selected={selected}
+            onSelect={setSelected}
+            onDataLoaded={setFeatures}
+            initialReligions={initialReligions}
+          />
         </Suspense>
       </div>
       <div ref={detailRef}>

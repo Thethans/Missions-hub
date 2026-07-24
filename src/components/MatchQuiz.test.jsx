@@ -75,3 +75,67 @@ describe('MatchQuiz result persistence', () => {
     expect(screen.getByText(/find your mission board/i)).toBeInTheDocument();
   });
 });
+
+describe('MatchQuiz religion map link', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('links to the map, pre-filtered, when religions were selected', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await user.click(screen.getByLabelText(/^islam$/i, { selector: 'input[name="religions"]' }));
+    await user.click(screen.getByLabelText(/^buddhism$/i, { selector: 'input[name="religions"]' }));
+    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+
+    const link = screen.getByRole('link', { name: /see where those groups are on the map/i });
+    expect(link).toHaveAttribute('href', '/map?religion=Islam%2CBuddhism');
+  });
+
+  it('shows no map link when no religions were selected', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
+    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+
+    expect(screen.queryByRole('link', { name: /see where those groups are on the map/i })).not.toBeInTheDocument();
+  });
+
+  it('excludes "no strong preference" from the map link and drops the link entirely if that\'s all that was picked', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await user.click(screen.getByLabelText(/no strong preference/i, { selector: 'input[name="religions"]' }));
+    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+
+    expect(screen.queryByRole('link', { name: /see where those groups are on the map/i })).not.toBeInTheDocument();
+  });
+
+  it('never affects which agencies are shown as matches', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
+    await user.click(screen.getByLabelText(/^islam$/i, { selector: 'input[name="religions"]' }));
+    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    expect(saved.matches.every((m) => !m.matched.some((x) => x.dimension === 'religions'))).toBe(true);
+    expect(saved.matches.every((m) => !m.concerns.some((x) => x.dimension === 'religions'))).toBe(true);
+  });
+
+  it('surfaces the map link on a restored saved result too', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      answers: { religions: ['Hinduism'] },
+      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, url: 'https://pioneers.org', score: 0, matched: [], concerns: [] }],
+      timestamp: Date.now()
+    }));
+
+    renderQuiz();
+
+    const link = screen.getByRole('link', { name: /see where those groups are on the map/i });
+    expect(link).toHaveAttribute('href', '/map?religion=Hinduism');
+  });
+});

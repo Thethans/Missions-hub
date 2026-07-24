@@ -128,6 +128,23 @@ describe('evaluateAgency', () => {
     const result = evaluateAgency(europeAgency, { ...FULL_MATCH_ANSWERS, region: ['Eastern Europe'] });
     expect(result.matched.some((m) => m.dimension === 'region')).toBe(true);
   });
+
+  // No agency in agencies.json has a confirmed field for which religious
+  // groups it specializes in reaching, so `religions` intentionally has no
+  // entry in DIMENSIONS — answering it must never change a score, appear as
+  // matched, or appear as an "unconfirmed" concern (which would wrongly
+  // imply agencies could in principle confirm it).
+  it('never scores the religions answer against any agency, matched or unconfirmed', () => {
+    const withReligions = evaluateAgency(FULL_AGENCY, {
+      ...FULL_MATCH_ANSWERS,
+      religions: ['Islam', 'Buddhism']
+    });
+    const without = evaluateAgency(FULL_AGENCY, FULL_MATCH_ANSWERS);
+
+    expect(withReligions.score).toBe(without.score);
+    expect(withReligions.matched.some((m) => m.dimension === 'religions')).toBe(false);
+    expect(withReligions.concerns.some((c) => c.dimension === 'religions')).toBe(false);
+  });
 });
 
 describe('getMatches', () => {

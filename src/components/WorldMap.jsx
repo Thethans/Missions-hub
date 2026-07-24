@@ -80,7 +80,7 @@ function buildGraticule() {
   return { type: 'FeatureCollection', features };
 }
 
-export default function WorldMap({ selected, onSelect, onDataLoaded }) {
+export default function WorldMap({ selected, onSelect, onDataLoaded, initialReligions }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const hoveredId = useRef(null);
@@ -100,8 +100,12 @@ export default function WorldMap({ selected, onSelect, onDataLoaded }) {
   // above, where membership means "shown" and the set starts full. Matches
   // the same "nothing selected = unfiltered" chip semantics already used by
   // OpportunitiesExplorer's agency filter, so multi-option filters behave
-  // consistently across the app.
-  const [religionActive, setReligionActive] = useState(() => new Set());
+  // consistently across the app. Seeded from `initialReligions` (MapPage's
+  // ?religion= param) so a deep link from the quiz's "see where they are"
+  // link lands pre-filtered — a value that doesn't match any real religion
+  // in the loaded data just yields zero results, same graceful-degradation
+  // behavior as an unrecognized ?agency= on the opportunities page.
+  const [religionActive, setReligionActive] = useState(() => new Set(initialReligions));
   const [dataError, setDataError] = useState(false);
   // Distinct from dataError: this is MapLibre itself failing (basemap tiles/
   // style/glyphs unreachable), not the people-groups.geojson fetch — the map

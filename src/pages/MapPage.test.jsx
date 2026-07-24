@@ -11,7 +11,12 @@ import MapPage from './MapPage.jsx';
 // that component's exact API surface changing, unlike hand-listing every
 // MapLibre method. Only `getCanvas` needs a concrete shape (code reads
 // `.style.cursor` off it) and `on('load', cb)` needs to actually capture the
-// callback so tests can drive the load lifecycle.
+// callback so tests can drive the load lifecycle. `getLayer` must return a
+// truthy stand-in (not the bare vi.fn() the generic fallback below would
+// give it) — WorldMap.jsx gates every setFilter call on `if
+// (map.getLayer(id))`, and a vi.fn() called with no mockImplementation
+// returns undefined, which would silently skip every setFilter call and
+// mask a real filtering bug as a passing test.
 function createMockMap() {
   const loadHandlers = [];
   const errorHandlers = [];
@@ -28,6 +33,7 @@ function createMockMap() {
         }
         if (prop === 'getCanvas') return () => ({ style: {} });
         if (prop === 'getZoom') return () => 1.4;
+        if (prop === 'getLayer') return () => ({});
         if (prop === '__triggerLoad') return () => loadHandlers.forEach((cb) => cb());
         if (prop === '__triggerError') return (error) => errorHandlers.forEach((cb) => cb({ error }));
         if (!(prop in target)) target[prop] = vi.fn();
@@ -182,5 +188,99 @@ describe('MapPage', () => {
 
     await user.click(chip);
     expect(chip).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('actually calls map.setFilter with a religion clause when a religion chip is toggled, not just a visual toggle', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [10, 15] },
+                properties: { name: 'Group A', progressStatus: 'unreached', population: 1000, religion: 'Islam' }
+              },
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [20, 15] },
+                properties: { name: 'Group B', progressStatus: 'unreached', population: 1000, religion: 'Christianity' }
+              }
+            ]
+          })
+      })
+    );
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    const chip = await screen.findByRole('button', { name: /islam/i });
+    lastMockMap.setFilter.mockClear();
+
+    await user.click(chip);
+
+    // The most recent setFilter call for the points layer must actually
+    // narrow by religion — not just re-apply the status filter with the
+    // religion clause silently dropped.
+    const pointsCalls = lastMockMap.setFilter.mock.calls.filter((args) => args[0] === 'people-groups-points');
+    expect(pointsCalls.length).toBeGreaterThan(0);
+    const [, appliedFilter] = pointsCalls[pointsCalls.length - 1];
+    expect(JSON.stringify(appliedFilter)).toContain('Islam');
+    expect(JSON.stringify(appliedFilter)).not.toContain('Christianity');
+  });
+
+  it('lands pre-filtered by religion when opened via a ?religion= deep link (from the quiz)', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [10, 15] },
+                properties: { name: 'Group A', progressStatus: 'unreached', population: 1000, religion: 'Islam' }
+              },
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [20, 15] },
+                properties: { name: 'Group B', progressStatus: 'unreached', population: 1000, religion: 'Christianity' }
+              },
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [30, 15] },
+                properties: { name: 'Group C', progressStatus: 'unreached', population: 1000, religion: 'Hinduism' }
+              }
+            ]
+          })
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/map?religion=Islam']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    const chip = await screen.findByRole('button', { name: /islam/i });
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+
+    // The very first filter application (right after layers are added, not
+    // a later toggle) must already carry the religion clause from the URL.
+    const pointsCalls = lastMockMap.setFilter.mock.calls.filter((args) => args[0] === 'people-groups-points');
+    expect(pointsCalls.length).toBeGreaterThan(0);
+    expect(JSON.stringify(pointsCalls[0][1])).toContain('Islam');
+    expect(JSON.stringify(pointsCalls[0][1])).not.toContain('Hinduism');
   });
 });
