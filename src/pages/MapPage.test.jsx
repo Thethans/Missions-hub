@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import MapPage from './MapPage.jsx';
@@ -16,10 +16,15 @@ import MapPage from './MapPage.jsx';
 // give it) — WorldMap.jsx gates every setFilter call on `if
 // (map.getLayer(id))`, and a vi.fn() called with no mockImplementation
 // returns undefined, which would silently skip every setFilter call and
-// mask a real filtering bug as a passing test.
+// mask a real filtering bug as a passing test. `once('idle', cb)` must
+// also actually capture its callback — WorldMap.jsx waits for it to clear
+// the "Updating map…" indicator, and a real MapLibre map can take several
+// seconds to repaint a large GeoJSON source after setFilter(), which is
+// exactly the bug that indicator exists to surface instead of hide.
 function createMockMap() {
   const loadHandlers = [];
   const errorHandlers = [];
+  const idleHandlers = [];
   const map = new Proxy(
     {},
     {
@@ -31,11 +36,26 @@ function createMockMap() {
             return map;
           };
         }
+        if (prop === 'once') {
+          return (event, cb) => {
+            if (event === 'idle' && typeof cb === 'function') idleHandlers.push(cb);
+            return map;
+          };
+        }
         if (prop === 'getCanvas') return () => ({ style: {} });
         if (prop === 'getZoom') return () => 1.4;
         if (prop === 'getLayer') return () => ({});
         if (prop === '__triggerLoad') return () => loadHandlers.forEach((cb) => cb());
         if (prop === '__triggerError') return (error) => errorHandlers.forEach((cb) => cb({ error }));
+        if (prop === '__triggerIdle') {
+          return () => {
+            // Real MapLibre's `once` semantics: each registered handler
+            // fires exactly once, so draining the queue (not just calling
+            // every handler still in it) matters if this is invoked twice.
+            const handlers = idleHandlers.splice(0, idleHandlers.length);
+            handlers.forEach((cb) => cb());
+          };
+        }
         if (!(prop in target)) target[prop] = vi.fn();
         return target[prop];
       }
@@ -188,6 +208,65 @@ describe('MapPage', () => {
 
     await user.click(chip);
     expect(chip).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shows an "Updating map…" indicator while a filtered repaint is still pending, and clears it once MapLibre reports idle', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    const chip = await screen.findByRole('button', { name: /islam/i });
+    await user.click(chip);
+
+    // setFilter() itself is synchronous, but on a real map, repainting the
+    // filtered result can take several seconds — this indicator is what
+    // stops that gap from reading as "the filter doesn't do anything."
+    expect(screen.getByText(/updating map/i)).toBeInTheDocument();
+
+    lastMockMap.__triggerIdle();
+
+    await waitFor(() => {
+      expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('clears the "Updating map…" indicator via a fallback timeout even if MapLibre\'s idle event never fires', async () => {
+    // The pulse-ring layer's rAF loop calls setPaintProperty on every
+    // frame for as long as the map is mounted — MapLibre's 'idle' only
+    // fires once nothing is queued to render, so it may never fire while
+    // that's running. This is the regression case that mattered: without
+    // a fallback, the indicator (and the underlying "why doesn't the
+    // filter do anything" confusion it exists to prevent) could get stuck
+    // forever.
+    vi.useFakeTimers();
+    try {
+      render(
+        <MemoryRouter initialEntries={['/map']}>
+          <MapPage />
+        </MemoryRouter>
+      );
+
+      await vi.waitFor(() => expect(lastMockMap).not.toBeNull());
+      await lastMockMap.__triggerLoad();
+
+      const chip = await vi.waitFor(() => screen.getByRole('button', { name: /islam/i }));
+      fireEvent.click(chip);
+
+      expect(screen.getByText(/updating map/i)).toBeInTheDocument();
+
+      // Never call __triggerIdle() — only the fallback should clear this.
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('actually calls map.setFilter with a religion clause when a religion chip is toggled, not just a visual toggle', async () => {

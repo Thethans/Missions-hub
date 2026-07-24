@@ -88,6 +88,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   const activeRef = useRef(null);
   const religionActiveRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
+  const filterGenerationRef = useRef(0);
   const [counts, setCounts] = useState(() => getPreloaded('mapCounts') ?? null);
   const [active, setActive] = useState(() => new Set(STATUSES));
   // Religion options + counts come from whatever the live geojson pull
@@ -114,6 +115,14 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // failure was previously unhandled entirely, leaving a blank/broken canvas
   // with no message at all.
   const [tileError, setTileError] = useState(false);
+  // setFilter() itself is synchronous and instant, but re-evaluating which
+  // of ~16,400 GeoJSON features pass the new filter and repainting them is
+  // not — measured at 2-4s on this dataset. Without this, a status/religion
+  // toggle looks completely broken for several seconds: the chip highlights
+  // immediately but the markers on screen don't change at all until
+  // MapLibre's next 'idle' event, which is what actually confirms the
+  // re-filtered tiles have finished rendering.
+  const [filtering, setFiltering] = useState(false);
   activeRef.current = active;
   religionActiveRef.current = religionActive;
   onDataLoadedRef.current = onDataLoaded;
@@ -334,7 +343,34 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   }, [onSelect]);
 
   useEffect(() => {
-    if (mapRef.current) applyFilters(mapRef.current);
+    const map = mapRef.current;
+    if (!map) return;
+    applyFilters(map);
+    // Only meaningful once the points layer actually exists — the very
+    // first run of this effect can fire before 'load' has added any
+    // layers yet (applyFilters' own per-layer getLayer() guards make that
+    // call a harmless no-op), and there's nothing to wait on repainting in
+    // that case.
+    if (map.getLayer('people-groups-points')) {
+      const myGeneration = ++filterGenerationRef.current;
+      setFiltering(true);
+      const clear = () => {
+        // A newer filter change superseded this one before it finished —
+        // don't let a late-arriving 'idle'/timeout from the OLD change
+        // clear the indicator for whatever's filtering now.
+        if (filterGenerationRef.current !== myGeneration) return;
+        setFiltering(false);
+      };
+      map.once('idle', clear);
+      // Fallback, not just a nicety: the pulse-ring layer's rAF loop below
+      // calls setPaintProperty on every frame for as long as the map is
+      // mounted, so MapLibre's 'idle' — which only fires once nothing is
+      // queued to render — may never fire at all while that's running.
+      // Without this, the indicator could get stuck showing forever, which
+      // is worse than the silent multi-second gap it exists to explain.
+      const timeoutId = setTimeout(clear, 5000);
+      return () => clearTimeout(timeoutId);
+    }
   }, [active, religionActive]);
 
   // Flies to and highlights whichever point is selected, regardless of
@@ -398,6 +434,9 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         <>
           {counts === null && (
             <p className="map-loading" role="status">Finding unreached peoples&hellip;</p>
+          )}
+          {filtering && (
+            <p className="map-loading" role="status">Updating map&hellip;</p>
           )}
           <MapLegend
             counts={counts}
