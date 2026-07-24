@@ -89,6 +89,16 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   const religionActiveRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
   const filterGenerationRef = useRef(0);
+  // The full loaded feature set, kept for computing exactly how many
+  // points *should* be on screen for a given filter — see the polling
+  // logic below, which needs that as a floor. Checking "every rendered
+  // point matches the filter" alone isn't sufficient: right after
+  // setFilter(), queryRenderedFeatures() can transiently return an empty
+  // array before the new tiles have painted anything at all, and an empty
+  // array passes .every() vacuously — that false positive is what let the
+  // "Updating map…" indicator clear while the canvas still showed the old,
+  // unfiltered markers.
+  const allFeaturesRef = useRef([]);
   const [counts, setCounts] = useState(() => getPreloaded('mapCounts') ?? null);
   const [active, setActive] = useState(() => new Set(STATUSES));
   // Religion options + counts come from whatever the live geojson pull
@@ -208,6 +218,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       setReligions(Object.keys(religionTally).sort((a, b) => religionTally[b] - religionTally[a]));
       setReligionCounts(religionTally);
 
+      allFeaturesRef.current = data.features;
+
       // Share the loaded features with the parent (MapAccessibleSearch) so a
       // keyboard-only visitor has a way to find and select a people group
       // without needing to click a point on the canvas — MapLibre's canvas
@@ -294,16 +306,29 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!prefersReduced) {
         let raf;
+        let lastPaintUpdate = 0;
         const start = performance.now();
+        // Full sine cycle is ~4.5s (2π / 1.4 rad/s) — throttled to ~15fps
+        // (a 66ms gate, not every rAF frame) is visually indistinguishable
+        // for a breath that slow, but cuts setPaintProperty calls on this
+        // layer by ~75%. Measured directly: at the untouched 60fps rate,
+        // this alone fires ~20 'sourcedata' events/sec on the shared
+        // 'people-groups' source with zero user interaction — churn that
+        // competes with, and measurably slows down, the real re-bucketing
+        // work a status/religion filter change needs to do on the same
+        // source (see the filter-completion polling below).
         const tick = (now) => {
-          const t = (now - start) / 1000;
-          const pulse = (Math.sin(t * 1.4) + 1) / 2; // 0..1
-          map.setPaintProperty('people-groups-pulse', 'circle-radius', [
-            '+',
-            CIRCLE_RADIUS,
-            6 + pulse * 10
-          ]);
-          map.setPaintProperty('people-groups-pulse', 'circle-opacity', 0.12 + pulse * 0.18);
+          if (now - lastPaintUpdate >= 66) {
+            lastPaintUpdate = now;
+            const t = (now - start) / 1000;
+            const pulse = (Math.sin(t * 1.4) + 1) / 2; // 0..1
+            map.setPaintProperty('people-groups-pulse', 'circle-radius', [
+              '+',
+              CIRCLE_RADIUS,
+              6 + pulse * 10
+            ]);
+            map.setPaintProperty('people-groups-pulse', 'circle-opacity', 0.12 + pulse * 0.18);
+          }
           raf = requestAnimationFrame(tick);
         };
         raf = requestAnimationFrame(tick);
@@ -365,11 +390,25 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       // unfiltered set — measured directly, both produced a real case of
       // the indicator clearing while stale markers were still on screen.
       // The only signal that's actually correct by construction is
-      // checking reality: does every currently-rendered point actually
-      // satisfy the filter that was just set. Polling is more expensive
-      // than listening for an event, but it can't lie the way those did.
+      // checking reality: does what's on screen actually satisfy the
+      // filter that was just set. Polling is more expensive than listening
+      // for an event, but it can't lie the way those did.
       const currentActive = activeRef.current;
       const currentReligions = religionActiveRef.current;
+      const matchesActiveFilter = (f) =>
+        currentActive.has(f.properties.progressStatus) &&
+        (currentReligions.size === 0 || currentReligions.has(f.properties.religion));
+      // "Every rendered point matches" alone isn't sufficient — right
+      // after setFilter(), queryRenderedFeatures() can transiently return
+      // an empty array before any new tiles have painted anything, and
+      // .every() on an empty array is vacuously true. That false positive
+      // is exactly what let the indicator clear while the canvas still
+      // showed the fully unfiltered set (confirmed live: cleared in under
+      // 1s against a real map, screenshot still showing every religion).
+      // Requiring the rendered count to reach the real expected count
+      // (computed from the actual loaded data, not guessed) rules that
+      // out — completeness, not just correctness.
+      const expectedCount = allFeaturesRef.current.filter(matchesActiveFilter).length;
       const stillCurrent = () => filterGenerationRef.current === myGeneration;
 
       let pollId = null;
@@ -385,12 +424,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       const poll = () => {
         if (!stillCurrent()) return;
         const rendered = map.queryRenderedFeatures({ layers: ['people-groups-points'] });
-        const matchesFilter = rendered.every(
-          (f) =>
-            currentActive.has(f.properties.progressStatus) &&
-            (currentReligions.size === 0 || currentReligions.has(f.properties.religion))
-        );
-        if (matchesFilter) {
+        const caughtUp = rendered.length >= expectedCount && rendered.every(matchesActiveFilter);
+        if (caughtUp) {
           finish();
         } else {
           pollId = setTimeout(poll, 250);
