@@ -202,14 +202,17 @@ describe('MapPage', () => {
     expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('shows an "Updating map…" indicator until the rendered markers actually match the new filter, not just on a timer/event guess', async () => {
-    // Regression coverage for the real bug: both a MapLibre 'idle'
-    // listener and a debounced 'sourcedata' listener were tried first and
-    // each produced a real, measured case of clearing while the canvas
-    // still showed the old, unfiltered markers. The only signal that
-    // can't lie is checking reality — polling queryRenderedFeatures for
-    // whether what's on screen actually satisfies the filter that was
-    // just set.
+  it('shows an "Updating map…" indicator until the rendered markers actually settle on the new filter, not just on a timer/event guess', async () => {
+    // Regression coverage: a MapLibre 'idle' listener, a debounced
+    // 'sourcedata' listener, and comparing against a precomputed "true"
+    // expected count were all tried first — each produced a real, measured
+    // case of the indicator lying (clearing too early while the canvas
+    // still showed stale markers, or in the expected-count case, never
+    // clearing at all because queryRenderedFeatures — being viewport/
+    // tile-boundary-based — permanently undercounts the full dataset by a
+    // small margin when widening back toward it). What actually holds
+    // regardless of direction: once the repaint is done, the rendered
+    // count stops changing between two consecutive polls.
     vi.useFakeTimers();
     try {
       render(
@@ -238,10 +241,15 @@ describe('MapPage', () => {
       await vi.advanceTimersByTimeAsync(250);
       expect(screen.getByText(/updating map/i)).toBeInTheDocument();
 
-      // Now the repaint actually catches up to the filter.
+      // Now the repaint actually catches up to the filter — but a single
+      // matching read isn't enough either (that's what let a viewport-
+      // clipped, still-changing count look "done" prematurely); it has to
+      // read the same matching count twice in a row.
       lastMockMap.__setRenderedFeatures([{ properties: { progressStatus: 'unreached', religion: 'Islam' } }]);
       await vi.advanceTimersByTimeAsync(250);
+      expect(screen.getByText(/updating map/i)).toBeInTheDocument();
 
+      await vi.advanceTimersByTimeAsync(250);
       expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
@@ -273,6 +281,47 @@ describe('MapPage', () => {
       expect(screen.getByText(/updating map/i)).toBeInTheDocument();
 
       await vi.advanceTimersByTimeAsync(20000);
+
+      expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears quickly on a stable-but-viewport-clipped count, instead of waiting for the 20s cap (regression: "taking off a filter takes forever")', async () => {
+    // The exact bug this covers: widening a filter back toward the full
+    // dataset (deselecting a religion, or re-enabling a status) genuinely
+    // finishes rendering within ~1s in practice, but
+    // queryRenderedFeatures() — being viewport/tile-boundary-based — can
+    // permanently return slightly fewer features than the *true* total.
+    // The previous version of this check compared against that true total
+    // and would poll all the way to the 20s cap even though the map had
+    // already settled. This fixture's rendered count (999, deliberately
+    // "one short" of a round 1000) never needs to match anything external
+    // — it only needs to stop changing.
+    vi.useFakeTimers();
+    try {
+      render(
+        <MemoryRouter initialEntries={['/map']}>
+          <MapPage />
+        </MemoryRouter>
+      );
+
+      await vi.waitFor(() => expect(lastMockMap).not.toBeNull());
+      await lastMockMap.__triggerLoad();
+
+      const stableFeature = { properties: { progressStatus: 'unreached', religion: 'Islam' } };
+      lastMockMap.__setRenderedFeatures(Array.from({ length: 999 }, () => stableFeature));
+
+      const chip = await vi.waitFor(() => screen.getByRole('button', { name: /islam/i }));
+      fireEvent.click(chip);
+
+      expect(screen.getByText(/updating map/i)).toBeInTheDocument();
+
+      // Two consecutive polls read the same stable 999 — well under any
+      // "true" total, but that's the point: nothing here depends on
+      // knowing what the true total is.
+      await vi.advanceTimersByTimeAsync(500);
 
       expect(screen.queryByText(/updating map/i)).not.toBeInTheDocument();
     } finally {

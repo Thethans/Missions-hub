@@ -122,16 +122,6 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // the completion-polling query) is driven off this instead of a single
   // hardcoded layer/source name.
   const bucketsRef = useRef([]);
-  // The full loaded feature set, kept for computing exactly how many
-  // points *should* be on screen for a given filter — see the polling
-  // logic below, which needs that as a floor. Checking "every rendered
-  // point matches the filter" alone isn't sufficient: right after
-  // setFilter(), queryRenderedFeatures() can transiently return an empty
-  // array before the new tiles have painted anything at all, and an empty
-  // array passes .every() vacuously — that false positive is what let the
-  // "Updating map…" indicator clear while the canvas still showed the old,
-  // unfiltered markers.
-  const allFeaturesRef = useRef([]);
   const [counts, setCounts] = useState(() => getPreloaded('mapCounts') ?? null);
   const [active, setActive] = useState(() => new Set(STATUSES));
   // Religion options + counts come from whatever the live geojson pull
@@ -260,8 +250,6 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       // dataset" rather than an alphabetical list.
       setReligions(Object.keys(religionTally).sort((a, b) => religionTally[b] - religionTally[a]));
       setReligionCounts(religionTally);
-
-      allFeaturesRef.current = data.features;
 
       // Share the loaded features with the parent (MapAccessibleSearch) so a
       // keyboard-only visitor has a way to find and select a people group
@@ -435,37 +423,37 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       const myGeneration = ++filterGenerationRef.current;
       setFiltering(true);
 
-      // Every MapLibre event tried here ('idle', a debounced 'sourcedata'
-      // quiet-period) turned out unreliable on this dataset under real
-      // load: 'idle' can go indefinitely unfired at all (the pulse layers'
-      // rAF loop keeps calling setPaintProperty), and 'sourcedata' can go
-      // quiet for 500ms+ in the *middle* of re-bucketing, firing a false
-      // "done" while the canvas still shows the old, unfiltered set —
-      // measured directly, both produced a real case of the indicator
-      // clearing while stale markers were still on screen. The only
-      // signal that's actually correct by construction is checking
-      // reality: does what's on screen actually satisfy the filter that
-      // was just set. Polling is more expensive than listening for an
-      // event, but it can't lie the way those did.
+      // Every completion signal tried here has turned out unreliable on
+      // this dataset:
+      // - 'idle' can go indefinitely unfired (the pulse layers' rAF loop
+      //   keeps calling setPaintProperty every frame).
+      // - a debounced 'sourcedata' quiet-period can fire early, mid-
+      //   rebucket, while the canvas still shows the old set.
+      // - comparing queryRenderedFeatures().length against a precomputed
+      //   "true" total (the previous version of this check) works for
+      //   narrowing, but going the other way — re-showing a hidden
+      //   religion, or turning a status back on — queryRenderedFeatures is
+      //   viewport/tile-boundary-based and can permanently undercount the
+      //   full dataset by a small margin, so the count never reaches that
+      //   target and the indicator got stuck at the 20s cap even though
+      //   the map had already finished rendering correctly within ~1s
+      //   (confirmed directly: Christianity settled at 6477/6479 rendered
+      //   by ~800ms, but "the exact expected total" was never reached).
+      // What actually holds regardless of direction: once the repaint is
+      // done, the rendered count stops changing. Waiting for two
+      // consecutive non-zero reads 250ms apart to agree needs no
+      // precomputed target and isn't fooled by a single transient empty
+      // read either (the earlier vacuous-.every()-on-[] bug).
       const currentActive = activeRef.current;
       const currentReligions = religionActiveRef.current;
       const matchesActiveFilter = (f) =>
         currentActive.has(f.properties.progressStatus) &&
         (currentReligions.size === 0 || currentReligions.has(f.properties.religion));
-      // "Every rendered point matches" alone isn't sufficient — right
-      // after setFilter(), queryRenderedFeatures() can transiently return
-      // an empty array before any new tiles have painted anything, and
-      // .every() on an empty array is vacuously true. Requiring the
-      // rendered count to reach the real expected count (computed from the
-      // actual loaded data, not guessed) rules that false-positive out —
-      // completeness, not just correctness. A hidden (religion-filtered-
-      // out) layer's own layout visibility means queryRenderedFeatures
-      // naturally excludes it here without any extra bookkeeping.
-      const expectedCount = allFeaturesRef.current.filter(matchesActiveFilter).length;
       const stillCurrent = () => filterGenerationRef.current === myGeneration;
 
       let pollId = null;
       let capId = null;
+      let lastCount = null;
 
       const finish = () => {
         if (!stillCurrent()) return;
@@ -477,8 +465,9 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       const poll = () => {
         if (!stillCurrent()) return;
         const rendered = map.queryRenderedFeatures({ layers: pointsLayerIds });
-        const caughtUp = rendered.length >= expectedCount && rendered.every(matchesActiveFilter);
-        if (caughtUp) {
+        const stable = rendered.length > 0 && rendered.length === lastCount && rendered.every(matchesActiveFilter);
+        lastCount = rendered.length;
+        if (stable) {
           finish();
         } else {
           pollId = setTimeout(poll, 250);
