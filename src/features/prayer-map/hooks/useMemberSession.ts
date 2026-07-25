@@ -130,9 +130,16 @@ export default function useMemberSession({ leaveScreenSignOut = true }: MemberSe
 
   const signInWithEmail = useCallback(async (email: string): Promise<{ sent: boolean; error?: string }> => {
     if (!supabase) return { sent: false, error: 'Sign-in is not configured for this environment.' };
+    // Redirect back to wherever sign-in was actually started, not always
+    // /prayer-map — signing in from /prayer-map/admin used to bounce
+    // through /prayer-map first, which still has leave-screen sign-out on
+    // (correctly, for its public-kiosk threat model). That extra stop was
+    // enough for an admin's email-app-to-browser focus switch to sign them
+    // right back out before they could navigate to /admin, defeating the
+    // exemption there entirely.
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin + '/prayer-map' }
+      options: { emailRedirectTo: window.location.origin + window.location.pathname }
     });
     if (error) return { sent: false, error: error.message };
     return { sent: true };

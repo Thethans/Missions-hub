@@ -57,6 +57,7 @@ describe('useMemberSession', () => {
     signOutMock.mockClear();
     signInWithOtpMock.mockClear();
     mockSupabase = buildSupabaseMock();
+    window.history.pushState({}, '', '/prayer-map');
   });
 
   it('starts as guest when there is no session', async () => {
@@ -133,7 +134,8 @@ describe('useMemberSession', () => {
     expect(signOutMock).toHaveBeenCalled();
   });
 
-  it('signInWithEmail sends a magic link with the /prayer-map redirect', async () => {
+  it('signInWithEmail redirects back to wherever sign-in was started, not always /prayer-map', async () => {
+    window.history.pushState({}, '', '/prayer-map/admin');
     const { result } = renderHook(() => useMemberSession());
     await waitFor(() => expect(result.current.authState).toBe('guest'));
 
@@ -145,7 +147,7 @@ describe('useMemberSession', () => {
     expect(response).toEqual({ sent: true });
     expect(signInWithOtpMock).toHaveBeenCalledWith({
       email: 'someone@example.com',
-      options: { emailRedirectTo: expect.stringContaining('/prayer-map') }
+      options: { emailRedirectTo: expect.stringContaining('/prayer-map/admin') }
     });
   });
 
