@@ -89,19 +89,23 @@ function buildGraticule() {
 // ever changes.
 const UNCLASSIFIED_RELIGION = null;
 
-// One MapLibre source (and matching shadow/pulse/points layers) per
-// religion category, instead of one giant source for all ~16,400 points.
-// Splitting means toggling a religion is a setLayoutProperty visibility
-// flip — a synchronous change MapLibre can apply without re-bucketing any
-// geometry — instead of a setFilter() call, which forces a worker-thread
-// re-walk of the whole source. Measured directly against the old single-
-// source approach: setFilter-driven religion narrowing took 4-9+s
-// depending on load; this is why. Status filtering still uses setFilter,
-// just against each (much smaller) per-religion source instead of one
-// 16,400-feature one.
-function religionSourceId(religion) {
+// One MapLibre source (and matching shadow/points layers, plus a pulse
+// layer for the 'unreached' bucket specifically) per (religion, status)
+// combination, instead of one giant source for all ~16,400 points. Every
+// feature in a bucket's source already satisfies both dimensions by
+// construction — no layer needs a `filter` at all — so toggling either
+// dimension is purely a setLayoutProperty visibility flip: a synchronous
+// change MapLibre applies without touching any geometry, instead of a
+// setFilter() call, which forces a worker-thread re-walk of the source.
+// Measured directly against the single-source approach this replaced:
+// setFilter-driven filtering took 4-9+s depending on load and direction
+// (worse when *widening* back toward the full dataset); splitting only by
+// religion first got narrowing down to ~1s but left status changes on the
+// same slow setFilter path (measured 0.6-4.7s) — this is the second half,
+// splitting by status too so nothing user-facing uses setFilter anymore.
+function bucketSourceId(religion, status) {
   const key = religion || 'unclassified';
-  return 'people-groups-' + key.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '');
+  return 'people-groups-' + key.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '') + '-' + status;
 }
 
 export default function WorldMap({ selected, onSelect, onDataLoaded, initialReligions }) {
@@ -109,18 +113,20 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   const mapRef = useRef(null);
   // { id, source } of the currently-hovered/selected feature — both are
   // needed (not just id) because setFeatureState/clearing it must target
-  // the specific per-religion source that feature actually lives in.
+  // the specific per-bucket source that feature actually lives in.
   const hoveredRef = useRef(null);
   const selectedRef = useRef(null);
   const activeRef = useRef(null);
   const religionActiveRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
   const filterGenerationRef = useRef(0);
-  // One entry per religion bucket, built once the data loads:
-  // { religion, sourceId, pointsLayer, shadowLayer, pulseLayer }. Every
-  // per-bucket operation (filtering, visibility, click/hover attachment,
-  // the completion-polling query) is driven off this instead of a single
-  // hardcoded layer/source name.
+  // One entry per (religion, status) bucket, built once the data loads:
+  // { religion, status, sourceId, pointsLayer, shadowLayer, pulseLayer }.
+  // pulseLayer is null for non-'unreached' buckets — the pulse ring only
+  // ever highlights unreached groups, so there's nothing to build for the
+  // other two statuses. Every per-bucket operation (visibility, click/
+  // hover attachment, the completion-polling query) is driven off this
+  // instead of a single hardcoded layer/source name.
   const bucketsRef = useRef([]);
   const [counts, setCounts] = useState(() => getPreloaded('mapCounts') ?? null);
   const [active, setActive] = useState(() => new Set(STATUSES));
@@ -148,39 +154,34 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // failure was previously unhandled entirely, leaving a blank/broken canvas
   // with no message at all.
   const [tileError, setTileError] = useState(false);
-  // Status changes still cost a setFilter() re-bucket (now against much
-  // smaller per-religion sources rather than one 16,400-feature one, but
-  // not free) — this indicator covers that gap. Religion-only changes now
-  // resolve almost immediately, since they're just a visibility flip.
+  // Now that both status and religion are pure visibility flips (no
+  // setFilter anywhere), this should resolve within a single poll cycle
+  // almost always — kept as a defensive safety net rather than removed
+  // outright, in case a slow device/heavy load ever makes even a batch of
+  // visibility changes take a beat to repaint.
   const [filtering, setFiltering] = useState(false);
   activeRef.current = active;
   religionActiveRef.current = religionActive;
   onDataLoadedRef.current = onDataLoaded;
 
   // Applies whatever's in activeRef/religionActiveRef right now to every
-  // religion bucket's layers. Reading from refs (rather than closing over
-  // state from whichever render scheduled this) means it's always safe to
-  // call this the instant a bucket's layers exist — no dependence on the
-  // map's one-shot 'load' event having fired at just the right moment.
+  // bucket's layers. Reading from refs (rather than closing over state
+  // from whichever render scheduled this) means it's always safe to call
+  // this the instant a bucket's layers exist — no dependence on the map's
+  // one-shot 'load' event having fired at just the right moment.
   const applyFilters = (map) => {
     const currentActive = activeRef.current;
     const currentReligions = religionActiveRef.current;
-    const statusExpr = ['in', ['get', 'progressStatus'], ['literal', Array.from(currentActive)]];
-    const pulseExpr = currentActive.has('unreached')
-      ? ['==', ['get', 'progressStatus'], 'unreached']
-      : ['==', ['get', 'progressStatus'], ''];
 
-    bucketsRef.current.forEach(({ religion, pointsLayer, shadowLayer, pulseLayer }) => {
+    bucketsRef.current.forEach(({ religion, status, pointsLayer, shadowLayer, pulseLayer }) => {
       if (!map.getLayer(pointsLayer)) return; // this bucket's layers aren't added yet
-      map.setFilter(pointsLayer, statusExpr);
-      map.setFilter(shadowLayer, statusExpr);
-      map.setFilter(pulseLayer, pulseExpr);
-
-      const visible = currentReligions.size === 0 || (religion != null && currentReligions.has(religion));
+      const visible =
+        currentActive.has(status) &&
+        (currentReligions.size === 0 || (religion != null && currentReligions.has(religion)));
       const visibility = visible ? 'visible' : 'none';
       map.setLayoutProperty(pointsLayer, 'visibility', visibility);
       map.setLayoutProperty(shadowLayer, 'visibility', visibility);
-      map.setLayoutProperty(pulseLayer, 'visibility', visibility);
+      if (pulseLayer) map.setLayoutProperty(pulseLayer, 'visibility', visibility);
     });
   };
 
@@ -222,26 +223,27 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       }
 
       // Bake a stable global id (this array's index) onto each feature
-      // BEFORE grouping by religion below — MapAccessibleSearch and
-      // MapPage's weekly featured-group both already use "index into this
-      // exact array" as the id contract for setFeatureState/selection, and
-      // splitting into per-religion sources must not break that. Explicit
-      // ids (rather than each per-religion source's own generateId:true,
-      // which would restart from 0 in every bucket) keep it intact.
+      // BEFORE grouping below — MapAccessibleSearch and MapPage's weekly
+      // featured-group both already use "index into this exact array" as
+      // the id contract for setFeatureState/selection, and splitting into
+      // per-bucket sources must not break that. Explicit ids (rather than
+      // each source's own generateId:true, which would restart from 0 in
+      // every bucket) keep it intact.
       data.features.forEach((f, i) => {
         f.id = i;
       });
 
       const tally = { unreached: 0, formative: 0, reached: 0 };
       const religionTally = {};
-      const byBucket = new Map(); // sourceId -> { religion, features: [] }
+      const byBucket = new Map(); // sourceId -> { religion, status, features: [] }
       data.features.forEach((f) => {
-        if (tally[f.properties.progressStatus] !== undefined) tally[f.properties.progressStatus] += 1;
+        const status = f.properties.progressStatus;
+        if (tally[status] !== undefined) tally[status] += 1;
         const r = f.properties.religion || UNCLASSIFIED_RELIGION;
         if (r) religionTally[r] = (religionTally[r] || 0) + 1;
 
-        const sourceId = religionSourceId(r);
-        if (!byBucket.has(sourceId)) byBucket.set(sourceId, { religion: r, features: [] });
+        const sourceId = bucketSourceId(r, status);
+        if (!byBucket.has(sourceId)) byBucket.set(sourceId, { religion: r, status, features: [] });
         byBucket.get(sourceId).features.push(f);
       });
       setPreloaded('mapCounts', tally);
@@ -270,11 +272,10 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       );
 
       const buckets = [];
-      byBucket.forEach(({ religion, features }, sourceId) => {
+      byBucket.forEach(({ religion, status, features }, sourceId) => {
         map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features } });
 
         const shadowLayer = `${sourceId}-shadow`;
-        const pulseLayer = `${sourceId}-pulse`;
         const pointsLayer = `${sourceId}-points`;
 
         // Soft drop-shadow approximation: a larger, lower-opacity circle
@@ -294,19 +295,24 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
 
         // A duplicate, wider ring behind unreached points only — animated
         // via rAF below into a slow pulse, drawing the eye to the greatest
-        // need.
-        map.addLayer({
-          id: pulseLayer,
-          type: 'circle',
-          source: sourceId,
-          filter: ['==', ['get', 'progressStatus'], 'unreached'],
-          paint: {
-            'circle-radius': CIRCLE_RADIUS,
-            'circle-color': '#b5482f',
-            'circle-opacity': 0.35,
-            'circle-blur': 0.4
-          }
-        });
+        // need. Every feature in an 'unreached'-status bucket's source is
+        // already unreached by construction, so unlike the pre-split
+        // version this needs no filter.
+        let pulseLayer = null;
+        if (status === 'unreached') {
+          pulseLayer = `${sourceId}-pulse`;
+          map.addLayer({
+            id: pulseLayer,
+            type: 'circle',
+            source: sourceId,
+            paint: {
+              'circle-radius': CIRCLE_RADIUS,
+              'circle-color': '#b5482f',
+              'circle-opacity': 0.35,
+              'circle-blur': 0.4
+            }
+          });
+        }
 
         map.addLayer({
           id: pointsLayer,
@@ -327,11 +333,11 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
           }
         });
 
-        buckets.push({ religion, sourceId, pointsLayer, shadowLayer, pulseLayer });
+        buckets.push({ religion, status, sourceId, pointsLayer, shadowLayer, pulseLayer });
       });
       bucketsRef.current = buckets;
       const pointsLayerIds = buckets.map((b) => b.pointsLayer);
-      const pulseLayerIds = buckets.map((b) => b.pulseLayer);
+      const pulseLayerIds = buckets.map((b) => b.pulseLayer).filter(Boolean);
 
       // Catch up to whatever the legend's filter state is by the time these
       // layers actually exist (the fetch above may have taken a beat, during
@@ -345,8 +351,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       });
 
       // Slow pulse: radius and opacity breathe via a sine wave, applied to
-      // every religion's pulse layer each tick. Reduced to a single static
-      // ring if the visitor prefers reduced motion.
+      // every unreached bucket's pulse layer each tick. Reduced to a single
+      // static ring if the visitor prefers reduced motion.
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!prefersReduced) {
         let raf;
@@ -355,9 +361,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         // Full sine cycle is ~4.5s (2π / 1.4 rad/s) — throttled to ~12fps
         // (an ~85ms gate, not every rAF frame) is visually indistinguishable
         // for a breath that slow, and keeps the *aggregate* setPaintProperty
-        // call rate across all religion buckets in the same ballpark as the
-        // old single-layer version at ~15fps, despite there now being one
-        // pulse layer per religion instead of one shared layer.
+        // call rate across all pulse buckets in the same ballpark as the
+        // original single-layer version at ~15fps.
         const tick = (now) => {
           if (now - lastPaintUpdate >= 85) {
             lastPaintUpdate = now;
@@ -423,27 +428,18 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       const myGeneration = ++filterGenerationRef.current;
       setFiltering(true);
 
-      // Every completion signal tried here has turned out unreliable on
-      // this dataset:
-      // - 'idle' can go indefinitely unfired (the pulse layers' rAF loop
-      //   keeps calling setPaintProperty every frame).
-      // - a debounced 'sourcedata' quiet-period can fire early, mid-
-      //   rebucket, while the canvas still shows the old set.
-      // - comparing queryRenderedFeatures().length against a precomputed
-      //   "true" total (the previous version of this check) works for
-      //   narrowing, but going the other way — re-showing a hidden
-      //   religion, or turning a status back on — queryRenderedFeatures is
-      //   viewport/tile-boundary-based and can permanently undercount the
-      //   full dataset by a small margin, so the count never reaches that
-      //   target and the indicator got stuck at the 20s cap even though
-      //   the map had already finished rendering correctly within ~1s
-      //   (confirmed directly: Christianity settled at 6477/6479 rendered
-      //   by ~800ms, but "the exact expected total" was never reached).
-      // What actually holds regardless of direction: once the repaint is
-      // done, the rendered count stops changing. Waiting for two
-      // consecutive non-zero reads 250ms apart to agree needs no
+      // Every completion signal tried here has turned out unreliable at
+      // one point or another: 'idle' can go indefinitely unfired (the
+      // pulse layers' rAF loop keeps calling setPaintProperty every
+      // frame), a debounced 'sourcedata' quiet-period can fire early
+      // mid-rebucket, and comparing queryRenderedFeatures().length against
+      // a precomputed "true" total works for narrowing but not widening
+      // (viewport/tile-boundary undercounting means the target is never
+      // reached). What actually holds regardless of direction: once the
+      // repaint is done, the rendered count stops changing. Waiting for
+      // two consecutive non-zero reads 250ms apart to agree needs no
       // precomputed target and isn't fooled by a single transient empty
-      // read either (the earlier vacuous-.every()-on-[] bug).
+      // read either.
       const currentActive = activeRef.current;
       const currentReligions = religionActiveRef.current;
       const matchesActiveFilter = (f) =>
@@ -500,7 +496,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     }
 
     if (!selected || selected.id == null) return;
-    const sourceId = religionSourceId(selected.religion || UNCLASSIFIED_RELIGION);
+    const sourceId = bucketSourceId(selected.religion || UNCLASSIFIED_RELIGION, selected.progressStatus);
     if (!map.getSource(sourceId)) return;
 
     selectedRef.current = { id: selected.id, source: sourceId };

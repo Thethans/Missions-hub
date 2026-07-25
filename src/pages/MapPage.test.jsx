@@ -13,18 +13,19 @@ import MapPage from './MapPage.jsx';
 // `.style.cursor` off it) and `on('load', cb)` needs to actually capture the
 // callback so tests can drive the load lifecycle. `getLayer` must return a
 // truthy stand-in (not the bare vi.fn() the generic fallback below would
-// give it) — WorldMap.jsx gates every setFilter call on `if
+// give it) — WorldMap.jsx gates every setLayoutProperty call on `if
 // (map.getLayer(id))`, and a vi.fn() called with no mockImplementation
-// returns undefined, which would silently skip every setFilter call and
+// returns undefined, which would silently skip every visibility change and
 // mask a real filtering bug as a passing test.
 //
 // `queryRenderedFeatures` needs to be a controllable stand-in too:
-// WorldMap.jsx polls it after a filter change to detect when the repaint
-// has actually caught up (both MapLibre's 'idle' event and a debounced
-// 'sourcedata' were tried first and both proved unreliable on a real map —
-// see the comment in WorldMap.jsx), rather than trusting any single event.
-// `__setRenderedFeatures` lets a test control what it returns between
-// polls, to simulate the repaint catching up over time.
+// WorldMap.jsx polls it after a status/religion change to detect when the
+// repaint has actually caught up (MapLibre's 'idle' event, a debounced
+// 'sourcedata' quiet-period, and comparing against a precomputed expected
+// count were all tried first and each proved unreliable on a real map —
+// see the comment in WorldMap.jsx), rather than trusting any single event
+// or target. `__setRenderedFeatures` lets a test control what it returns
+// between polls, to simulate the repaint catching up over time.
 function createMockMap() {
   const loadHandlers = [];
   const errorHandlers = [];
@@ -373,10 +374,61 @@ describe('MapPage', () => {
     await user.click(chip);
 
     const visibilityCalls = lastMockMap.setLayoutProperty.mock.calls.filter((args) => args[1] === 'visibility');
-    const islamPointsCall = visibilityCalls.find((args) => args[0] === 'people-groups-islam-points');
-    const christianityPointsCall = visibilityCalls.find((args) => args[0] === 'people-groups-christianity-points');
+    const islamPointsCall = visibilityCalls.find((args) => args[0] === 'people-groups-islam-unreached-points');
+    const christianityPointsCall = visibilityCalls.find((args) => args[0] === 'people-groups-christianity-unreached-points');
     expect(islamPointsCall?.[2]).toBe('visible');
     expect(christianityPointsCall?.[2]).toBe('none');
+  });
+
+  it('toggles per-status layer visibility when a status chip is clicked, not setFilter', async () => {
+    // Status used to still go through setFilter even after the religion
+    // split (measured 0.6-4.7s depending on direction/load) — buckets are
+    // now split by (religion, status) together, so status is a visibility
+    // flip too, same as religion.
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [10, 15] },
+                properties: { name: 'Group A', progressStatus: 'unreached', population: 1000, religion: 'Islam' }
+              },
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [20, 15] },
+                properties: { name: 'Group B', progressStatus: 'reached', population: 1000, religion: 'Islam' }
+              }
+            ]
+          })
+      })
+    );
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    // Anchored: plain /reached/i also matches "Unreached".
+    const reachedChip = await screen.findByRole('button', { name: /^reached/i });
+    lastMockMap.setFilter.mockClear();
+    lastMockMap.setLayoutProperty.mockClear();
+
+    await user.click(reachedChip);
+
+    // Clicking "Reached" while all three statuses default to active turns
+    // it off, leaving Unreached (untouched by this click) still visible.
+    expect(lastMockMap.setFilter).not.toHaveBeenCalled();
+    const visibilityCalls = lastMockMap.setLayoutProperty.mock.calls.filter((args) => args[1] === 'visibility');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-islam-reached-points')?.[2]).toBe('none');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-islam-unreached-points')?.[2]).toBe('visible');
   });
 
   it('lands pre-filtered by religion when opened via a ?religion= deep link (from the quiz)', async () => {
@@ -421,8 +473,8 @@ describe('MapPage', () => {
     // The very first visibility application (right after layers are
     // added, not a later toggle) must already reflect the URL's religion.
     const visibilityCalls = lastMockMap.setLayoutProperty.mock.calls.filter((args) => args[1] === 'visibility');
-    expect(visibilityCalls.find((args) => args[0] === 'people-groups-islam-points')?.[2]).toBe('visible');
-    expect(visibilityCalls.find((args) => args[0] === 'people-groups-christianity-points')?.[2]).toBe('none');
-    expect(visibilityCalls.find((args) => args[0] === 'people-groups-hinduism-points')?.[2]).toBe('none');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-islam-unreached-points')?.[2]).toBe('visible');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-christianity-unreached-points')?.[2]).toBe('none');
+    expect(visibilityCalls.find((args) => args[0] === 'people-groups-hinduism-unreached-points')?.[2]).toBe('none');
   });
 });
