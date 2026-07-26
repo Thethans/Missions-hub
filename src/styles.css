@@ -315,11 +315,12 @@ a { color: var(--voyage-teal); }
    viewport, so this trims padding/type size further than the shared
    compact hero. */
 .map-hero {
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-3) var(--space-6);
 }
 
-.map-hero h1 { font-size: 1.5rem; margin-bottom: var(--space-2); }
-.map-hero p { font-size: 0.9rem; }
+.map-hero h1 { font-size: 1.25rem; margin-bottom: var(--space-1); }
+.map-hero p { font-size: 0.85rem; }
+.map-hero .map-search { margin-top: var(--space-3); }
 
 .page-body { flex: 1; }
 
@@ -2085,6 +2086,16 @@ a { color: var(--voyage-teal); }
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   margin-left: auto;
+}
+
+/* The site-wide --focus-ring's outer color is voyage-teal (see tokens.css)
+   — on a button that's already solid teal, that ring has no contrast
+   against its own background and just reads as a fuzzy mismatched halo.
+   Swap the outer ring to ink-navy here only, keeping the same paper-color
+   inner gap and 2px/4px sizing as everywhere else on the site. */
+.matcher-nav-next:focus-visible,
+.matcher-nav-submit:focus-visible {
+  box-shadow: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--ink-navy);
 }
 
 .matcher-nav-next:hover,
