@@ -54,6 +54,8 @@ describe('evaluateAgency', () => {
 
     // focus(3) + tradition(2) + supportRaising(2) + region(2) + lifeStage(2) + termLength(1) + roleType(2) = 14
     expect(result.score).toBe(14);
+    expect(result.maxPossible).toBe(14);
+    expect(result.matchPercent).toBe(100);
     expect(result.matched).toHaveLength(7);
     expect(result.concerns).toHaveLength(0);
   });
@@ -62,6 +64,11 @@ describe('evaluateAgency', () => {
     const result = evaluateAgency(CONFLICTING_AGENCY, FULL_MATCH_ANSWERS);
 
     expect(result.score).toBe(0);
+    // Every dimension was still comparable (agency has a confirmed, just
+    // conflicting, value for each) — maxPossible is the full 14, so this
+    // reads as a real, fully-informed 0%, not "we don't know."
+    expect(result.maxPossible).toBe(14);
+    expect(result.matchPercent).toBe(0);
     expect(result.matched).toHaveLength(0);
     // lifeStage only applies for 'married with kids' (it does here), so all 7 dimensions engage.
     expect(result.concerns).toHaveLength(7);
@@ -72,6 +79,10 @@ describe('evaluateAgency', () => {
     const result = evaluateAgency(UNCONFIRMED_AGENCY, FULL_MATCH_ANSWERS);
 
     expect(result.score).toBe(0);
+    // Nothing was actually comparable — every engaged dimension was
+    // unconfirmed — so this is "not enough public info," not a 0% fit.
+    expect(result.maxPossible).toBe(0);
+    expect(result.matchPercent).toBeNull();
     expect(result.matched).toHaveLength(0);
     expect(result.concerns).toHaveLength(7);
     expect(result.concerns.every((c) => c.type === 'unconfirmed')).toBe(true);
@@ -171,15 +182,53 @@ describe('getMatches', () => {
     expect(matches).toHaveLength(2);
     expect(matches.every((m) => m.score === 0)).toBe(true);
   });
+
+  it('ranks by matchPercent, not raw score, so answering fewer questions never wins on a technicality', () => {
+    // Answering only 'focus' (weight 3): a match is a 100% fit off a single
+    // dimension. That must not outrank an agency confirmed to conflict on
+    // every other dimension too but still nets a higher raw score from
+    // matching more of them (a case the old raw-score sort got backwards).
+    const oneQuestionAnswer = { focus: ['church planting'] };
+    const partialMatchAgency = { ...CONFLICTING_AGENCY, name: 'Partial', focus: ['church planting'] };
+    const matches = getMatches(oneQuestionAnswer, [partialMatchAgency], 1);
+    expect(matches[0].matchPercent).toBe(100);
+  });
+
+  it('sorts an unconfirmed (null-percent) agency behind any agency with a real percentage, even 0%', () => {
+    const matches = getMatches(FULL_MATCH_ANSWERS, [UNCONFIRMED_AGENCY, CONFLICTING_AGENCY], 2);
+    expect(matches[0].name).toBe('Conflicting Mission');
+    expect(matches[0].matchPercent).toBe(0);
+    expect(matches[1].name).toBe('Sparse Mission');
+    expect(matches[1].matchPercent).toBeNull();
+  });
+
+  it('breaks a percent tie in favor of the agency with more confirmed (corroborated) dimensions', () => {
+    // Both are a 100% fit, but "Broad" had twice as many dimensions actually
+    // confirmed-and-matching — a more corroborated match, so it should rank
+    // first even though the percentages are identical.
+    const narrowAgency = { ...FULL_AGENCY, name: 'Narrow', regions: [], termLengths: [], roles: [] };
+    const broadAgency = { ...FULL_AGENCY, name: 'Broad' };
+    const matches = getMatches(FULL_MATCH_ANSWERS, [narrowAgency, broadAgency], 2);
+
+    expect(matches[0].name).toBe('Broad');
+    expect(matches[0].matchPercent).toBe(100);
+    expect(matches[1].name).toBe('Narrow');
+    expect(matches[1].matchPercent).toBe(100);
+    expect(matches[0].maxPossible).toBeGreaterThan(matches[1].maxPossible);
+  });
 });
 
 describe('matchLabel', () => {
-  it('labels by score threshold', () => {
-    expect(matchLabel(14)).toBe('Strong match');
-    expect(matchLabel(8)).toBe('Strong match');
-    expect(matchLabel(7)).toBe('Worth exploring');
-    expect(matchLabel(4)).toBe('Worth exploring');
-    expect(matchLabel(3)).toBe('Loose fit');
+  it('labels by match-percentage threshold', () => {
+    expect(matchLabel(100)).toBe('Strong match');
+    expect(matchLabel(75)).toBe('Strong match');
+    expect(matchLabel(74)).toBe('Worth exploring');
+    expect(matchLabel(40)).toBe('Worth exploring');
+    expect(matchLabel(39)).toBe('Loose fit');
     expect(matchLabel(0)).toBe('Loose fit');
+  });
+
+  it('gives null (nothing comparable) its own honest label instead of reading as a bad fit', () => {
+    expect(matchLabel(null)).toBe('Not enough public info to compare');
   });
 });

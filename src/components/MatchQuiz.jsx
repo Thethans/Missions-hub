@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CaretLeft, CaretRight, CheckCircle } from '@phosphor-icons/react';
 import agencies from '../data/agencies.json';
 import { QUESTIONS, NEUTRAL_VALUES } from '../data/quizQuestions.js';
 import { getMatches } from '../data/scoreAgency.js';
@@ -8,9 +9,15 @@ import MatchResultCard from './MatchResultCard.jsx';
 
 const STORAGE_KEY = 'fielded_quiz_result';
 const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+const TOTAL_STEPS = QUESTIONS.length;
 
 function hasAnyAnswer(answers) {
   return Object.values(answers).some((v) => (Array.isArray(v) ? v.length > 0 : v != null && v !== ''));
+}
+
+function isAnswered(question, answers) {
+  const v = answers[question.key];
+  return Array.isArray(v) ? v.length > 0 : v != null && v !== '';
 }
 
 // The `religions` answer isn't scored against agencies (no agency has a
@@ -42,9 +49,17 @@ export default function MatchQuiz() {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [step, setStep] = useState(0);
 
   const results = submitted ? getMatches(answers, agencies) : [];
   const answered = hasAnyAnswer(answers);
+  const currentQuestion = QUESTIONS[step];
+  const isLastStep = step === TOTAL_STEPS - 1;
+
+  function goToStep(index) {
+    setStep(Math.max(0, Math.min(TOTAL_STEPS - 1, index)));
+    setShowHint(false);
+  }
 
   function handleSubmit() {
     if (!answered) {
@@ -75,6 +90,7 @@ export default function MatchQuiz() {
     setAnswers({});
     setSubmitted(false);
     setShowHint(false);
+    setStep(0);
   }
 
   if (saved && !submitted) {
@@ -82,7 +98,7 @@ export default function MatchQuiz() {
     return (
       <div className="matcher">
         <h2>Your matches from last time</h2>
-        <p>Saved from your last quiz — retake it any time if your answers have changed.</p>
+        <p>Saved from your last quiz. Retake it any time if your answers have changed.</p>
         {savedReligionLink && (
           <p className="matcher-religion-link">
             <Link to={savedReligionLink}>See where those groups are on the map →</Link>
@@ -98,30 +114,11 @@ export default function MatchQuiz() {
     );
   }
 
-  return (
-    <div className="matcher">
-      <h2>Find your mission board</h2>
-      <p>This is a starting point, not a final answer — always talk to a real person at each agency.</p>
-
-      {QUESTIONS.map((q) => (
-        <QuizQuestion
-          key={q.key}
-          question={q}
-          value={answers[q.key]}
-          onChange={(opt) => setAnswers({ ...answers, [q.key]: opt })}
-        />
-      ))}
-
-      <button type="button" onClick={handleSubmit}>
-        See my matches
-      </button>
-      {showHint && !answered && (
-        <p className="matcher-hint" role="alert">Answer at least one question first — matches need something to go on.</p>
-      )}
-
-      {submitted && (
+  if (submitted) {
+    return (
+      <div className="matcher">
         <div className="results" aria-live="polite">
-          <h3>Closest matches</h3>
+          <h3>Your closest matches</h3>
           {religionMapLink(answers) && (
             <p className="matcher-religion-link">
               <Link to={religionMapLink(answers)}>See where those groups are on the map →</Link>
@@ -131,6 +128,72 @@ export default function MatchQuiz() {
             <MatchResultCard key={r.name} result={r} index={i} />
           ))}
         </div>
+        <button type="button" onClick={handleRetake}>Retake quiz</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="matcher">
+      <p className="matcher-kicker">Agency match quiz</p>
+      <p className="matcher-intro">
+        This is a starting point, not a final answer. Always talk with a real person at the agency before deciding.
+      </p>
+
+      <div className="matcher-progress" role="group" aria-label="Quiz progress">
+        <div className="matcher-progress-bar">
+          <div
+            className="matcher-progress-fill"
+            style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
+          />
+        </div>
+        <span className="matcher-progress-label">Question {step + 1} of {TOTAL_STEPS}</span>
+      </div>
+
+      <div className="matcher-steps" role="tablist" aria-label="Jump to a question">
+        {QUESTIONS.map((q, i) => (
+          <button
+            key={q.key}
+            type="button"
+            role="tab"
+            aria-selected={i === step}
+            aria-label={`Question ${i + 1}${isAnswered(q, answers) ? ' (answered)' : ''}`}
+            className={`matcher-step-dot${i === step ? ' matcher-step-dot--current' : ''}${isAnswered(q, answers) ? ' matcher-step-dot--answered' : ''}`}
+            onClick={() => goToStep(i)}
+          >
+            {isAnswered(q, answers) ? <CheckCircle weight="fill" size={14} /> : i + 1}
+          </button>
+        ))}
+      </div>
+
+      <QuizQuestion
+        key={currentQuestion.key}
+        question={currentQuestion}
+        value={answers[currentQuestion.key]}
+        onChange={(opt) => setAnswers({ ...answers, [currentQuestion.key]: opt })}
+      />
+
+      <div className="matcher-nav">
+        <button
+          type="button"
+          className="matcher-nav-back"
+          onClick={() => goToStep(step - 1)}
+          disabled={step === 0}
+        >
+          <CaretLeft size={16} weight="bold" /> Back
+        </button>
+        {isLastStep ? (
+          <button type="button" className="matcher-nav-submit" onClick={handleSubmit}>
+            See my matches
+          </button>
+        ) : (
+          <button type="button" className="matcher-nav-next" onClick={() => goToStep(step + 1)}>
+            Next <CaretRight size={16} weight="bold" />
+          </button>
+        )}
+      </div>
+      {showHint && !answered && (
+        <p className="matcher-hint" role="alert">Answer at least one question first — matches need something to go on.</p>
       )}
     </div>
   );

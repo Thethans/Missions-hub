@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import MatchQuiz from './MatchQuiz.jsx';
+import { QUESTIONS } from '../data/quizQuestions.js';
 
 const STORAGE_KEY = 'fielded_quiz_result';
 
@@ -13,6 +14,19 @@ function renderQuiz() {
       <MatchQuiz />
     </MemoryRouter>
   );
+}
+
+// The quiz is a one-question-per-step wizard — jumps directly to a given
+// step via its numbered dot (role="tab") rather than clicking "Next"
+// N times, since every question is independently optional and a real user
+// can jump around the same way.
+async function jumpToStep(user, stepNumber) {
+  await user.click(screen.getByRole('tab', { name: new RegExp(`^Question ${stepNumber}\\b`) }));
+}
+
+async function submitQuiz(user) {
+  await jumpToStep(user, QUESTIONS.length);
+  await user.click(screen.getByRole('button', { name: /see my matches/i }));
 }
 
 describe('MatchQuiz result persistence', () => {
@@ -25,7 +39,7 @@ describe('MatchQuiz result persistence', () => {
     renderQuiz();
 
     await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
-    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+    await submitQuiz(user);
 
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     expect(saved.answers.focus).toContain('church planting');
@@ -37,7 +51,7 @@ describe('MatchQuiz result persistence', () => {
   it('shows saved matches from a previous session on mount', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       answers: { tradition: 'broadly evangelical' },
-      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: ['church planting'], supportRaising: null, url: 'https://pioneers.org', score: 2, matched: [], concerns: [] }],
+      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: ['church planting'], supportRaising: null, matchPercent: 100, matched: [], concerns: [] }],
       timestamp: Date.now()
     }));
 
@@ -50,21 +64,21 @@ describe('MatchQuiz result persistence', () => {
   it('ignores a saved result older than 24 hours and shows a fresh quiz', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       answers: { tradition: 'broadly evangelical' },
-      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, url: 'https://pioneers.org', score: 2, matched: [], concerns: [] }],
+      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, matchPercent: 100, matched: [], concerns: [] }],
       timestamp: Date.now() - 25 * 60 * 60 * 1000
     }));
 
     renderQuiz();
 
     expect(screen.queryByText(/your matches from last time/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/find your mission board/i)).toBeInTheDocument();
+    expect(screen.getByText(/agency match quiz/i)).toBeInTheDocument();
   });
 
   it('clears the saved result and restarts on retake', async () => {
     const user = userEvent.setup();
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       answers: { tradition: 'broadly evangelical' },
-      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, url: 'https://pioneers.org', score: 2, matched: [], concerns: [] }],
+      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, matchPercent: 100, matched: [], concerns: [] }],
       timestamp: Date.now()
     }));
 
@@ -72,7 +86,66 @@ describe('MatchQuiz result persistence', () => {
     await user.click(screen.getByRole('button', { name: /retake quiz/i }));
 
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
-    expect(screen.getByText(/find your mission board/i)).toBeInTheDocument();
+    expect(screen.getByText(/agency match quiz/i)).toBeInTheDocument();
+  });
+});
+
+describe('MatchQuiz step navigation', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('starts on question 1 of N, with Back disabled', async () => {
+    renderQuiz();
+    expect(screen.getByText(`Question 1 of ${QUESTIONS.length}`)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
+  });
+
+  it('Next advances one question and updates the progress label', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+    await user.click(screen.getByRole('button', { name: /^next/i }));
+    expect(screen.getByText(`Question 2 of ${QUESTIONS.length}`)).toBeInTheDocument();
+  });
+
+  it('Back returns to the previous question', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+    await user.click(screen.getByRole('button', { name: /^next/i }));
+    await user.click(screen.getByRole('button', { name: /^back/i }));
+    expect(screen.getByText(`Question 1 of ${QUESTIONS.length}`)).toBeInTheDocument();
+  });
+
+  it('only shows "See my matches" on the final question', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+    expect(screen.queryByRole('button', { name: /see my matches/i })).not.toBeInTheDocument();
+
+    await jumpToStep(user, QUESTIONS.length);
+    expect(screen.getByRole('button', { name: /see my matches/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^next/i })).not.toBeInTheDocument();
+  });
+
+  it('marks a step dot as answered once that question has a value, and preserves the answer when navigating away and back', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
+    expect(screen.getByRole('tab', { name: /^Question 1 \(answered\)/ })).toBeInTheDocument();
+
+    await jumpToStep(user, 3);
+    await jumpToStep(user, 1);
+    expect(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' })).toBeChecked();
+  });
+
+  it('shows the hint instead of submitting when nothing has been answered anywhere', async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+    await jumpToStep(user, QUESTIONS.length);
+    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/answer at least one question/i);
+    expect(screen.queryByText(/your closest matches/i)).not.toBeInTheDocument();
   });
 });
 
@@ -85,6 +158,7 @@ describe('MatchQuiz religion map link', () => {
     const user = userEvent.setup();
     renderQuiz();
 
+    await jumpToStep(user, QUESTIONS.length); // 'religions' is the last question
     await user.click(screen.getByLabelText(/^islam$/i, { selector: 'input[name="religions"]' }));
     await user.click(screen.getByLabelText(/^buddhism$/i, { selector: 'input[name="religions"]' }));
     await user.click(screen.getByRole('button', { name: /see my matches/i }));
@@ -98,7 +172,7 @@ describe('MatchQuiz religion map link', () => {
     renderQuiz();
 
     await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
-    await user.click(screen.getByRole('button', { name: /see my matches/i }));
+    await submitQuiz(user);
 
     expect(screen.queryByRole('link', { name: /see where those groups are on the map/i })).not.toBeInTheDocument();
   });
@@ -107,6 +181,7 @@ describe('MatchQuiz religion map link', () => {
     const user = userEvent.setup();
     renderQuiz();
 
+    await jumpToStep(user, QUESTIONS.length);
     await user.click(screen.getByLabelText(/no strong preference/i, { selector: 'input[name="religions"]' }));
     await user.click(screen.getByRole('button', { name: /see my matches/i }));
 
@@ -118,6 +193,7 @@ describe('MatchQuiz religion map link', () => {
     renderQuiz();
 
     await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
+    await jumpToStep(user, QUESTIONS.length);
     await user.click(screen.getByLabelText(/^islam$/i, { selector: 'input[name="religions"]' }));
     await user.click(screen.getByRole('button', { name: /see my matches/i }));
 
@@ -129,7 +205,7 @@ describe('MatchQuiz religion map link', () => {
   it('surfaces the map link on a restored saved result too', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       answers: { religions: ['Hinduism'] },
-      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, url: 'https://pioneers.org', score: 0, matched: [], concerns: [] }],
+      matches: [{ name: 'Pioneers', tradition: 'broadly evangelical', focus: [], supportRaising: null, matchPercent: null, matched: [], concerns: [] }],
       timestamp: Date.now()
     }));
 

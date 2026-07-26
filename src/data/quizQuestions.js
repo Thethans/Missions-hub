@@ -5,7 +5,7 @@ export const QUESTIONS = [
   {
     key: 'focus',
     multi: true,
-    text: 'What kind of ministry pulls you most? (choose all that apply)',
+    text: 'Which ministry focus areas interest you most? (choose all that apply)',
     options: [
       'church planting',
       'unreached peoples',
@@ -23,7 +23,7 @@ export const QUESTIONS = [
   },
   {
     key: 'tradition',
-    text: 'What theological tradition fits you best?',
+    text: 'Which theological tradition best describes you?',
     options: [
       'broadly evangelical',
       'Baptist / conservative evangelical',
@@ -34,7 +34,7 @@ export const QUESTIONS = [
   },
   {
     key: 'supportRaising',
-    text: 'How do you feel about support raising?',
+    text: 'Which support model works for you?',
     options: [
       'full personal support raising',
       'faith-support model',
@@ -44,7 +44,7 @@ export const QUESTIONS = [
   {
     key: 'region',
     multi: true,
-    text: 'Where do you feel drawn to serve? (choose all that apply)',
+    text: 'Which regions are you interested in serving? (choose all that apply)',
     options: [
       'Sub-Saharan Africa',
       'Middle East / North Africa',
@@ -63,19 +63,19 @@ export const QUESTIONS = [
   },
   {
     key: 'lifeStage',
-    text: "What's your family/life stage?",
+    text: "What's your current family/life stage?",
     options: ['single', 'married, no kids yet', 'married with kids', 'not sure yet']
   },
   {
     key: 'termLength',
     multi: true,
-    text: 'How long of a commitment are you thinking? (choose all that apply)',
+    text: 'What length of commitment are you considering? (choose all that apply)',
     options: ['short-term (under 2 years)', 'mid-term (2-4 years)', 'career/long-term', 'not sure yet']
   },
   {
     key: 'roleType',
     multi: true,
-    text: 'What kind of role fits your skills? (choose all that apply)',
+    text: 'Which role types fit your skills? (choose all that apply)',
     options: [
       'church planting',
       'medical',
@@ -96,7 +96,7 @@ export const QUESTIONS = [
   {
     key: 'religions',
     multi: true,
-    text: 'Which unreached religious groups are you most drawn to reaching? (choose all that apply)',
+    text: 'Which unreached religious groups are you most interested in reaching? (choose all that apply)',
     // Real, most-represented-first list of every religion category actually
     // present in public/data/people-groups.geojson (Joshua Project data) —
     // same source and ordering rationale as the map's own legend. Not scored
