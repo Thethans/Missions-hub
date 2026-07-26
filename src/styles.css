@@ -3159,6 +3159,48 @@ a { color: var(--voyage-teal); }
   }
 }
 
+/* ==== ROUTE FLY TRANSITION ==== */
+
+/* The solid layer that actually guarantees full coverage on nav-tab
+   changes (see useRouteFlyTransition.js) — a huge plane icon alone would
+   always have gaps around the fuselage/wings, so this navy panel is what's
+   really doing the "cover the whole screen" work; the plane on top sells
+   the "flying across" read. z-index sits above the nav (max elsewhere in
+   this file is 1001) and the mobile drawer. */
+.route-fly-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: var(--ink-navy);
+  will-change: transform;
+}
+
+.route-fly-plane {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 5001;
+  color: var(--atlas-paper);
+  will-change: transform, opacity;
+  filter: drop-shadow(0 12px 40px rgba(22, 35, 59, 0.5));
+  /* Purely decorative (aria-hidden) — never part of the hit-testing layer,
+     unlike .route-fly-panel which deliberately blocks input mid-flight. */
+  pointer-events: none;
+}
+
+.route-fly-plane svg {
+  display: block;
+  width: 48vw;
+  height: 48vw;
+  max-width: 720px;
+  max-height: 720px;
+  transform: rotate(6deg);
+}
+
+@media (max-width: 640px) {
+  .route-fly-plane svg { width: 70vw; height: 70vw; }
+}
+
 /* ==== FOOTER ==== */
 
 .app-footer {
