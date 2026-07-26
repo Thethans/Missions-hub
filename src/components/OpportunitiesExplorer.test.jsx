@@ -476,6 +476,85 @@ describe('OpportunitiesExplorer pagination, URL sync, and facet counts', () => {
   }, TIMEOUT);
 });
 
+describe('OpportunitiesExplorer active-filter chips', () => {
+  beforeEach(() => {
+    mockSupabase = null;
+    mockFallbackFetch(PAGINATION_SAMPLE);
+    vi.stubEnv('VITE_ENABLE_FRESH_FETCH', 'false');
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    localStorage.clear();
+  });
+
+  it('shows a removable chip for each active filter, even with the panel closed', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    await user.click(screen.getByRole('button', { name: /^Filters/i }));
+    await user.click(screen.getByRole('button', { name: /^Sub-Saharan Africa/ }));
+
+    // Close the panel — the chip summary must stay visible on its own.
+    await user.click(screen.getByRole('button', { name: /^Filters/i }));
+    expect(screen.queryByRole('button', { name: 'Close filters' })).not.toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /Sub-Saharan Africa/, hidden: false })).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('removes just that filter when its chip is clicked', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    await user.click(screen.getByRole('button', { name: /^Filters/i }));
+    await user.click(screen.getByRole('button', { name: /^Sub-Saharan Africa/ }));
+    await waitFor(() => expect(screen.getByTestId('url-params').textContent).toContain('region=Sub-Saharan'));
+
+    const activeFiltersRegion = screen.getByLabelText('Active filters');
+    await user.click(within(activeFiltersRegion).getByText('Sub-Saharan Africa'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('url-params').textContent).not.toContain('region=');
+    });
+  }, TIMEOUT);
+
+  it('a search term also shows as a removable chip', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    await user.type(screen.getByPlaceholderText('Search opportunities...'), 'Opp 1');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Active filters')).toBeInTheDocument();
+    });
+    expect(within(screen.getByLabelText('Active filters')).getByText('"Opp 1"')).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('"Clear all" removes every active filter at once', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Opp 0'));
+
+    await user.click(screen.getByRole('button', { name: /^Filters/i }));
+    await user.click(screen.getByRole('button', { name: /^Sub-Saharan Africa/ }));
+    await user.click(screen.getByRole('button', { name: /^medical/ }));
+
+    const clearAll = within(screen.getByLabelText('Active filters')).getByText('Clear all');
+    await user.click(clearAll);
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Active filters')).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('url-params').textContent).not.toContain('region=');
+    expect(screen.getByTestId('url-params').textContent).not.toContain('category=');
+  }, TIMEOUT);
+});
+
 const CTA_SAMPLE = [
   { id: 'cta-1', agency: 'Africa Inland Mission (AIM)', title: 'Field Role', url: 'https://example.org/1', location: null, region: null, role_type: null, term_length: null, description: null },
   { id: 'cta-2', agency: 'Cru (Campus Crusade for Christ)', title: 'Campus Role', url: 'https://example.org/2', location: null, region: null, role_type: null, term_length: null, description: null },

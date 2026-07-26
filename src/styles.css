@@ -1961,6 +1961,53 @@ a { color: var(--voyage-teal); }
 .checklist-error { color: #b3261e; }
 .checklist-loading { text-align: center; margin-top: 3rem; }
 
+/* Low-pressure account prompt for anonymous checklist progress — a plain
+   banner, not a modal/paywall, so it never blocks the checklist itself. */
+.checklist-signup-prompt {
+  max-width: 720px;
+  margin: var(--space-6) auto 0;
+  padding: var(--space-4) var(--space-5);
+  background: rgba(43, 110, 118, 0.08);
+  border: 1px solid var(--voyage-teal);
+  border-radius: var(--radius);
+}
+
+.checklist-signup-prompt p {
+  margin: 0;
+  color: var(--ink-navy);
+}
+
+.checklist-signup-prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.checklist-signup-prompt-dismiss {
+  margin-left: auto;
+  font-size: 1.3rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: var(--muted-text);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+}
+
+.checklist-signup-prompt-dismiss:hover { color: var(--ink-navy); }
+
+/* The prompt's expanded state reuses .checklist-auth's own form styling —
+   just drop its centering/shadow/margin so it sits inline in the banner
+   instead of looking like a second floating card. */
+.checklist-signup-prompt .checklist-auth {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+
 .checklist { max-width: 720px; margin: 2rem auto; padding: 0 var(--space-6) 3rem; }
 
 .checklist-header {
@@ -2305,6 +2352,13 @@ a { color: var(--voyage-teal); }
   gap: var(--space-4);
 }
 
+/* Overlay + mobile-only header are always in the DOM when the panel is
+   open (see OpportunitiesExplorer.template.jsx) but only rendered visibly
+   below the same 640px breakpoint the sheet layout kicks in at. */
+.opp-filters-overlay { display: none; }
+
+.opp-filters-mobile-header { display: none; }
+
 .opp-filter-group {
   display: flex;
   flex-direction: column;
@@ -2397,6 +2451,41 @@ a { color: var(--voyage-teal); }
   text-decoration: underline;
   align-self: flex-start;
   padding: 0;
+}
+
+/* Active-filter chip row — visible whenever a filter is applied, whether
+   or not the panel itself is open, so a visitor can see and undo what's
+   narrowing the list without reopening it. */
+.opp-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.opp-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  border: 1px solid var(--voyage-teal);
+  border-radius: 999px;
+  background: rgba(43, 110, 118, 0.08);
+  color: var(--voyage-teal);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.opp-active-chip:hover { background: rgba(43, 110, 118, 0.16); }
+.opp-active-chip svg { flex-shrink: 0; }
+
+.opp-clear-filters--inline {
+  font-size: 0.8rem;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 /* Results header */
@@ -2690,6 +2779,75 @@ a { color: var(--voyage-teal); }
   .opp-search-wrap { min-width: 100%; }
   .opp-grid { grid-template-columns: 1fr; }
   .opp-modal { padding: var(--space-6); margin: var(--space-3); }
+
+  /* Filter panel becomes a bottom sheet: fixed to the viewport edge,
+     scrollable internally so a tall filter list never pushes the mobile
+     close button off-screen, with the same slide-up-from-below motion as
+     a native sheet. Reduced motion still gets the sheet, just without the
+     transform animation (see the shared prefers-reduced-motion rule near
+     the other opp-* animations). */
+  .opp-filters-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(22, 35, 59, 0.45);
+    z-index: 150;
+  }
+
+  .opp-filters {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 151;
+    max-height: 85vh;
+    overflow-y: auto;
+    margin-bottom: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: none;
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+    animation: opp-filters-sheet-in 0.25s ease-out;
+  }
+
+  .opp-filters-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: white;
+    margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) 0;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .opp-filters-mobile-title {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .opp-filters-mobile-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    border: none;
+    background: none;
+    color: var(--muted-text);
+    cursor: pointer;
+  }
+}
+
+@keyframes opp-filters-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+  .opp-filters { animation: none; }
 }
 
 /* ==== ROUTE LOADING BAR ==== */

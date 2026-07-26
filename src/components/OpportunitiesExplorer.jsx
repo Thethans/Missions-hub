@@ -33,7 +33,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-24T17:03:57.228Z"
+// Generated: "2026-07-25T15:35:03.051Z"
 // Opportunities: 1063 across 27 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -410,6 +410,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [selectedRoles, setSelectedRoles] = useState(() => parseSetParam(searchParams, 'category'));
   const [selectedTerms, setSelectedTerms] = useState(() => parseSetParam(searchParams, 'term'));
   const [showFilters, setShowFilters] = useState(false);
+  const filtersPanelRef = useRef(null);
+  const filterToggleRef = useRef(null);
 
   const [quizScores] = useState(loadQuizAgencyScores);
   const [sortMode, setSortMode] = useState(() => {
@@ -582,10 +584,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     () =>
       new Fuse(opportunities || [], {
         keys: [
-          { name: 'title', weight: 0.4 },
-          { name: 'agency', weight: 0.3 },
+          { name: 'title', weight: 0.35 },
+          { name: 'agency', weight: 0.25 },
+          { name: 'role_type', weight: 0.15 },
           { name: 'location', weight: 0.15 },
-          { name: 'description', weight: 0.15 }
+          { name: 'description', weight: 0.1 }
         ],
         threshold: 0.32,
         ignoreLocation: true
@@ -753,6 +756,63 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size;
   const hasActiveFilters = search || activeFilterCount > 0 || showSavedOnly;
 
+  // Removable-chip summary of every active filter, independent of whether
+  // the filter panel itself is open — a visitor shouldn't have to reopen
+  // the panel just to see (or undo) what's currently narrowing the list.
+  const activeFilterChips = useMemo(() => {
+    const chips = [];
+    if (search) chips.push({ key: 'search', label: `"${search}"`, onRemove: () => setSearch('') });
+    for (const a of selectedAgencies) chips.push({ key: `agency-${a}`, label: a, onRemove: () => toggleFilter(setSelectedAgencies, a) });
+    for (const r of selectedRegions) chips.push({ key: `region-${r}`, label: r, onRemove: () => toggleFilter(setSelectedRegions, r) });
+    for (const r of selectedRoles) chips.push({ key: `role-${r}`, label: r, onRemove: () => toggleFilter(setSelectedRoles, r) });
+    for (const t of selectedTerms) chips.push({ key: `term-${t}`, label: t, onRemove: () => toggleFilter(setSelectedTerms, t) });
+    if (showSavedOnly) chips.push({ key: 'saved', label: 'Saved only', onRemove: () => setShowSavedOnly(false) });
+    return chips;
+  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly]);
+
+  // Below ~640px the filter panel becomes a bottom sheet (see .opp-filters
+  // in styles.css) — this gives it the keyboard behavior a sheet actually
+  // needs (focus moves in on open, Tab wraps at its own edges, Escape
+  // closes and returns focus to the toggle that opened it), matching
+  // InquiryModal's pattern. Above 640px it stays the existing inline
+  // region — a real focus trap there would be a regression, not an
+  // improvement, since the rest of the page is still fully usable while
+  // it's open — so the trap itself only activates under the same
+  // 640px breakpoint the CSS uses.
+  useEffect(() => {
+    if (!showFilters) return;
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    if (isMobile) {
+      const focusable = filtersPanelRef.current?.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusable?.focus();
+    }
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setShowFilters(false);
+        filterToggleRef.current?.focus();
+        return;
+      }
+      if (!isMobile || e.key !== 'Tab') return;
+      const focusables = filtersPanelRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showFilters]);
+
   return (
     <div className="opp-explorer">
       {/* Search + filter bar */}
@@ -770,6 +830,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         </div>
         <button
           type="button"
+          ref={filterToggleRef}
           className={`opp-filter-toggle${showFilters ? ' opp-filter-toggle--open' : ''}`}
           onClick={() => setShowFilters(!showFilters)}
           aria-expanded={showFilters}
@@ -804,6 +865,21 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         </label>
       </div>
 
+      {activeFilterChips.length > 0 && (
+        <div className="opp-active-filters" aria-label="Active filters">
+          {activeFilterChips.map((chip) => (
+            <button type="button" key={chip.key} className="opp-active-chip" onClick={chip.onRemove}>
+              <span>{chip.label}</span>
+              <X size={12} weight="bold" aria-hidden="true" />
+              <span className="visually-hidden">Remove filter</span>
+            </button>
+          ))}
+          <button type="button" className="opp-clear-filters opp-clear-filters--inline" onClick={clearFilters}>
+            Clear all
+          </button>
+        </div>
+      )}
+
       {sortMode === SORT_RELEVANCE && quizScores ? (
         <p className="opp-sort-pill">Sorted by your quiz matches</p>
       ) : !quizScores ? (
@@ -812,9 +888,26 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         </p>
       ) : null}
 
-      {/* Expandable filter panel */}
+      {/* Expandable filter panel — an inline region on desktop, a bottom
+          sheet below 640px (see .opp-filters / .opp-filters-overlay in
+          styles.css). The overlay only renders visibly under that same
+          breakpoint but stays in the DOM either way so its click-outside-
+          to-close handler is always available. */}
       {showFilters && (
-        <div className="opp-filters" id="opp-filters-panel">
+        <>
+          <div className="opp-filters-overlay" onClick={() => setShowFilters(false)} aria-hidden="true" />
+          <div className="opp-filters" id="opp-filters-panel" ref={filtersPanelRef} aria-label="Filter opportunities">
+          <div className="opp-filters-mobile-header">
+            <span className="opp-filters-mobile-title">Filters</span>
+            <button
+              type="button"
+              className="opp-filters-mobile-close"
+              onClick={() => setShowFilters(false)}
+              aria-label="Close filters"
+            >
+              <X size={18} weight="bold" />
+            </button>
+          </div>
           <div className="opp-filter-group">
             <span className="opp-filter-label">
               Agency
@@ -868,7 +961,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
               Clear all filters {activeFilterCount > 0 && `(${activeFilterCount})`}
             </button>
           )}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Results */}
