@@ -128,15 +128,24 @@ export function formatCoord(lat, lon) {
   return `${latLabel} ${lonLabel}`;
 }
 
+// Each real sending city gets ROUTES_PER_CITY different real destinations
+// (not just one) — more distinct group names cycling through, still only
+// ever real coordinates/names, just more of them sampled.
+const ROUTES_PER_CITY = 3;
+
 export function buildRoutes(unreachedFeatures) {
   if (unreachedFeatures.length < SENDING_CITIES.length) return [];
   const sorted = [...unreachedFeatures].sort(
     (a, b) => a.geometry.coordinates[0] - b.geometry.coordinates[0]
   );
-  const fractions = [0.15, 0.5, 0.85];
+  const routeCount = Math.min(SENDING_CITIES.length * ROUTES_PER_CITY, sorted.length);
 
-  return SENDING_CITIES.map((city, i) => {
-    const idx = Math.min(sorted.length - 1, Math.floor(fractions[i] * sorted.length));
+  return Array.from({ length: routeCount }, (_, i) => {
+    const city = SENDING_CITIES[i % SENDING_CITIES.length];
+    // Evenly spread fractions across [0, 1), offset by half a slot so no
+    // route lands exactly on the 0%/100% edge of the sorted list.
+    const fraction = (i + 0.5) / routeCount;
+    const idx = Math.min(sorted.length - 1, Math.floor(fraction * sorted.length));
     const dest = sorted[idx];
     const [destLon, destLat] = dest.geometry.coordinates;
     const from = project(city.lon, city.lat);

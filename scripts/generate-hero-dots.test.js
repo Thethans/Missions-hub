@@ -61,11 +61,11 @@ describe('buildRoutes', () => {
     properties: { name, progressStatus: 'unreached' }
   });
 
-  it('builds one route per sending city, using real feature coordinates as destinations', () => {
+  it('builds several routes per sending city, using real feature coordinates as destinations', () => {
     const features = Array.from({ length: 30 }, (_, i) => makeFeature(-170 + i * 12, 10, `Group ${i}`));
     const routes = buildRoutes(features);
 
-    expect(routes).toHaveLength(3);
+    expect(routes).toHaveLength(9);
     for (const route of routes) {
       expect(route.from.label).toMatch(/°[NS] .*°[EW]/);
       expect(route.to.label).toMatch(/°[NS] .*°[EW]/);

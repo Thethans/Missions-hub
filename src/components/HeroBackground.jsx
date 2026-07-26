@@ -93,23 +93,58 @@ function Pulses({ pulses, animate }) {
   );
 }
 
+// Deterministic pseudo-random in [0, 1) — same hash-of-a-sine trick as the
+// rest of this file's "stable but not obviously patterned" values. Used
+// below so route/label timing doesn't feel like a metronome (every 1.3s,
+// forever) but also doesn't produce a server/client hydration mismatch the
+// way Math.random() in render would.
+function pseudoRandom(seed) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function Routes({ routes, animate }) {
   return (
     <g className="hero-atlas-routes">
-      {routes.map((r, i) => (
-        <g key={i} style={animate ? { animationDelay: `${i * 1.3}s` } : undefined}>
-          <path
-            d={`M ${r.from.x} ${r.from.y} Q ${r.controlX} ${r.controlY} ${r.to.x} ${r.to.y}`}
-            className="hero-atlas-route"
-          />
-          <text x={r.from.x} y={r.from.y - 10} className="hero-atlas-coord" textAnchor="middle">
-            {r.from.label}
-          </text>
-          <text x={r.to.x} y={r.to.y - 10} className="hero-atlas-coord" textAnchor="middle">
-            {r.to.label}
-          </text>
-        </g>
-      ))}
+      {routes.map((r, i) => {
+        // Each route gets its own delay AND cycle duration (not just a
+        // fixed stagger), so routes drift in and out of phase with each
+        // other over time instead of repeating in lockstep — and the two
+        // labels on a route pop a beat apart rather than together.
+        const routeDelay = pseudoRandom(i * 3.1 + 1) * 5;
+        const routeDuration = 5.5 + pseudoRandom(i * 7.7 + 2) * 4.5;
+        const fromDelay = routeDelay + pseudoRandom(i * 5.3 + 3) * 0.8;
+        const toDelay = routeDelay + 0.9 + pseudoRandom(i * 9.1 + 4) * 1.4;
+        return (
+          <g
+            key={i}
+            style={animate ? { animationDelay: `${routeDelay}s`, animationDuration: `${routeDuration}s` } : undefined}
+          >
+            <path
+              d={`M ${r.from.x} ${r.from.y} Q ${r.controlX} ${r.controlY} ${r.to.x} ${r.to.y}`}
+              className="hero-atlas-route"
+            />
+            <text
+              x={r.from.x}
+              y={r.from.y - 10}
+              className="hero-atlas-coord"
+              textAnchor="middle"
+              style={animate ? { animationDelay: `${fromDelay}s`, animationDuration: `${routeDuration}s` } : undefined}
+            >
+              {r.from.label}
+            </text>
+            <text
+              x={r.to.x}
+              y={r.to.y - 10}
+              className="hero-atlas-coord"
+              textAnchor="middle"
+              style={animate ? { animationDelay: `${toDelay}s`, animationDuration: `${routeDuration}s` } : undefined}
+            >
+              {r.to.label}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
