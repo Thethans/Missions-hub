@@ -2063,7 +2063,9 @@ a { color: var(--voyage-teal); }
   background: none;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  font-family: inherit;
+  font-size: 0.95rem;
   color: var(--muted-text);
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease;
@@ -2081,7 +2083,14 @@ a { color: var(--voyage-teal); }
   color: white;
   border: none;
   border-radius: var(--radius);
-  padding: var(--space-2) var(--space-5);
+  /* Was var(--space-5), a token that doesn't exist in this project's scale
+     (--space-4 jumps straight to --space-6) — an unresolvable var() inside
+     a shorthand drops the whole declaration, so this button has had zero
+     padding this whole time. --space-6 matches .matcher > button's own
+     horizontal padding for the same "primary CTA" sizing everywhere else. */
+  padding: var(--space-3) var(--space-6);
+  font-family: inherit;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
@@ -2180,7 +2189,11 @@ a { color: var(--voyage-teal); }
 .checklist-signup-prompt {
   max-width: 720px;
   margin: var(--space-6) auto 0;
-  padding: var(--space-4) var(--space-5);
+  /* Was var(--space-5) — not a token in this project's scale (--space-4
+     jumps straight to --space-6), so this whole shorthand was invalid and
+     dropped: the banner has had zero padding on every side, not just
+     horizontal, until this fix. */
+  padding: var(--space-4) var(--space-6);
   background: rgba(43, 110, 118, 0.08);
   border: 1px solid var(--voyage-teal);
   border-radius: var(--radius);
