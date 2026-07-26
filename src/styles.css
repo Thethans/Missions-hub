@@ -433,9 +433,9 @@ a { color: var(--voyage-teal); }
 
 @keyframes hero-atlas-route-draw {
   0% { stroke-dashoffset: 0; opacity: 0; }
-  8% { opacity: 0.7; }
-  45% { stroke-dashoffset: -120; opacity: 0.7; }
-  70%, 100% { stroke-dashoffset: -120; opacity: 0; }
+  10% { opacity: 0.7; }
+  55% { stroke-dashoffset: -120; opacity: 0.7; }
+  80%, 100% { stroke-dashoffset: -120; opacity: 0; }
 }
 
 .hero-atlas-coord {
@@ -446,10 +446,13 @@ a { color: var(--voyage-teal); }
   animation: hero-atlas-coord-fade 6s ease-in-out infinite;
 }
 
+/* Wide plateau at full opacity (35%-65% of the cycle, not the old 20%) and
+   slow fade edges either side — a name needs to sit still long enough to
+   actually read, not just flicker past. */
 @keyframes hero-atlas-coord-fade {
-  0%, 20% { opacity: 0; }
-  45%, 65% { opacity: 0.75; }
-  85%, 100% { opacity: 0; }
+  0%, 12% { opacity: 0; }
+  35%, 65% { opacity: 0.85; }
+  88%, 100% { opacity: 0; }
 }
 
 /* Ambient rising particles — pure atmosphere (not real data, unlike the

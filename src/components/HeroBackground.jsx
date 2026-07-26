@@ -112,7 +112,10 @@ function Routes({ routes, animate }) {
         // other over time instead of repeating in lockstep — and the two
         // labels on a route pop a beat apart rather than together.
         const routeDelay = pseudoRandom(i * 3.1 + 1) * 5;
-        const routeDuration = 5.5 + pseudoRandom(i * 7.7 + 2) * 4.5;
+        // Long enough that a label's full-opacity plateau (see
+        // hero-atlas-coord-fade in styles.css) is actually readable, not a
+        // flicker — 10-16s per cycle rather than the original 5.5-10s.
+        const routeDuration = 10 + pseudoRandom(i * 7.7 + 2) * 6;
         const fromDelay = routeDelay + pseudoRandom(i * 5.3 + 3) * 0.8;
         const toDelay = routeDelay + 0.9 + pseudoRandom(i * 9.1 + 4) * 1.4;
         return (
