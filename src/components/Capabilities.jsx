@@ -5,6 +5,7 @@ import agencies from '../data/agencies.json';
 import { QUESTIONS } from '../data/quizQuestions.js';
 import opportunitiesMeta from '../data/opportunitiesMeta.json';
 import useTilt from '../hooks/useTilt.js';
+import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import SpotlightOverlay from './SpotlightOverlay.jsx';
 
 // Counts come from the same files the quiz itself reads (src/data/
@@ -45,11 +46,14 @@ const EASE = [0.16, 1, 0.3, 1];
 // hook call per card — hooks can't be called inside a loop callback.
 function CapabilityCard({ item, index }) {
   const tilt = useTilt();
+  const prefersReduced = usePrefersReducedMotion();
   return (
     <motion.div
       ref={tilt.ref}
       className="capability-wrapper"
-      initial={{ opacity: 0, y: 50, scale: 0.92 }}
+      // initial={false} under reduced motion — see RevealOnScroll.jsx for
+      // why this beats an opacity:0 that depends on whileInView firing.
+      initial={prefersReduced ? false : { opacity: 0, y: 50, scale: 0.92 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.7, delay: index * 0.12, ease: EASE }}
@@ -68,11 +72,12 @@ function CapabilityCard({ item, index }) {
 }
 
 export default function Capabilities() {
+  const prefersReduced = usePrefersReducedMotion();
   return (
     <section className="capabilities">
       <SpotlightOverlay />
       <motion.h2
-        initial={{ opacity: 0, y: 30 }}
+        initial={prefersReduced ? false : { opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.5 }}
         transition={{ duration: 0.6, ease: EASE }}
