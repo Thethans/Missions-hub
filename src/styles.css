@@ -394,10 +394,14 @@ a { color: var(--voyage-teal); }
   to { opacity: 0.8; }
 }
 
-.hero-atlas-dots circle {
-  fill: var(--atlas-paper);
-  opacity: 0.35;
-}
+/* Same status colors as the live map (WorldMap.jsx's CIRCLE_COLOR) — every
+   dot's color traces back to a real progressStatus majority in its grid
+   cell, not a decorative palette. */
+.hero-atlas-dot { opacity: 0.55; }
+.hero-atlas-dot--unreached { fill: var(--status-unreached); }
+.hero-atlas-dot--formative { fill: var(--status-formative); }
+.hero-atlas-dot--reached { fill: var(--status-reached); }
+.hero-atlas-dot--unknown { fill: var(--atlas-paper); opacity: 0.3; }
 
 .hero-atlas-pulse {
   fill: var(--status-unreached);
@@ -528,7 +532,7 @@ a { color: var(--voyage-teal); }
   .hero-content {
     align-items: flex-start;
     text-align: left;
-    max-width: 640px;
+    max-width: 720px;
     padding-left: clamp(2rem, 6vw, 6rem);
   }
   .hero p { margin-left: 0; margin-right: 0; }
@@ -553,7 +557,7 @@ a { color: var(--voyage-teal); }
 }
 
 .hero-wordmark {
-  font-size: clamp(3.75rem, 13vw + 1rem, 10.5rem);
+  font-size: clamp(4.5rem, 15vw + 1.25rem, 12rem);
   line-height: 0.95;
   letter-spacing: -0.03em;
   margin: 0;

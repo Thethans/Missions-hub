@@ -50,10 +50,26 @@ export function project(lon, lat) {
 // traces back to at least one real location. Step size is searched so the
 // final dot count lands in the spec's ~600-900 range regardless of exactly
 // how many people-group records this particular Joshua Project pull has.
+//
+// Each cell optionally carries a real progressStatus tally (only when
+// points are passed as [lon, lat, status] triples — the plain [lon, lat]
+// form used by earlier tests still works and yields status-less dots) so
+// the hero can color-code dots the same way the live map does, without
+// inventing anything: a cell's status is whichever real progressStatus is
+// most common among the actual people groups that landed in it.
 function toDots(cells) {
-  return [...cells].map((key) => {
+  return [...cells.entries()].map(([key, statusCounts]) => {
     const [x, y] = key.split(',').map(Number);
-    return { x, y };
+    const dot = { x, y };
+    if (statusCounts) {
+      let best = null;
+      let bestCount = -1;
+      for (const [status, count] of statusCounts) {
+        if (count > bestCount) { best = status; bestCount = count; }
+      }
+      dot.status = best;
+    }
+    return dot;
   });
 }
 
@@ -63,12 +79,19 @@ export function rasterize(points, targetMin = 600, targetMax = 900) {
   let step = 4;
   let closest = null; // best-so-far cells, in case no attempt lands in range
   for (let attempt = 0; attempt < 40; attempt++) {
-    const cells = new Set();
-    for (const [lon, lat] of points) {
+    const cells = new Map(); // key -> Map(status -> count), or null when no status given
+    for (const [lon, lat, status] of points) {
       const [x, y] = project(lon, lat);
       const gx = Math.round(x / step) * step;
       const gy = Math.round(y / step) * step;
-      cells.add(`${gx},${gy}`);
+      const key = `${gx},${gy}`;
+      if (status) {
+        if (!cells.has(key)) cells.set(key, new Map());
+        const statusCounts = cells.get(key);
+        statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+      } else if (!cells.has(key)) {
+        cells.set(key, null);
+      }
     }
 
     if (cells.size >= targetMin && cells.size <= targetMax) {
@@ -136,7 +159,7 @@ export function buildRoutes(unreachedFeatures) {
 
 function main() {
   const geojson = JSON.parse(fs.readFileSync(GEOJSON_PATH, 'utf8'));
-  const allPoints = geojson.features.map((f) => f.geometry.coordinates);
+  const allPoints = geojson.features.map((f) => [...f.geometry.coordinates, f.properties.progressStatus]);
   const unreachedFeatures = geojson.features.filter((f) => f.properties.progressStatus === 'unreached');
 
   const dots = rasterize(allPoints);

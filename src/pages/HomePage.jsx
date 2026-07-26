@@ -17,16 +17,20 @@ const DRAMATIC = [0.16, 1, 0.3, 1];
 
 function HeroHeadline() {
   const prefersReduced = usePrefersReducedMotion();
-  const wght = useMotionValue(prefersReduced ? 800 : 340);
-  const opsz = useMotionValue(prefersReduced ? 100 : 18);
+  // Starts further from its resting weight/width than the rest of the hero's
+  // bloom (250/12 vs the old 340/18) and runs longer (2.6s vs 2.1s) — the
+  // wordmark is the one element that gets its own, more theatrical entrance;
+  // everything else around it still uses the snappier heroRise timing.
+  const wght = useMotionValue(prefersReduced ? 800 : 250);
+  const opsz = useMotionValue(prefersReduced ? 100 : 12);
   const fontVariationSettings = useMotionTemplate`'wght' ${wght}, 'opsz' ${opsz}, 'WONK' 1`;
 
   useEffect(() => {
     if (prefersReduced) return;
     // Slow, dramatic bloom: the wordmark swells from a thin, condensed form
-    // into its full display weight over ~2s.
-    const wghtControls = animate(wght, 800, { duration: 2.1, ease: DRAMATIC });
-    const opszControls = animate(opsz, 100, { duration: 2.1, ease: DRAMATIC });
+    // into its full display weight over ~2.6s.
+    const wghtControls = animate(wght, 800, { duration: 2.6, ease: DRAMATIC });
+    const opszControls = animate(opsz, 100, { duration: 2.6, ease: DRAMATIC });
     return () => {
       wghtControls.stop();
       opszControls.stop();
@@ -39,7 +43,7 @@ function HeroHeadline() {
     <motion.h1
       className="hero-wordmark"
       style={{ fontVariationSettings }}
-      variants={heroRise}
+      variants={heroWordmarkRise}
     >
       Fielded
     </motion.h1>
@@ -59,6 +63,22 @@ const heroContainer = {
 const heroRise = {
   hidden: { opacity: 0, y: 48, scale: 0.985 },
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.7, ease: DRAMATIC } }
+};
+
+// The wordmark's own entrance — a bigger drop and a much deeper starting
+// scale than heroRise (0.68 vs 0.985), so it visibly grows into place
+// rather than just fading up like its siblings. Independent duration from
+// heroRise, but staggerChildren still controls *when* it starts (see
+// heroContainer) so this doesn't reintroduce the LCP delay the tightened
+// stagger timing above was written to fix.
+const heroWordmarkRise = {
+  hidden: { opacity: 0, y: 90, scale: 0.68 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 110, damping: 15, mass: 1 }
+  }
 };
 
 export default function HomePage() {

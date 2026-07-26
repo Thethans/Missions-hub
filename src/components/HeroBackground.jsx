@@ -57,12 +57,22 @@ function AmbientParticles() {
 // is ~193, so this crop keeps that band roughly centered with padding.
 const MOBILE_VIEWBOX = '0 70 800 260';
 
+// Colored the same way the live map colors real people groups (see
+// WorldMap.jsx's CIRCLE_COLOR) — unreached/formative/reached, straight from
+// each cell's real progressStatus majority (src/data/heroAtlas.json, built
+// by scripts/generate-hero-dots.js), never an invented palette.
 function Dots({ dots, mobile }) {
   const visible = mobile ? dots.filter((_, i) => i % 2 === 0) : dots;
   return (
     <g className="hero-atlas-dots">
       {visible.map((d, i) => (
-        <circle key={i} cx={d.x} cy={d.y} r={1.6} />
+        <circle
+          key={i}
+          cx={d.x}
+          cy={d.y}
+          r={1.1}
+          className={`hero-atlas-dot hero-atlas-dot--${d.status || 'unknown'}`}
+        />
       ))}
     </g>
   );
