@@ -1,5 +1,15 @@
 import * as cheerio from 'cheerio';
 
+// Node's native fetch has no default timeout — a single agency site that
+// accepts the TCP connection but never responds (rather than erroring or
+// refusing) hangs this call forever. Since sync-opportunities.js runs a
+// worker-pool of these across 21 agencies and only resolves once every
+// task settles, one hung fetch stalls the entire scrape indefinitely
+// instead of just failing that one agency. Confirmed live: the first CI
+// run to get past the unrelated npm-lockfile/Node-version bugs this fixed
+// alongside ran for 15+ minutes with no completion before this was added.
+const FETCH_TIMEOUT_MS = 20000;
+
 export class BaseScraper {
   constructor(agencyName, baseUrl) {
     this.agency = agencyName;
@@ -7,12 +17,25 @@ export class BaseScraper {
   }
 
   async fetchPage(url) {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'FieldedBot/1.0 (missions-hub; educational project)',
-        'Accept': 'text/html,application/xhtml+xml'
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    let res;
+    try {
+      res = await fetch(url, {
+        headers: {
+          'User-Agent': 'FieldedBot/1.0 (missions-hub; educational project)',
+          'Accept': 'text/html,application/xhtml+xml'
+        },
+        signal: controller.signal
+      });
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw new Error(`${this.agency}: timed out after ${FETCH_TIMEOUT_MS}ms fetching ${url}`);
       }
-    });
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
     if (!res.ok) throw new Error(`${this.agency}: HTTP ${res.status} for ${url}`);
     return res.text();
   }
