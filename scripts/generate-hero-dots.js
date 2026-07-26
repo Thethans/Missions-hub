@@ -159,28 +159,48 @@ export function buildRoutes(unreachedFeatures) {
 
 function main() {
   const geojson = JSON.parse(fs.readFileSync(GEOJSON_PATH, 'utf8'));
-  const allPoints = geojson.features.map((f) => [...f.geometry.coordinates, f.properties.progressStatus]);
+  // The base dot-matrix (the texture that traces the continents) carries no
+  // status — it's a plain, uncolored map, same as the original "Living
+  // Atlas" — so this stays plain [lon, lat] pairs.
+  const allPoints = geojson.features.map((f) => f.geometry.coordinates);
   const unreachedFeatures = geojson.features.filter((f) => f.properties.progressStatus === 'unreached');
 
   const dots = rasterize(allPoints);
 
-  // ~40 unreached points sampled evenly across the sorted-by-longitude list
-  // (not randomly) so the west→east animation-delay stagger is smooth and
-  // the build output is stable across runs — same dataset in, same file out.
-  const PULSE_COUNT = 40;
-  const sortedUnreached = [...unreachedFeatures].sort(
-    (a, b) => a.geometry.coordinates[0] - b.geometry.coordinates[0]
-  );
-  const strideLength = Math.max(1, Math.floor(sortedUnreached.length / PULSE_COUNT));
+  // ~14 real people groups per status, sampled evenly by longitude within
+  // each status bucket (not randomly, so the build is stable run-to-run),
+  // then interleaved round-robin across the three buckets rather than
+  // concatenated. Real groups of the same status tend to sit in the same
+  // region (a contiguous unreached belt, say), so a single list sorted by
+  // longitude alone would still read as solid-colored blocks; interleaving
+  // keeps every pulse a real, specific group while breaking that up into a
+  // visually mixed, sporadic scatter of colors.
+  const PULSES_PER_STATUS = 14;
+  const statuses = ['unreached', 'formative', 'reached'];
+  const byStatus = Object.fromEntries(statuses.map((status) => {
+    const features = geojson.features.filter((f) => f.properties.progressStatus === status);
+    const sorted = [...features].sort((a, b) => a.geometry.coordinates[0] - b.geometry.coordinates[0]);
+    const strideLength = Math.max(1, Math.floor(sorted.length / PULSES_PER_STATUS));
+    const sampled = [];
+    for (let i = 0; i < sorted.length && sampled.length < PULSES_PER_STATUS; i += strideLength) {
+      sampled.push(sorted[i]);
+    }
+    return [status, sampled];
+  }));
+
   const pulses = [];
-  for (let i = 0; i < sortedUnreached.length && pulses.length < PULSE_COUNT; i += strideLength) {
-    const [lon, lat] = sortedUnreached[i].geometry.coordinates;
-    const [x, y] = project(lon, lat);
-    // Delay fraction (0..1) by longitude — animation-delay is computed from
-    // this at render time so the pulse visibly travels west→east, like
-    // time zones waking up, matching the spec's description exactly.
-    const delayFraction = (lon + 180) / 360;
-    pulses.push({ x, y, delayFraction });
+  for (let i = 0; i < PULSES_PER_STATUS; i++) {
+    for (const status of statuses) {
+      const feature = byStatus[status][i];
+      if (!feature) continue;
+      const [lon, lat] = feature.geometry.coordinates;
+      const [x, y] = project(lon, lat);
+      // Delay fraction (0..1) by longitude — animation-delay is computed
+      // from this at render time so the pulse visibly travels west→east,
+      // like time zones waking up, matching the spec's description exactly.
+      const delayFraction = (lon + 180) / 360;
+      pulses.push({ x, y, delayFraction, status });
+    }
   }
 
   const routes = buildRoutes(unreachedFeatures);

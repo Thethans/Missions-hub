@@ -394,19 +394,21 @@ a { color: var(--voyage-teal); }
   to { opacity: 0.8; }
 }
 
-/* Same status colors as the live map (WorldMap.jsx's CIRCLE_COLOR) — every
-   dot's color traces back to a real progressStatus majority in its grid
-   cell, not a decorative palette. Unreached uses --status-unreached-on-navy
-   rather than the map's own --status-unreached — see tokens.css — since
-   this layer sits on --ink-navy instead of the map's light basemap. */
-.hero-atlas-dot { opacity: 0.6; }
-.hero-atlas-dot--unreached { fill: var(--status-unreached-on-navy); }
-.hero-atlas-dot--formative { fill: var(--status-formative); }
-.hero-atlas-dot--reached { fill: var(--status-reached); }
-.hero-atlas-dot--unknown { fill: var(--atlas-paper); opacity: 0.3; }
+.hero-atlas-dots circle {
+  fill: var(--atlas-paper);
+  opacity: 0.3;
+}
+
+/* The pulses that fade in and out carry real status color — same palette as
+   the live map (WorldMap.jsx's CIRCLE_COLOR). Unreached uses
+   --status-unreached-on-navy rather than the map's own --status-unreached
+   — see tokens.css — since this layer sits on --ink-navy instead of the
+   map's light basemap; formative/reached stay on the map's own tokens. */
+.hero-atlas-pulse--unreached { fill: var(--status-unreached-on-navy); }
+.hero-atlas-pulse--formative { fill: var(--status-formative); }
+.hero-atlas-pulse--reached { fill: var(--status-reached); }
 
 .hero-atlas-pulse {
-  fill: var(--status-unreached-on-navy);
   transform-box: fill-box;
   transform-origin: center;
   animation: hero-atlas-pulse 3.5s ease-in-out infinite;

@@ -57,27 +57,25 @@ function AmbientParticles() {
 // is ~193, so this crop keeps that band roughly centered with padding.
 const MOBILE_VIEWBOX = '0 70 800 260';
 
-// Colored the same way the live map colors real people groups (see
-// WorldMap.jsx's CIRCLE_COLOR) — unreached/formative/reached, straight from
-// each cell's real progressStatus majority (src/data/heroAtlas.json, built
-// by scripts/generate-hero-dots.js), never an invented palette.
+// The base dot-matrix — the texture that traces the continents themselves —
+// stays a plain, uncolored white/paper tint regardless of what real people
+// group landed in each cell; status only shows up on the pulse layer below.
 function Dots({ dots, mobile }) {
   const visible = mobile ? dots.filter((_, i) => i % 2 === 0) : dots;
   return (
     <g className="hero-atlas-dots">
       {visible.map((d, i) => (
-        <circle
-          key={i}
-          cx={d.x}
-          cy={d.y}
-          r={0.85}
-          className={`hero-atlas-dot hero-atlas-dot--${d.status || 'unknown'}`}
-        />
+        <circle key={i} cx={d.x} cy={d.y} r={1.6} />
       ))}
     </g>
   );
 }
 
+// The pulses that fade in and out are the layer carrying real status —
+// colored the same way the live map colors real people groups (see
+// WorldMap.jsx's CIRCLE_COLOR), straight from each pulse's real
+// progressStatus (src/data/heroAtlas.json, built by
+// scripts/generate-hero-dots.js), never an invented palette.
 function Pulses({ pulses, animate }) {
   return (
     <g className="hero-atlas-pulses">
@@ -86,8 +84,8 @@ function Pulses({ pulses, animate }) {
           key={i}
           cx={p.x}
           cy={p.y}
-          r={3}
-          className="hero-atlas-pulse"
+          r={1.4}
+          className={`hero-atlas-pulse hero-atlas-pulse--${p.status || 'unreached'}`}
           style={animate ? { animationDelay: `${p.delayFraction * 3.5}s` } : undefined}
         />
       ))}
