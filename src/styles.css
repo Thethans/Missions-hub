@@ -380,6 +380,15 @@ a { color: var(--voyage-teal); }
   animation: hero-atlas-fade 2s ease-out both;
 }
 
+/* Desktop: the atlas runs large and bleeds past the frame rather than
+   sitting neatly inside it — scaled up so its edges fall outside the
+   viewport, which keeps the cursor-parallax drift (see HeroBackground.jsx)
+   from ever revealing empty space at the edges. */
+@media (min-width: 900px) {
+  .hero-background { transform: scale(1.14); transform-origin: center; }
+  .hero-atlas { opacity: 0.92; }
+}
+
 @keyframes hero-atlas-fade {
   from { opacity: 0; }
   to { opacity: 0.8; }
@@ -387,7 +396,7 @@ a { color: var(--voyage-teal); }
 
 .hero-atlas-dots circle {
   fill: var(--atlas-paper);
-  opacity: 0.3;
+  opacity: 0.35;
 }
 
 .hero-atlas-pulse {
@@ -497,7 +506,33 @@ a { color: var(--voyage-teal); }
   pointer-events: none;
 }
 
+/* Desktop: the hero content moves off-center (see .hero-content below), so
+   the scrim follows it — darkening only the left band where the text sits
+   and leaving the right two-thirds of the living atlas (the real data —
+   pulses, routes) uncovered instead of dimmed behind the headline. */
+@media (min-width: 900px) {
+  .hero-scrim {
+    background: radial-gradient(ellipse 52% 88% at 28% 50%, rgba(22, 35, 59, 0.88) 0%, rgba(22, 35, 59, 0.58) 48%, transparent 76%);
+  }
+}
+
 .hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+
+/* Desktop: break the centered-stack layout — the copy moves into a
+   left-anchored column so the large moving atlas graphic gets the right
+   two-thirds of the frame to itself instead of being centered (and mostly
+   scrimmed out) behind the text. Mobile keeps the original centered stack,
+   which is what actually fits at that width. */
+@media (min-width: 900px) {
+  .hero-zoom { align-items: flex-start; }
+  .hero-content {
+    align-items: flex-start;
+    text-align: left;
+    max-width: 640px;
+    padding-left: clamp(2rem, 6vw, 6rem);
+  }
+  .hero p { margin-left: 0; margin-right: 0; }
+}
 
 .hero-eyebrow {
   display: inline-flex;
@@ -568,10 +603,14 @@ a { color: var(--voyage-teal); }
 /* ==== HOME: STATS STRIP ==== */
 
 .stats-strip {
-  background: linear-gradient(135deg, var(--ink-navy) 0%, #1a3148 50%, #1e3a52 100%);
+  background: linear-gradient(180deg, var(--ink-navy) 0%, #1c3a52 40%, #21445e 100%);
   padding: calc(var(--space-16) + var(--space-8)) var(--space-6) calc(var(--space-16) + var(--space-16));
   position: relative;
   overflow: hidden;
+  /* A visible seam against the hero above it — otherwise both sections are
+     close enough in tone to read as one undifferentiated navy slab. */
+  border-top: 1px solid rgba(43, 110, 118, 0.35);
+  box-shadow: inset 0 1px 48px rgba(43, 110, 118, 0.1);
 }
 
 .stats-strip::before {

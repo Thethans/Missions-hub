@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import atlas from '../data/heroAtlas.json';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import useMatchMedia from '../hooks/useMatchMedia.js';
@@ -112,15 +112,23 @@ export default function HeroBackground() {
   const finePointer = useMatchMedia(FINE_POINTER_QUERY);
   const containerRef = useRef(null);
 
-  // Cursor parallax: the atlas drifts a few px against the pointer, a
-  // subtle depth cue that makes the map read as a live, responsive surface
-  // rather than a flat background image. Spring-smoothed so it trails the
-  // cursor instead of snapping to it. Fine-pointer desktops only, off
-  // entirely under reduced motion.
+  // Cursor parallax: the atlas drifts against the pointer, a depth cue that
+  // makes the map read as a live, responsive surface rather than a flat
+  // background image. Two layers move at different rates off the same
+  // spring — dots (the farthest, most numerous layer) drift least, pulses
+  // and routes (the layer carrying the real data) drift most — so the
+  // parallax reads as actual depth rather than the whole graphic sliding
+  // as one flat plane. Spring-smoothed so it trails the cursor instead of
+  // snapping to it. Fine-pointer desktops only, off entirely under reduced
+  // motion.
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
-  const springX = useSpring(rawX, { stiffness: 40, damping: 20, mass: 0.6 });
-  const springY = useSpring(rawY, { stiffness: 40, damping: 20, mass: 0.6 });
+  const springX = useSpring(rawX, { stiffness: 34, damping: 18, mass: 0.7 });
+  const springY = useSpring(rawY, { stiffness: 34, damping: 18, mass: 0.7 });
+  const bgX = useTransform(springX, (v) => v * 0.45);
+  const bgY = useTransform(springY, (v) => v * 0.45);
+  const fgX = useTransform(springX, (v) => v * 1.35);
+  const fgY = useTransform(springY, (v) => v * 1.35);
 
   useEffect(() => {
     if (prefersReduced || !finePointer) return;
@@ -130,25 +138,30 @@ export default function HeroBackground() {
       const rect = el.getBoundingClientRect();
       const px = (e.clientX - rect.left) / rect.width - 0.5;
       const py = (e.clientY - rect.top) / rect.height - 0.5;
-      rawX.set(px * -14);
-      rawY.set(py * -10);
+      rawX.set(px * -32);
+      rawY.set(py * -22);
     };
     el.addEventListener('mousemove', handleMove);
     return () => el.removeEventListener('mousemove', handleMove);
   }, [prefersReduced, finePointer, rawX, rawY]);
 
+  const parallaxActive = !prefersReduced && finePointer;
+
   return (
     <div className="hero-background" ref={containerRef} aria-hidden="true">
-      <motion.svg
+      <svg
         className={`hero-atlas${prefersReduced ? ' hero-atlas--static' : ''}`}
         viewBox={mobile ? MOBILE_VIEWBOX : atlas.viewBox}
         preserveAspectRatio="xMidYMid slice"
-        style={prefersReduced || !finePointer ? undefined : { x: springX, y: springY }}
       >
-        <Dots dots={atlas.dots} mobile={mobile} />
-        <Routes routes={atlas.routes} animate={!prefersReduced} />
-        <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
-      </motion.svg>
+        <motion.g style={parallaxActive ? { x: bgX, y: bgY } : undefined}>
+          <Dots dots={atlas.dots} mobile={mobile} />
+        </motion.g>
+        <motion.g style={parallaxActive ? { x: fgX, y: fgY } : undefined}>
+          <Routes routes={atlas.routes} animate={!prefersReduced} />
+          <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
+        </motion.g>
+      </svg>
       {!prefersReduced && <AmbientParticles />}
     </div>
   );
