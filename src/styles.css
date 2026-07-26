@@ -1410,6 +1410,45 @@ a { color: var(--voyage-teal); }
   opacity: 0.75;
 }
 
+/* Wraps each chip so the tooltip can be positioned relative to just that
+   one chip, not the whole flex-wrapped row. */
+.map-legend-religion-chip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.map-legend-religion-tooltip {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  max-width: calc(100vw - var(--space-8));
+  padding: var(--space-2) var(--space-3);
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: left;
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+/* :focus-within (not just :hover) so keyboard users tabbing to a chip see
+   the same summary a mouse user hovering it would — aria-describedby
+   already wires it up for screen readers regardless of visibility. */
+.map-legend-religion-chip-wrap:hover .map-legend-religion-tooltip,
+.map-legend-religion-chip-wrap:focus-within .map-legend-religion-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
 .map-loading {
   position: absolute;
   top: var(--space-4);
@@ -1895,6 +1934,159 @@ a { color: var(--voyage-teal); }
 
 .match-chip--concern { background: rgba(217, 164, 65, 0.15); color: var(--ink-navy); }
 .match-chip--concern svg { color: #a6791f; }
+
+/* A real, stated conflict reads differently from "they haven't said" —
+   same treatment family as --concern (a warm, attention tone) but with
+   its own hue so the two are visually distinguishable at a glance. */
+.match-chip--conflict { background: rgba(179, 38, 30, 0.08); color: var(--ink-navy); }
+.match-chip--conflict svg { color: #b3261e; }
+
+.match-label-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.match-label-row .match-label { margin-bottom: 0; }
+
+.match-percent {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-navy);
+}
+
+.matcher-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--voyage-teal);
+  margin: 0 0 var(--space-2);
+}
+
+.matcher-intro {
+  color: var(--muted-text);
+  margin: 0 0 var(--space-6);
+}
+
+.matcher-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.matcher-progress-bar {
+  flex: 1;
+  background: var(--line);
+  border-radius: var(--radius);
+  height: 6px;
+  overflow: hidden;
+}
+
+.matcher-progress-fill {
+  background: var(--voyage-teal);
+  height: 100%;
+  transition: width 0.25s ease;
+}
+
+.matcher-progress-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  white-space: nowrap;
+}
+
+.matcher-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.matcher-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: white;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.matcher-step-dot:hover { border-color: var(--voyage-teal); color: var(--voyage-teal); }
+
+.matcher-step-dot--answered {
+  background: rgba(43, 110, 118, 0.1);
+  border-color: var(--voyage-teal);
+  color: var(--voyage-teal);
+}
+
+.matcher-step-dot--current {
+  background: var(--voyage-teal);
+  border-color: var(--voyage-teal);
+  color: white;
+}
+
+.matcher-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.matcher-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  color: var(--muted-text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.matcher-nav-back:hover:not(:disabled) { border-color: var(--voyage-teal); color: var(--voyage-teal); }
+.matcher-nav-back:disabled { opacity: 0.4; cursor: default; }
+
+.matcher-nav-next,
+.matcher-nav-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--voyage-teal);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-5);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  margin-left: auto;
+}
+
+.matcher-nav-next:hover,
+.matcher-nav-submit:hover {
+  background: #245e65;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 640px) {
+  .matcher-steps { gap: var(--space-1); }
+  .matcher-step-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+}
 
 .matcher > button {
   background: var(--voyage-teal);

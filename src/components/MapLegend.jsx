@@ -1,10 +1,38 @@
-import React from 'react';
+import React, { useId } from 'react';
+import RELIGION_SUMMARIES from '../data/religionSummaries.js';
 
 const ITEMS = [
   { status: 'unreached', label: 'Unreached' },
   { status: 'formative', label: 'Formative' },
   { status: 'reached', label: 'Reached' }
 ];
+
+// Split out so useId() (needed for a stable aria-describedby target) can
+// be called once per chip, not once per array item inside a .map() in the
+// parent — hooks can't live inside a loop callback.
+function ReligionChip({ religion, isActive, count, onClick }) {
+  const tooltipId = useId();
+  const summary = RELIGION_SUMMARIES[religion];
+  return (
+    <span className="map-legend-religion-chip-wrap">
+      <button
+        type="button"
+        className={`map-legend-religion-chip${isActive ? ' map-legend-religion-chip--active' : ''}`}
+        onClick={onClick}
+        aria-pressed={isActive}
+        aria-describedby={summary ? tooltipId : undefined}
+      >
+        {religion}
+        <span className="map-legend-religion-chip-count">{count}</span>
+      </button>
+      {summary && (
+        <span role="tooltip" id={tooltipId} className="map-legend-religion-tooltip">
+          {summary}
+        </span>
+      )}
+    </span>
+  );
+}
 
 export default function MapLegend({
   counts,
@@ -42,21 +70,15 @@ export default function MapLegend({
             )}
           </span>
           <div className="map-legend-religion-chips">
-            {religions.map((religion) => {
-              const isActive = religionActive.has(religion);
-              return (
-                <button
-                  key={religion}
-                  type="button"
-                  className={`map-legend-religion-chip${isActive ? ' map-legend-religion-chip--active' : ''}`}
-                  onClick={() => onToggleReligion && onToggleReligion(religion)}
-                  aria-pressed={isActive}
-                >
-                  {religion}
-                  <span className="map-legend-religion-chip-count">{religionCounts[religion] ?? 0}</span>
-                </button>
-              );
-            })}
+            {religions.map((religion) => (
+              <ReligionChip
+                key={religion}
+                religion={religion}
+                isActive={religionActive.has(religion)}
+                count={religionCounts[religion] ?? 0}
+                onClick={() => onToggleReligion && onToggleReligion(religion)}
+              />
+            ))}
           </div>
         </div>
       )}
