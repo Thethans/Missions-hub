@@ -310,6 +310,17 @@ a { color: var(--voyage-teal); }
 .page-hero--compact p { max-width: 640px; margin: 0 auto; }
 .page-hero--compact a { color: var(--atlas-paper); text-decoration: underline; }
 
+/* The map itself is the point of this page — the intro shouldn't push it
+   (and the legend/filters overlaid on it) toward the bottom of the
+   viewport, so this trims padding/type size further than the shared
+   compact hero. */
+.map-hero {
+  padding: var(--space-4) var(--space-6);
+}
+
+.map-hero h1 { font-size: 1.5rem; margin-bottom: var(--space-2); }
+.map-hero p { font-size: 0.9rem; }
+
 .page-body { flex: 1; }
 
 .page-about {
@@ -1417,34 +1428,34 @@ a { color: var(--voyage-teal); }
   display: inline-flex;
 }
 
+/* Portaled to document.body (see MapLegend.jsx) and positioned in JS from
+   the chip's own getBoundingClientRect — top/left are set inline per
+   instance, so only the shared visual treatment lives here. Fixed
+   positioning + a viewport-relative rect means it renders on top of
+   everything, unclipped by the legend panel's own overflow-y:auto. */
 .map-legend-religion-tooltip {
-  position: absolute;
-  bottom: calc(100% + var(--space-2));
-  left: 50%;
-  transform: translateX(-50%);
-  width: 220px;
+  position: fixed;
+  transform: translate(-50%, calc(-100% - var(--space-2)));
+  width: 190px;
   max-width: calc(100vw - var(--space-8));
   padding: var(--space-2) var(--space-3);
   background: var(--ink-navy);
   color: var(--atlas-paper);
+  border: 1px solid var(--glass-dark-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-dark-sheen), var(--glass-shadow);
   font-family: var(--font-body);
   font-size: 0.75rem;
   line-height: 1.4;
   text-align: left;
-  z-index: 20;
+  z-index: 1000;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.12s ease;
 }
 
-/* :focus-within (not just :hover) so keyboard users tabbing to a chip see
-   the same summary a mouse user hovering it would — aria-describedby
-   already wires it up for screen readers regardless of visibility. */
-.map-legend-religion-chip-wrap:hover .map-legend-religion-tooltip,
-.map-legend-religion-chip-wrap:focus-within .map-legend-religion-tooltip {
+.map-legend-religion-tooltip--visible {
   opacity: 1;
   visibility: visible;
 }

@@ -65,13 +65,12 @@ export default function MapPage() {
 
   return (
     <>
-      <section className="page-hero page-hero--compact">
+      <section className="page-hero page-hero--compact map-hero">
         <h1>The world map</h1>
         <p>
           Every point is a real people group from{' '}
           <a href="https://joshuaproject.net" target="_blank" rel="noreferrer">Joshua Project</a>,
-          colored by progress status — red for unreached, gold for formative, green for reached.
-          Circle size reflects population. Click a point for details, or use the legend to filter.
+          colored by progress status. Click a point for details, or use the legend to filter.
         </p>
         <MapAccessibleSearch features={features} onSelect={setSelected} />
       </section>

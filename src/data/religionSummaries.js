@@ -12,25 +12,25 @@
 // as such, not smoothed over.
 const RELIGION_SUMMARIES = {
   Christianity:
-    "Centers on Jesus Christ as the Son of God, whose death and resurrection Christians believe reconciles humanity with God. Beliefs and practices vary widely across traditions such as Catholic, Orthodox, and Protestant churches, but most affirm the Bible as scripture.",
+    'Centers on Jesus Christ as the Son of God, whose death and resurrection reconcile humanity with God. Practices vary across Catholic, Orthodox, and Protestant traditions, but most affirm the Bible as scripture.',
   Islam:
-    "Teaches that there is one God (Allah) and that Muhammad is God's final prophet, delivering the message recorded in the Quran. Core practices include the Five Pillars: professing faith, praying five times daily, giving to charity, fasting during Ramadan, and pilgrimage to Mecca.",
+    "Teaches that there is one God (Allah) and that Muhammad is God's final prophet, delivering the Quran. Core practices are the Five Pillars: faith, daily prayer, charity, fasting during Ramadan, and pilgrimage to Mecca.",
   'Ethnic Religions':
-    "Not a single religion but a broad category for traditional belief systems closely tied to a specific people group's culture, land, and ancestry. These vary widely by region and often include ancestor veneration, animism, or other locally rooted spiritual practices.",
+    "A broad category, not a single religion — traditional belief systems tied to a specific people group's culture and ancestry. Varies by region, often including ancestor veneration or animism.",
   Hinduism:
-    'Encompasses a wide range of traditions generally built around dharma (duty and order), karma, and reincarnation across many lifetimes. Most traditions honor one or more deities, often understood as expressions of a single underlying reality.',
+    'A family of traditions built around dharma (duty and order), karma, and reincarnation across many lifetimes. Most traditions honor one or more deities as expressions of a single underlying reality.',
   Buddhism:
-    'Follows the teachings of Siddhartha Gautama (the Buddha) on ending suffering by understanding its causes and following a path toward enlightenment. Most traditions hold to a cycle of rebirth, with the goal of reaching nirvana — freedom from craving and suffering.',
+    'Follows the teachings of Siddhartha Gautama (the Buddha) on ending suffering by understanding its causes. Most traditions hold to a cycle of rebirth, aiming for nirvana — freedom from craving and suffering.',
   'Non-Religious':
-    "People who don't identify with an organized religion, ranging from atheists and agnostics to those simply unaffiliated with any faith. It's not a shared belief system, just an absence of religious identification in the data.",
+    "People who don't identify with an organized religion, from atheists to those simply unaffiliated. Not a shared belief system — just an absence of religious identification in the data.",
   Unknown:
-    "This isn't a belief system — it means Joshua Project's records for these people groups don't include a documented religious affiliation. It reflects a gap in available data, not a religious classification.",
+    "This isn't a belief system — it means Joshua Project's records for these people groups list no documented religious affiliation. A gap in available data, not a classification.",
   Judaism:
-    'Centers on a covenant relationship between God and the Jewish people, rooted in the Torah and the wider Hebrew Bible. Central practices include observing the Sabbath, following dietary laws (kashrut), and keeping the ethical and ritual commandments (mitzvot).',
+    'Centers on a covenant between God and the Jewish people, rooted in the Torah and Hebrew Bible. Central practices include the Sabbath, dietary laws (kashrut), and the mitzvot.',
   Sikhism:
-    'Founded by Guru Nanak in 15th-century Punjab, it teaches belief in one God and the equality of all people, rejecting caste distinctions. Sikhs follow the teachings of ten Gurus, recorded in their scripture, the Guru Granth Sahib.',
+    'Founded by Guru Nanak in 15th-century Punjab, teaching one God and the equality of all people. Sikhs follow the ten Gurus, recorded in their scripture, the Guru Granth Sahib.',
   'Other / Small':
-    'A catch-all category for religious traditions too small or specific to warrant their own listing in this dataset. It groups a variety of minor faiths together rather than representing one shared belief system.'
+    'A catch-all for traditions too small or specific to list individually in this dataset. Groups several minor faiths together rather than one shared belief system.'
 };
 
 export default RELIGION_SUMMARIES;
