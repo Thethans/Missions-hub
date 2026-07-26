@@ -3175,30 +3175,31 @@ a { color: var(--voyage-teal); }
   will-change: transform;
 }
 
-.route-fly-plane {
+.route-fly-plane-wrap {
   position: fixed;
   top: 50%;
   left: 50%;
   z-index: 5001;
-  color: var(--atlas-paper);
   will-change: transform, opacity;
-  filter: drop-shadow(0 12px 40px rgba(22, 35, 59, 0.5));
   /* Purely decorative (aria-hidden) — never part of the hit-testing layer,
      unlike .route-fly-panel which deliberately blocks input mid-flight. */
   pointer-events: none;
 }
 
-.route-fly-plane svg {
+.route-fly-plane {
   display: block;
   width: 48vw;
-  height: 48vw;
+  height: auto;
   max-width: 720px;
-  max-height: 720px;
+  /* Source PNG is black line-art on transparent (see RouteFlyOverlay.jsx
+     for provenance) — invert flips it to paper-white so it reads against
+     the navy panel, same as the rest of this transition's palette. */
+  filter: invert(1) drop-shadow(0 12px 40px rgba(22, 35, 59, 0.5));
   transform: rotate(6deg);
 }
 
 @media (max-width: 640px) {
-  .route-fly-plane svg { width: 70vw; height: 70vw; }
+  .route-fly-plane { width: 70vw; }
 }
 
 /* ==== FOOTER ==== */
