@@ -358,7 +358,17 @@ async function run() {
 
   await closeBrowser();
 
-  if (totalErrors > 0) process.exit(1);
+  // Explicit exit rather than letting the event loop drain naturally: a
+  // GitHub Actions run of this script completed all its real work (logged
+  // "Done.", correct upsert counts) in 74s, then sat with the step still
+  // "in_progress" for 19+ minutes before being cancelled — something in the
+  // container (most likely a Puppeteer/Chrome child process not fully
+  // reaped without an init process, a known class of issue running headless
+  // Chrome in a bare Docker/CI container) held the event loop open even
+  // after closeBrowser() resolved. Didn't reproduce locally (macOS), so
+  // rather than chase a container-specific root cause, force termination
+  // once the script's own logged work is verifiably complete.
+  process.exit(totalErrors > 0 ? 1 : 0);
 }
 
 run();
