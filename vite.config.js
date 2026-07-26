@@ -54,7 +54,15 @@ export default defineConfig({
         // cached vendor/motion chunks for returning visitors.
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          motion: ['framer-motion']
+          motion: ['framer-motion'],
+          // Without this, Rollup's automatic shared-chunk naming picked
+          // "basemapStyle" (the smallest/first module in the shared graph)
+          // to name a chunk that's actually maplibre-gl's own ~800KB
+          // production bundle — misleading in any bundle-size report. Naming
+          // it explicitly doesn't change what's in it, just what it's called;
+          // it was already split into its own chunk (only fetched on /map)
+          // before this.
+          maplibre: ['maplibre-gl']
         }
       }
     }
