@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import RouteLine from './RouteLine.jsx';
 import BrandMark from './BrandMark.jsx';
-import { routeImports } from '../routeImports.js';
+import { routeImports, deepPrefetchImports } from '../routeImports.js';
 import { List, X } from '@phosphor-icons/react';
 
 const LINKS = [
@@ -26,6 +26,7 @@ export default function TopNav() {
     if (!load) return;
     prefetched.current.add(to);
     load();
+    deepPrefetchImports[to]?.();
   };
 
   useEffect(() => {

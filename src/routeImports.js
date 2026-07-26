@@ -12,3 +12,15 @@ export const routeImports = {
   '/terms': () => import('./pages/TermsPage.jsx'),
   '/privacy': () => import('./pages/PrivacyPage.jsx')
 };
+
+// A route's own page chunk above is small — the real weight some routes pay
+// for is a child component the page unconditionally renders, one lazy()
+// boundary deeper (so it isn't fetched just because MapPage's own tiny
+// chunk was). /map is the extreme case: MapPage always renders WorldMap.jsx,
+// which pulls in maplibre-gl's ~800KB/218KB-gzip chunk — every visitor to
+// /map needs it, so there's no reason not to start that fetch during
+// hover-to-click dead time same as the page chunk itself, rather than
+// waiting for MapPage to mount and its own lazy() import to kick in.
+export const deepPrefetchImports = {
+  '/map': () => import('./components/WorldMap.jsx')
+};
