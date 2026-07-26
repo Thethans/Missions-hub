@@ -70,7 +70,7 @@ function Dots({ dots, mobile }) {
           key={i}
           cx={d.x}
           cy={d.y}
-          r={1.1}
+          r={0.85}
           className={`hero-atlas-dot hero-atlas-dot--${d.status || 'unknown'}`}
         />
       ))}
