@@ -1,51 +1,44 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { PLANE_HIDDEN_LEFT } from '../hooks/useRouteFlyTransition.js';
 
 // The visual half of the route transition (see useRouteFlyTransition.js for
-// the sequencing/timing). Two independently-animated layers riding the same
-// left-to-right pass: a full-viewport navy panel that actually guarantees
-// total coverage (the plane graphic alone, with all its negative space,
-// never could), and a huge plane graphic layered on top for the "flies
-// across" read. Both are inert (aria-hidden, no focusable content) — this
-// is pure transition chrome, never a thing a screen reader or keyboard
-// user needs to stop on.
+// the sequencing/timing). There's no separate covering panel anymore —
+// the plane graphic is the only thing on screen during the transition,
+// and the page swaps directly underneath it. Both layers below are inert
+// (aria-hidden, no focusable content) — this is pure transition chrome,
+// never a thing a screen reader or keyboard user needs to stop on.
 //
 // public/images/route-fly-plane.png: a solid top-down airplane silhouette
 // (filled, not an outline/blueprint), transparent background, from Pixabay
-// (cdn.pixabay.com/photo/2013/07/13/01/21/jet-155574_1280.png, uploaded by
-// OpenClipart-Vectors) — free for commercial use under the Pixabay Content
-// License, no attribution required. Recolored from solid-black to
-// solid-paper-white via the CSS invert filter in styles.css so it reads
-// against the navy panel. The source art is drawn nose-up; BASE_ROTATE
-// (90deg, matched here in `initial` and held constant for the whole
-// flight in useRouteFlyTransition.js) turns that so the nose points into
-// the direction of travel (right) instead of sideways.
+// (cdn.pixabay.com/photo/2026/01/12/15/44/airplane-10064722_1280.png,
+// uploaded by DARKTOR) — free for commercial use under the Pixabay
+// Content License, no attribution required. Recolored from solid-black to
+// solid-paper-white via the CSS invert filter in styles.css. The source
+// art is drawn nose-up; BASE_ROTATE (90deg, matched here in `initial` and
+// held constant for the whole flight in useRouteFlyTransition.js) turns
+// that so the nose points into the direction of travel (right).
 const BASE_ROTATE = 90;
 
-export default function RouteFlyOverlay({ panelControls, planeControls, isFlying }) {
+export default function RouteFlyOverlay({ planeControls, isFlying }) {
   return (
     <>
-      <motion.div
-        className="route-fly-panel"
-        initial={{ x: '-130vw' }}
-        animate={panelControls}
-        aria-hidden="true"
-        style={{ pointerEvents: isFlying ? 'auto' : 'none' }}
-      />
-      {/* x/y/rotate all live on this one motion.div — framer composes
-          multiple animated transform properties into a single matrix
-          correctly as long as they're all on the same element (mixing an
-          animated element with a statically-transformed one is what
-          actually breaks). The inner <img> stays a plain, non-animated
-          child (sizing/filter only). */}
-      <motion.div
-        className="route-fly-plane-wrap"
-        initial={{ x: '-70vw', y: '-50%', rotate: BASE_ROTATE, opacity: 0 }}
-        animate={planeControls}
-        aria-hidden="true"
-      >
-        <img src="/images/route-fly-plane.png" alt="" className="route-fly-plane" />
-      </motion.div>
+      <div className="route-fly-input-guard" aria-hidden="true" style={{ pointerEvents: isFlying ? 'auto' : 'none' }} />
+      {/* Static outer anchor centers exactly on the viewport regardless of
+          the plane's own (large) box size; the inner motion.div's x is
+          then a plain "distance from true center" — see the
+          .route-fly-plane-anchor comment in styles.css for why this is
+          two elements instead of one. */}
+      <div className="route-fly-plane-anchor">
+        <motion.div
+          className="route-fly-plane-wrap"
+          initial={{ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 0 }}
+          animate={planeControls}
+          aria-hidden="true"
+        >
+          <img src="/images/route-fly-plane.png" alt="" className="route-fly-plane" />
+        </motion.div>
+      </div>
     </>
   );
 }

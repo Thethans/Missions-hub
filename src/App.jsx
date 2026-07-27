@@ -25,8 +25,8 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 export default function App() {
   // <Routes> matches against `displayLocation`, not the live router
   // location — see useRouteFlyTransition.js — so a nav-tab click doesn't
-  // swap the page until the flyover has fully covered the screen.
-  const { displayLocation, panelControls, planeControls, isFlying, prefersReduced } = useRouteFlyTransition();
+  // swap the page until the plane's wings are crossing screen-center.
+  const { displayLocation, planeControls, isFlying, prefersReduced } = useRouteFlyTransition();
 
   return (
     <DisplayLocationProvider value={displayLocation}>
@@ -46,7 +46,7 @@ export default function App() {
         </Route>
       </Routes>
       {!prefersReduced && (
-        <RouteFlyOverlay panelControls={panelControls} planeControls={planeControls} isFlying={isFlying} />
+        <RouteFlyOverlay planeControls={planeControls} isFlying={isFlying} />
       )}
     </DisplayLocationProvider>
   );

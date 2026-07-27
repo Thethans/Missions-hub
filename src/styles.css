@@ -3161,60 +3161,62 @@ a { color: var(--voyage-teal); }
 
 /* ==== ROUTE FLY TRANSITION ==== */
 
-/* The solid layer that actually guarantees full coverage on nav-tab
-   changes (see useRouteFlyTransition.js) — a huge plane icon alone would
-   always have gaps around the fuselage/wings, so this navy panel is what's
-   really doing the "cover the whole screen" work; the plane on top sells
-   the "flying across" read. z-index sits above the nav (max elsewhere in
-   this file is 1001) and the mobile drawer.
-
-   Wider than the viewport (130vw) with the gradient baked into its own
-   left ~23% (30vw of the 130vw) rather than a flat fill, so there's a
-   dedicated "soft" segment that can sweep across the screen on its own —
-   a plain 100vw panel has nowhere to put a fade without punching a
-   transparent hole in the middle of "full coverage." At x:-30vw (see
-   PANEL_COVERED in the hook) the solid segment [30vw,130vw] lines up
-   exactly with the viewport for full opaque coverage; sweeping on to
-   x:100vw carries the soft [0,30vw] segment across the viewport right at
-   the tail of the reveal — the new page dissolving in through that fade
-   instead of a hard-edged cut. */
-.route-fly-panel {
+/* No separate cover panel anymore — the plane itself is the only thing on
+   screen during the transition, and the page swaps directly underneath it
+   (see SWAP_FRACTION in useRouteFlyTransition.js). z-index still sits
+   above the nav (max elsewhere in this file is 1001) and the mobile
+   drawer, and this still blocks input for the duration of the flight
+   (isFlying) — same reasoning as before, just with no visible panel to
+   hang that behavior off of, so it's its own fully transparent layer. */
+.route-fly-input-guard {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 130vw;
-  height: 100%;
+  inset: 0;
   z-index: 5000;
-  background: linear-gradient(to right, transparent 0%, var(--ink-navy) 23.08%, var(--ink-navy) 100%);
-  will-change: transform;
+  background: transparent;
 }
 
-.route-fly-plane-wrap {
+/* True, size-independent centering: left:50%/top:50% alone only centers
+   an element's top-left corner, not the element itself, and framer-motion
+   overwrites the *entire* `transform` property on whatever element
+   carries its animated x/y/rotate — so a static translate(-50%,-50%) on
+   the SAME element as the motion values would just get clobbered every
+   frame. Splitting them onto two elements (a plain, static outer anchor
+   and a motion-driven inner wrapper) means the inner one's x is a pure,
+   predictable "distance from true center" instead of something that has
+   to account for the plane's own (large, viewport-relative) box size. */
+.route-fly-plane-anchor {
   position: fixed;
   top: 50%;
   left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 5001;
-  will-change: transform, opacity;
-  /* Purely decorative (aria-hidden) — never part of the hit-testing layer,
-     unlike .route-fly-panel which deliberately blocks input mid-flight. */
   pointer-events: none;
+}
+
+.route-fly-plane-wrap {
+  will-change: transform, opacity;
 }
 
 .route-fly-plane {
   display: block;
-  width: 48vw;
+  /* Sized by viewport HEIGHT, not width — after the 90deg nose-right
+     rotation (see BASE_ROTATE in useRouteFlyTransition.js) the source
+     image's own width axis (its wingspan) becomes the on-screen VERTICAL
+     axis, so this is what makes the wingtips reach the top and bottom of
+     the screen. */
+  width: 100vh;
   height: auto;
-  max-width: 720px;
   /* Source PNG is a solid black silhouette on transparent (see
      RouteFlyOverlay.jsx for provenance) — invert flips it to solid paper-
-     white so it reads against the navy panel. Rotation (nose-right) is
-     animated on the parent .route-fly-plane-wrap, held constant for the
-     whole flight — see BASE_ROTATE in useRouteFlyTransition.js. */
+     white so it reads directly against whatever page is behind it (no
+     navy panel to guarantee contrast anymore, hence also the shadow). */
   filter: invert(1) drop-shadow(0 12px 40px rgba(22, 35, 59, 0.5));
 }
 
 @media (max-width: 640px) {
-  .route-fly-plane { width: 70vw; }
+  /* A phone viewport is much narrower than it is tall — 100vh here would
+     make the fuselage absurdly long relative to screen width. */
+  .route-fly-plane { width: 60vh; }
 }
 
 /* ==== FOOTER ==== */

@@ -3,64 +3,80 @@ import { useLocation } from 'react-router-dom';
 import { useAnimation } from 'framer-motion';
 import usePrefersReducedMotion from './usePrefersReducedMotion.js';
 
-// Drives the "plane flies across and covers the screen" route transition
-// (see RouteFlyOverlay.jsx). The actual page swap doesn't happen the
-// instant the URL changes — <Routes> is rendered against `displayLocation`
-// here rather than the live router location. Previously this was two
-// separate awaited animations (cover, then a hold, then reveal), which
-// read as a stutter — the plane visibly stopped dead for a beat mid-
-// flight. It's now ONE continuous keyframed pass for both panel and
-// plane, sharing the same `times` breakpoints, with the page swap fired
-// via a plain setTimeout at the same elapsed moment the panel's keyframes
-// say it's at full coverage (SWAP_FRACTION) — i.e. right as the plane's
-// wings are passing — instead of gating on an awaited sub-animation
-// finishing. The new page is live well before the plane finishes its
-// pass, not after the whole thing has played out.
+// Drives the "plane flies across" route transition (see
+// RouteFlyOverlay.jsx). The actual page swap doesn't happen the instant
+// the URL changes — <Routes> is rendered against `displayLocation` here
+// rather than the live router location. There's no covering panel to hide
+// that swap behind anymore (by request — "nothing else besides a plane"),
+// so the swap is a plain, visible cut timed to fire the moment the wings
+// are crossing screen-center, not before or after.
+//
+// One continuous, constant-velocity pass (a single 3-keyframe `x`
+// animation with a plain 'linear' ease and evenly-spaced `times`) — no
+// separate cover/hold/reveal animations, and no bob/bank wobble. Either
+// of those previously read as the plane slowing, stopping, or shaking;
+// this is just a straight, unbroken glide left to right.
 const FLIGHT_DURATION = 3.4;
-// Fraction of FLIGHT_DURATION at which the plane is centered and the
-// panel is at full opaque coverage — the moment it's safe (invisible) to
-// swap the actual page content, and the moment that reads as "the wings
-// have passed."
-const SWAP_FRACTION = 0.4;
-const FLIGHT_TIMES = [0, SWAP_FRACTION, 1];
-// Ease in on the approach, ease out on the departure — one continuous
-// curve, not two separate animations glued together with a pause.
-const FLIGHT_EASE = [[0.45, 0, 0.4, 1], [0.4, 0, 0.35, 1]];
+const FLIGHT_TIMES = [0, 0.5, 1];
 
 // public/images/route-fly-plane.png is drawn nose-up — BASE_ROTATE turns
-// that to nose-right (rotate(90deg) takes 12 o'clock to 3 o'clock), so it
-// actually reads as flying in its direction of travel instead of just
-// sliding sideways nose-first-into-nothing. Held constant for the whole
-// flight — no bob/bank wobble — a steady, continuous glide instead of
-// something that reads as shaking.
+// that to nose-right (rotate(90deg) takes 12 o'clock to 3 o'clock) so it
+// reads as flying in its direction of travel. Held constant for the whole
+// flight (no bank wobble).
 const BASE_ROTATE = 90;
 
-// The panel is wider than the viewport (130vw, not 100vw) with a gradient
-// baked into its left ~23% — solid navy everywhere else. Sized/positioned
-// so that x:-30vw lands the solid portion exactly over the viewport (full
-// opaque coverage, no dissolve visible), while sweeping on to x:100vw
-// carries that soft-left-edge gradient segment across the viewport for
-// the rest of the pass — the "dissolves into the new page" moment —
-// rather than a hard-edged cut. See the .route-fly-panel comment in
-// styles.css for the exact math.
-const PANEL_HIDDEN_LEFT = '-130vw';
-const PANEL_COVERED = '-30vw';
-const PANEL_HIDDEN_RIGHT = '100vw';
+// The source image is 1280x1200 (width x height, pre-rotation) — width
+// becomes the on-screen vertical extent post-rotation (see .route-fly-
+// plane's width:100vh in styles.css), so the scale factor from the
+// original image's own pixel space to on-screen vh is 100/1280.
+const IMAGE_SCALE_VH_PER_PX = 100 / 1280;
+// Measured directly from the source PNG (widest opaque row, i.e. the
+// wingspan): y=747 of 1200px height, vs. the image's vertical midpoint at
+// y=600 — the wings sit 147px toward the TAIL from center. After the
+// nose-right rotation, "toward the tail" is "toward screen-left", so the
+// wings trail the plane's own geometric x-center by this many vh.
+const WING_OFFSET_FROM_CENTER_VH = (747 - 1200 / 2) * IMAGE_SCALE_VH_PER_PX; // ≈ 11.5, trailing (left of) center
 
-const PANEL_X_KEYFRAMES = [PANEL_HIDDEN_LEFT, PANEL_COVERED, PANEL_HIDDEN_RIGHT];
-const PLANE_X_KEYFRAMES = ['-70vw', '0vw', '95vw'];
+// Fuselage length on screen post-rotation (the image's original HEIGHT,
+// scaled by the same factor) — half of this plus half the viewport width
+// is exactly how far the plane's geometric center needs to sit from
+// true-center to clear the screen completely on either side, regardless
+// of viewport aspect ratio (mixing vw/vh in one calc() lets the browser
+// do that per-device instead of a single fixed number that's only
+// correct for one specific aspect ratio).
+const HALF_FUSELAGE_VH = (1200 * IMAGE_SCALE_VH_PER_PX) / 2; // 1200 is the source image's HEIGHT (1280 is its width, already used above)
+// Exported so RouteFlyOverlay.jsx's `initial` (the very first render,
+// before any flight has run) matches this exactly instead of duplicating
+// the calc() string.
+export const PLANE_HIDDEN_LEFT = `calc(-50vw - ${HALF_FUSELAGE_VH}vh)`;
+const PLANE_HIDDEN_RIGHT = `calc(50vw + ${HALF_FUSELAGE_VH}vh)`;
+const PLANE_X_KEYFRAMES = [PLANE_HIDDEN_LEFT, 0, PLANE_HIDDEN_RIGHT];
 const PLANE_OPACITY_KEYFRAMES = [0, 1, 0];
+
+// The fraction of FLIGHT_DURATION at which the WING (not the plane's
+// overall geometric center) crosses true screen-center — since motion is
+// linear/constant-velocity the whole way, this is just linear
+// interpolation between the hidden-left and hidden-right endpoints,
+// evaluated in one common unit (vh-equivalent) at a representative ~16:9
+// viewport (this is a decorative sync, not pixel-critical, so one fixed
+// approximation across aspect ratios is fine — 50vw at aspect A is
+// 50*A vh-equivalent units).
+const REPRESENTATIVE_ASPECT = 1.6; // vw:vh at a typical desktop viewport
+const HALF_VIEWPORT_WIDTH_VH_EQUIV = 50 * REPRESENTATIVE_ASPECT;
+const HIDDEN_LEFT_VH_EQUIV = -(HALF_VIEWPORT_WIDTH_VH_EQUIV + HALF_FUSELAGE_VH);
+const HIDDEN_RIGHT_VH_EQUIV = HALF_VIEWPORT_WIDTH_VH_EQUIV + HALF_FUSELAGE_VH;
+// The plane's center must be WING_OFFSET_FROM_CENTER_VH to the right of
+// true-center for its trailing wing to have just reached true-center.
+const SWAP_FRACTION = (WING_OFFSET_FROM_CENTER_VH - HIDDEN_LEFT_VH_EQUIV) / (HIDDEN_RIGHT_VH_EQUIV - HIDDEN_LEFT_VH_EQUIV);
 
 export default function useRouteFlyTransition() {
   const location = useLocation();
   const prefersReduced = usePrefersReducedMotion();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [isFlying, setIsFlying] = useState(false);
-  const panelControls = useAnimation();
   const planeControls = useAnimation();
-  // Guards against a second nav starting mid-flight from finishing an
-  // in-flight promise chain (or firing the delayed swap) after it no
-  // longer matches the latest location.
+  // Guards against a second nav starting mid-flight from firing the
+  // delayed swap or reset after it no longer matches the latest location.
   const runId = useRef(0);
 
   useEffect(() => {
@@ -79,34 +95,22 @@ export default function useRouteFlyTransition() {
       setDisplayLocation(location);
     }, SWAP_FRACTION * FLIGHT_DURATION * 1000);
 
-    Promise.all([
-      panelControls.start({ x: PANEL_X_KEYFRAMES, transition: { duration: FLIGHT_DURATION, times: FLIGHT_TIMES, ease: FLIGHT_EASE } }),
-      planeControls.start({
+    planeControls
+      .start({
         x: PLANE_X_KEYFRAMES,
-        y: '-50%',
         rotate: BASE_ROTATE,
         opacity: PLANE_OPACITY_KEYFRAMES,
-        // y/rotate don't change (constant, no bob/bank wobble) — a plain
-        // ease avoids handing a 2-entry per-segment `ease` array to a
-        // property that only has one segment (start === end).
-        transition: {
-          duration: FLIGHT_DURATION,
-          times: FLIGHT_TIMES,
-          ease: FLIGHT_EASE,
-          y: { ease: 'linear' },
-          rotate: { ease: 'linear' }
-        }
+        transition: { duration: FLIGHT_DURATION, times: FLIGHT_TIMES, ease: 'linear' }
       })
-    ]).then(() => {
-      if (runId.current !== id) return;
-      // Reset off-screen-left, ready for the next navigation.
-      panelControls.set({ x: PANEL_HIDDEN_LEFT });
-      planeControls.set({ x: '-70vw', y: '-50%', rotate: BASE_ROTATE, opacity: 0 });
-      setIsFlying(false);
-    });
+      .then(() => {
+        if (runId.current !== id) return;
+        // Reset off-screen-left, ready for the next navigation.
+        planeControls.set({ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 0 });
+        setIsFlying(false);
+      });
 
     return () => clearTimeout(swapTimer);
-  }, [location, displayLocation, panelControls, planeControls, prefersReduced]);
+  }, [location, displayLocation, planeControls, prefersReduced]);
 
-  return { displayLocation, panelControls, planeControls, isFlying, prefersReduced };
+  return { displayLocation, planeControls, isFlying, prefersReduced };
 }
