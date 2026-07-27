@@ -34,7 +34,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-27T20:37:56.330Z"
+// Generated: "2026-07-27T21:02:39.786Z"
 // Opportunities: 1335 across 29 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -73,6 +73,29 @@ const SORT_AGENCY = 'agency';
 const SORT_MIXED = 'mixed';
 
 const PAGE_SIZE = 24;
+
+// Missions-world terminology where the "obvious" search word and the word
+// actually likely to appear in a listing's title/role_type/description
+// aren't the same string — e.g. someone searching "Muslim" should also
+// surface listings that only say "Islam" or "Islamic", and "BAM" (Business
+// as Mission) is standard shorthand for what a listing's own text usually
+// calls "creative access". Case-insensitive, matched by whole-term equality
+// (not fuzzy) against the term the user typed, then every synonym in the
+// matched group is OR'd together (see expandSearchTerm) before that group's
+// result set gets intersected with any other search term, same as always.
+const SYNONYM_GROUPS = [
+  ['islam', 'muslim', 'islamic'],
+  ['bam', 'business as mission', 'creative access', 'restricted access'],
+  ['upg', 'unreached', 'unreached people group'],
+  ['tck', 'third culture kid'],
+  ['esl', 'tesol', 'efl', 'english teaching']
+];
+
+function expandSearchTerm(term) {
+  const lower = term.trim().toLowerCase();
+  const group = SYNONYM_GROUPS.find((g) => g.includes(lower));
+  return group ? [term, ...group] : [term];
+}
 
 // One item from each agency bucket per round, cycling until every bucket is
 // exhausted — turns "first 250 rows are all ABWE" into "one ABWE listing
@@ -629,6 +652,12 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // debounced draft) is Fused independently, then the per-term id sets are
   // intersected — an opportunity has to match every term to survive, so
   // each additional chip can only shrink the result set, never grow it.
+  //
+  // Within a single term, synonyms (see SYNONYM_GROUPS/expandSearchTerm
+  // above) are the opposite: OR'd together first, since "Muslim" and
+  // "Islam" are the same search intent, not two separate narrowing
+  // filters — only after that union is a term's result set intersected
+  // with every other term's.
   const matchedIds = useMemo(() => {
     const terms = [...searchTerms];
     const draft = debouncedSearch.trim();
@@ -636,7 +665,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (terms.length === 0) return null;
 
     return terms
-      .map((term) => new Set(searchIndex.search(term).map((r) => r.item.id)))
+      .map((term) => {
+        const ids = new Set();
+        for (const variant of expandSearchTerm(term)) {
+          for (const r of searchIndex.search(variant)) ids.add(r.item.id);
+        }
+        return ids;
+      })
       .reduce((a, b) => new Set([...a].filter((id) => b.has(id))));
   }, [searchIndex, searchTerms, debouncedSearch]);
 

@@ -844,7 +844,37 @@ describe('OpportunitiesExplorer fuzzy search', () => {
       expect(screen.queryByText('Linguistics Consultant')).not.toBeInTheDocument();
     });
   }, TIMEOUT);
+
+  it('matches missions-terminology synonyms, not just the literal typed word', async () => {
+    mockFallbackFetch(SYNONYM_SAMPLE);
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Outreach Coordinator'));
+
+    // The listing's own text only ever says "Islam"/"Islamic" — searching
+    // "Muslim" (the word someone would actually type) has to expand to
+    // that, not just fuzzy-match the literal string "muslim".
+    await user.type(screen.getByPlaceholderText(/search opportunities/i), 'muslim');
+    await waitFor(() => {
+      expect(screen.getByText('Outreach Coordinator')).toBeInTheDocument();
+      expect(screen.queryByText('Warehouse Manager')).not.toBeInTheDocument();
+    });
+
+    // Same for "BAM" <-> "creative access" — real shorthand a searcher
+    // might use vs. the phrase a listing's description actually contains.
+    await user.clear(screen.getByPlaceholderText(/search opportunities/i));
+    await user.type(screen.getByPlaceholderText(/search opportunities/i), 'BAM');
+    await waitFor(() => {
+      expect(screen.getByText('Warehouse Manager')).toBeInTheDocument();
+      expect(screen.queryByText('Outreach Coordinator')).not.toBeInTheDocument();
+    });
+  }, TIMEOUT);
 });
+
+const SYNONYM_SAMPLE = [
+  { id: 'syn-1', agency: 'Frontiers', title: 'Outreach Coordinator', url: 'https://example.org/syn1', location: 'North Africa', region: 'Middle East / North Africa', role_type: 'evangelism/discipleship', term_length: null, description: 'Build relationships in a majority-Islamic community and support local believers.' },
+  { id: 'syn-2', agency: 'Crossworld', title: 'Warehouse Manager', url: 'https://example.org/syn2', location: 'Remote', region: 'Southeast Asia', role_type: 'business as mission', term_length: null, description: 'Run day-to-day logistics for a creative access business venture.' }
+];
 
 const LISTING_TYPE_SAMPLE = [
   { id: 'lt-1', agency: 'Avant Ministries', title: 'Serve in Albania — Avant Ministries', url: 'https://example.org/1', location: null, region: null, role_type: null, term_length: null, description: null, listing_type: 'category_page' },
