@@ -1,13 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { PLANE_HIDDEN_LEFT } from '../hooks/useRouteFlyTransition.js';
+import { PLANE_HIDDEN_LEFT, CURTAIN_HIDDEN_LEFT } from '../hooks/useRouteFlyTransition.js';
 
 // The visual half of the route transition (see useRouteFlyTransition.js for
-// the sequencing/timing). There's no separate covering panel anymore —
-// the plane graphic is the only thing on screen during the transition,
-// and the page swaps directly underneath it. Both layers below are inert
-// (aria-hidden, no focusable content) — this is pure transition chrome,
-// never a thing a screen reader or keyboard user needs to stop on.
+// the sequencing/timing and the exact geometry). A solid, fully-opaque
+// curtain trails the plane's wing — the wing is the dividing line between
+// "still covered" (curtain) and "revealed" (the real new page, already
+// swapped in underneath). Both layers are inert (aria-hidden, no
+// focusable content) — this is pure transition chrome, never a thing a
+// screen reader or keyboard user needs to stop on.
 //
 // public/images/route-fly-plane.png: a solid top-down airplane silhouette
 // (filled, not an outline/blueprint), transparent background, from Pixabay
@@ -20,10 +21,20 @@ import { PLANE_HIDDEN_LEFT } from '../hooks/useRouteFlyTransition.js';
 // that so the nose points into the direction of travel (right).
 const BASE_ROTATE = 90;
 
-export default function RouteFlyOverlay({ planeControls, isFlying }) {
+export default function RouteFlyOverlay({ planeControls, curtainControls, isFlying }) {
   return (
     <>
       <div className="route-fly-input-guard" aria-hidden="true" style={{ pointerEvents: isFlying ? 'auto' : 'none' }} />
+      {/* Curtain's `x` keyframes (see useRouteFlyTransition.js) are the
+          plane's own keyframes offset by a constant — pinned to the wing
+          at every instant, not just synced by matching duration/timing
+          between two independently-animated things. */}
+      <motion.div
+        className="route-fly-curtain"
+        initial={{ x: CURTAIN_HIDDEN_LEFT }}
+        animate={curtainControls}
+        aria-hidden="true"
+      />
       {/* Static outer anchor centers exactly on the viewport regardless of
           the plane's own (large) box size; the inner motion.div's x is
           then a plain "distance from true center" — see the
@@ -32,7 +43,7 @@ export default function RouteFlyOverlay({ planeControls, isFlying }) {
       <div className="route-fly-plane-anchor">
         <motion.div
           className="route-fly-plane-wrap"
-          initial={{ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 0 }}
+          initial={{ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 1 }}
           animate={planeControls}
           aria-hidden="true"
         >

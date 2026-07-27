@@ -24,9 +24,11 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 export default function App() {
   // <Routes> matches against `displayLocation`, not the live router
-  // location — see useRouteFlyTransition.js — so a nav-tab click doesn't
-  // swap the page until the plane's wings are crossing screen-center.
-  const { displayLocation, planeControls, isFlying, prefersReduced } = useRouteFlyTransition();
+  // location — see useRouteFlyTransition.js. The swap itself happens the
+  // instant a flight starts (the curtain covers the whole screen at that
+  // point), then gets revealed progressively as the curtain, pinned to
+  // the plane's wing, sweeps across.
+  const { displayLocation, planeControls, curtainControls, isFlying, prefersReduced } = useRouteFlyTransition();
 
   return (
     <DisplayLocationProvider value={displayLocation}>
@@ -46,7 +48,7 @@ export default function App() {
         </Route>
       </Routes>
       {!prefersReduced && (
-        <RouteFlyOverlay planeControls={planeControls} isFlying={isFlying} />
+        <RouteFlyOverlay planeControls={planeControls} curtainControls={curtainControls} isFlying={isFlying} />
       )}
     </DisplayLocationProvider>
   );

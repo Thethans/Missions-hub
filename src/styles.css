@@ -3161,18 +3161,38 @@ a { color: var(--voyage-teal); }
 
 /* ==== ROUTE FLY TRANSITION ==== */
 
-/* No separate cover panel anymore — the plane itself is the only thing on
-   screen during the transition, and the page swaps directly underneath it
-   (see SWAP_FRACTION in useRouteFlyTransition.js). z-index still sits
+/* Blocks input for the duration of the flight (isFlying) — z-index sits
    above the nav (max elsewhere in this file is 1001) and the mobile
-   drawer, and this still blocks input for the duration of the flight
-   (isFlying) — same reasoning as before, just with no visible panel to
-   hang that behavior off of, so it's its own fully transparent layer. */
+   drawer. Fully transparent: this is a separate layer purely so click-
+   blocking doesn't have to be tied to a specific visible element. */
 .route-fly-input-guard {
   position: fixed;
   inset: 0;
   z-index: 5000;
   background: transparent;
+}
+
+/* The curtain: a solid, fully opaque navy sheet the plane's wing "pulls"
+   across. Its `x` (see CURTAIN_X_KEYFRAMES in useRouteFlyTransition.js)
+   is the plane's own x plus a constant — the wing's offset from the
+   plane's geometric center — so the curtain's LEFT edge is pinned to the
+   wing at every instant: right of the wing is still curtain (old page
+   hidden underneath), left of the wing is the real new page, already
+   swapped in and revealed as the curtain sweeps past. Wide enough
+   (100vw + 200vh, deliberately generous) that even at its leftmost point
+   its far edge still reaches well past the right side of any reasonable
+   viewport — the curtain must never run out of coverage before the wing
+   has actually finished crossing. No gradient, no transparency: solid
+   the whole way, per feedback that a fade read as "not really there." */
+.route-fly-curtain {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: calc(100vw + 200vh);
+  height: 100%;
+  z-index: 5000;
+  background: var(--ink-navy);
+  will-change: transform;
 }
 
 /* True, size-independent centering: left:50%/top:50% alone only centers
@@ -3208,8 +3228,11 @@ a { color: var(--voyage-teal); }
   height: auto;
   /* Source PNG is a solid black silhouette on transparent (see
      RouteFlyOverlay.jsx for provenance) — invert flips it to solid paper-
-     white so it reads directly against whatever page is behind it (no
-     navy panel to guarantee contrast anymore, hence also the shadow). */
+     white. The plane straddles both backgrounds it can ride over (its
+     nose-half sits on the curtain, its tail-half on the already-revealed
+     real page, since the wing — the curtain's edge — trails behind the
+     plane's own geometric center), hence the shadow for contrast either
+     way. */
   filter: invert(1) drop-shadow(0 12px 40px rgba(22, 35, 59, 0.5));
 }
 

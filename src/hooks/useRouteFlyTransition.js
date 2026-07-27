@@ -3,19 +3,26 @@ import { useLocation } from 'react-router-dom';
 import { useAnimation } from 'framer-motion';
 import usePrefersReducedMotion from './usePrefersReducedMotion.js';
 
-// Drives the "plane flies across" route transition (see
-// RouteFlyOverlay.jsx). The actual page swap doesn't happen the instant
-// the URL changes — <Routes> is rendered against `displayLocation` here
-// rather than the live router location. There's no covering panel to hide
-// that swap behind anymore (by request — "nothing else besides a plane"),
-// so the swap is a plain, visible cut timed to fire the moment the wings
-// are crossing screen-center, not before or after.
+// Drives the "plane pulls a curtain across, revealing the new page" route
+// transition (see RouteFlyOverlay.jsx). The metaphor is literal: a solid,
+// fully opaque curtain's LEADING edge is pinned to the plane's wing at
+// every instant (not animated separately — its keyframes are the plane's
+// own keyframes, offset by a constant, so the two stay in lockstep by
+// construction, not by matching timing numbers between two independent
+// animations). Right of the wing is still curtain (old page hidden
+// underneath); left of the wing is bare page, because the curtain has
+// already swept past there.
 //
-// One continuous, constant-velocity pass (a single 3-keyframe `x`
-// animation with a plain 'linear' ease and evenly-spaced `times`) — no
-// separate cover/hold/reveal animations, and no bob/bank wobble. Either
-// of those previously read as the plane slowing, stopping, or shaking;
-// this is just a straight, unbroken glide left to right.
+// Because the curtain covers the ENTIRE viewport at t=0 (it's wide enough
+// that even at the flight's leftmost point its far edge reaches well past
+// the right side of any reasonable viewport), <Routes> can swap to the
+// new page the instant the flight starts — no separate timed
+// setTimeout, no gap where anything's visible except curtain+plane.
+//
+// One continuous, constant-velocity pass — a single 3-keyframe `x`
+// animation with ease:'linear' — no bob/bank wobble, no opacity fade.
+// The plane is opacity:1 for the entire flight; it's only ever hidden by
+// sitting off-screen, never by fading.
 const FLIGHT_DURATION = 3.4;
 const FLIGHT_TIMES = [0, 0.5, 1];
 
@@ -39,11 +46,11 @@ const WING_OFFSET_FROM_CENTER_VH = (747 - 1200 / 2) * IMAGE_SCALE_VH_PER_PX; // 
 
 // Fuselage length on screen post-rotation (the image's original HEIGHT,
 // scaled by the same factor) — half of this plus half the viewport width
-// is exactly how far the plane's geometric center needs to sit from
-// true-center to clear the screen completely on either side, regardless
-// of viewport aspect ratio (mixing vw/vh in one calc() lets the browser
-// do that per-device instead of a single fixed number that's only
-// correct for one specific aspect ratio).
+// is how far the plane's geometric center needs to sit from true-center
+// to clear the screen completely on either side, regardless of viewport
+// aspect ratio (mixing vw/vh in one calc() lets the browser do that
+// per-device instead of a single fixed number correct for only one
+// aspect ratio).
 const HALF_FUSELAGE_VH = (1200 * IMAGE_SCALE_VH_PER_PX) / 2; // 1200 is the source image's HEIGHT (1280 is its width, already used above)
 // Exported so RouteFlyOverlay.jsx's `initial` (the very first render,
 // before any flight has run) matches this exactly instead of duplicating
@@ -51,23 +58,19 @@ const HALF_FUSELAGE_VH = (1200 * IMAGE_SCALE_VH_PER_PX) / 2; // 1200 is the sour
 export const PLANE_HIDDEN_LEFT = `calc(-50vw - ${HALF_FUSELAGE_VH}vh)`;
 const PLANE_HIDDEN_RIGHT = `calc(50vw + ${HALF_FUSELAGE_VH}vh)`;
 const PLANE_X_KEYFRAMES = [PLANE_HIDDEN_LEFT, 0, PLANE_HIDDEN_RIGHT];
-const PLANE_OPACITY_KEYFRAMES = [0, 1, 0];
 
-// The fraction of FLIGHT_DURATION at which the WING (not the plane's
-// overall geometric center) crosses true screen-center — since motion is
-// linear/constant-velocity the whole way, this is just linear
-// interpolation between the hidden-left and hidden-right endpoints,
-// evaluated in one common unit (vh-equivalent) at a representative ~16:9
-// viewport (this is a decorative sync, not pixel-critical, so one fixed
-// approximation across aspect ratios is fine — 50vw at aspect A is
-// 50*A vh-equivalent units).
-const REPRESENTATIVE_ASPECT = 1.6; // vw:vh at a typical desktop viewport
-const HALF_VIEWPORT_WIDTH_VH_EQUIV = 50 * REPRESENTATIVE_ASPECT;
-const HIDDEN_LEFT_VH_EQUIV = -(HALF_VIEWPORT_WIDTH_VH_EQUIV + HALF_FUSELAGE_VH);
-const HIDDEN_RIGHT_VH_EQUIV = HALF_VIEWPORT_WIDTH_VH_EQUIV + HALF_FUSELAGE_VH;
-// The plane's center must be WING_OFFSET_FROM_CENTER_VH to the right of
-// true-center for its trailing wing to have just reached true-center.
-const SWAP_FRACTION = (WING_OFFSET_FROM_CENTER_VH - HIDDEN_LEFT_VH_EQUIV) / (HIDDEN_RIGHT_VH_EQUIV - HIDDEN_LEFT_VH_EQUIV);
+// The curtain's leading (left) edge is the plane's own x, shifted by the
+// wing's offset from the plane's geometric center — literally the same
+// keyframes as PLANE_X_KEYFRAMES with WING_OFFSET_FROM_CENTER_VH added to
+// each, so it's pinned to the wing at every instant instead of just at
+// one moment. (calc(0 + Nvh) collapses fine — no special-casing needed
+// for the "0" center keyframe.)
+export const CURTAIN_HIDDEN_LEFT = `calc(-50vw - ${HALF_FUSELAGE_VH - WING_OFFSET_FROM_CENTER_VH}vh)`;
+const CURTAIN_X_KEYFRAMES = [
+  CURTAIN_HIDDEN_LEFT,
+  `calc(${WING_OFFSET_FROM_CENTER_VH}vh)`,
+  `calc(50vw + ${HALF_FUSELAGE_VH + WING_OFFSET_FROM_CENTER_VH}vh)`
+];
 
 export default function useRouteFlyTransition() {
   const location = useLocation();
@@ -75,8 +78,9 @@ export default function useRouteFlyTransition() {
   const [displayLocation, setDisplayLocation] = useState(location);
   const [isFlying, setIsFlying] = useState(false);
   const planeControls = useAnimation();
-  // Guards against a second nav starting mid-flight from firing the
-  // delayed swap or reset after it no longer matches the latest location.
+  const curtainControls = useAnimation();
+  // Guards against a second nav starting mid-flight from firing the reset
+  // after it no longer matches the latest location.
   const runId = useRef(0);
 
   useEffect(() => {
@@ -89,28 +93,30 @@ export default function useRouteFlyTransition() {
 
     const id = ++runId.current;
     setIsFlying(true);
+    // The curtain covers the whole viewport at t=0 (see the module
+    // comment) — safe to swap immediately, revealed progressively as the
+    // curtain (pinned to the wing) sweeps past each point on screen.
+    setDisplayLocation(location);
 
-    const swapTimer = setTimeout(() => {
-      if (runId.current !== id) return;
-      setDisplayLocation(location);
-    }, SWAP_FRACTION * FLIGHT_DURATION * 1000);
-
-    planeControls
-      .start({
+    Promise.all([
+      planeControls.start({
         x: PLANE_X_KEYFRAMES,
         rotate: BASE_ROTATE,
-        opacity: PLANE_OPACITY_KEYFRAMES,
+        opacity: 1,
+        transition: { duration: FLIGHT_DURATION, times: FLIGHT_TIMES, ease: 'linear' }
+      }),
+      curtainControls.start({
+        x: CURTAIN_X_KEYFRAMES,
         transition: { duration: FLIGHT_DURATION, times: FLIGHT_TIMES, ease: 'linear' }
       })
-      .then(() => {
-        if (runId.current !== id) return;
-        // Reset off-screen-left, ready for the next navigation.
-        planeControls.set({ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 0 });
-        setIsFlying(false);
-      });
+    ]).then(() => {
+      if (runId.current !== id) return;
+      // Reset off-screen-left, ready for the next navigation.
+      planeControls.set({ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 1 });
+      curtainControls.set({ x: CURTAIN_HIDDEN_LEFT });
+      setIsFlying(false);
+    });
+  }, [location, displayLocation, planeControls, curtainControls, prefersReduced]);
 
-    return () => clearTimeout(swapTimer);
-  }, [location, displayLocation, planeControls, prefersReduced]);
-
-  return { displayLocation, planeControls, isFlying, prefersReduced };
+  return { displayLocation, planeControls, curtainControls, isFlying, prefersReduced };
 }
