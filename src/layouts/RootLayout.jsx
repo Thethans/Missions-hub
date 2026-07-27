@@ -1,10 +1,9 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import TopNav from '../components/TopNav.jsx';
 import RouteLoadingBar from '../components/RouteLoadingBar.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
-import { useDisplayLocation } from '../context/DisplayLocationContext.js';
 
 const TITLES = {
   '/': 'Fielded — Get to the Field',
@@ -18,11 +17,7 @@ const TITLES = {
 };
 
 export default function RootLayout() {
-  // The location the page content is actually rendered against (see
-  // useRouteFlyTransition.js) — not the live URL — so title/scroll/focus
-  // and the ErrorBoundary key change exactly when the new page becomes
-  // visible, not a beat earlier when the nav link was clicked.
-  const { pathname } = useDisplayLocation();
+  const { pathname } = useLocation();
   const mainRef = useRef(null);
   // Derived synchronously from the current path (not '' + an effect): the
   // effect below only needs to fire on subsequent route changes now, so the
