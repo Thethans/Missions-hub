@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { PLANE_HIDDEN_LEFT, CURTAIN_HIDDEN_LEFT } from '../hooks/useRouteFlyTransition.js';
+import { PLANE_HIDDEN_LEFT, CURTAIN_HIDDEN_RIGHT } from '../hooks/useRouteFlyTransition.js';
 
 // The visual half of the route transition (see useRouteFlyTransition.js for
 // the sequencing/timing and the exact geometry). A solid, fully-opaque
@@ -28,10 +28,14 @@ export default function RouteFlyOverlay({ planeControls, curtainControls, isFlyi
       {/* Curtain's `x` keyframes (see useRouteFlyTransition.js) are the
           plane's own keyframes offset by a constant — pinned to the wing
           at every instant, not just synced by matching duration/timing
-          between two independently-animated things. */}
+          between two independently-animated things. `initial` is
+          CURTAIN_HIDDEN_RIGHT, not _LEFT — the curtain's own hidden-left
+          position is deliberately wide enough to still cover the whole
+          viewport (that's the point, right at flight-start), so it's
+          never a safe idle value; see that constant's comment. */}
       <motion.div
         className="route-fly-curtain"
-        initial={{ x: CURTAIN_HIDDEN_LEFT }}
+        initial={{ x: CURTAIN_HIDDEN_RIGHT }}
         animate={curtainControls}
         aria-hidden="true"
       />

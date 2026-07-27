@@ -65,11 +65,24 @@ const PLANE_X_KEYFRAMES = [PLANE_HIDDEN_LEFT, 0, PLANE_HIDDEN_RIGHT];
 // each, so it's pinned to the wing at every instant instead of just at
 // one moment. (calc(0 + Nvh) collapses fine — no special-casing needed
 // for the "0" center keyframe.)
-export const CURTAIN_HIDDEN_LEFT = `calc(-50vw - ${HALF_FUSELAGE_VH - WING_OFFSET_FROM_CENTER_VH}vh)`;
+//
+// CURTAIN_HIDDEN_LEFT is deliberately NOT a safe "idle" position, even
+// though the name suggests it — the curtain is wide (100vw + 200vh, see
+// styles.css) so that its trailing tail still reaches past the viewport's
+// right edge when its leading edge is all the way over at this position;
+// that width means CURTAIN_HIDDEN_LEFT itself still covers the ENTIRE
+// viewport. That's correct and load-bearing at t=0 of a flight (the whole
+// point is guaranteed full coverage right when the swap happens), but it
+// must never be used as a rest/idle value or the curtain blanks the
+// whole page forever. CURTAIN_HIDDEN_RIGHT is the only genuinely
+// off-screen (not-covering-anything) position — that's what `initial` in
+// RouteFlyOverlay.jsx and the post-flight .set() below both use.
+const CURTAIN_HIDDEN_LEFT = `calc(-50vw - ${HALF_FUSELAGE_VH - WING_OFFSET_FROM_CENTER_VH}vh)`;
+export const CURTAIN_HIDDEN_RIGHT = `calc(50vw + ${HALF_FUSELAGE_VH + WING_OFFSET_FROM_CENTER_VH}vh)`;
 const CURTAIN_X_KEYFRAMES = [
   CURTAIN_HIDDEN_LEFT,
   `calc(${WING_OFFSET_FROM_CENTER_VH}vh)`,
-  `calc(50vw + ${HALF_FUSELAGE_VH + WING_OFFSET_FROM_CENTER_VH}vh)`
+  CURTAIN_HIDDEN_RIGHT
 ];
 
 export default function useRouteFlyTransition() {
@@ -111,9 +124,12 @@ export default function useRouteFlyTransition() {
       })
     ]).then(() => {
       if (runId.current !== id) return;
-      // Reset off-screen-left, ready for the next navigation.
+      // Reset: plane off-screen-left (ready to re-enter for the next
+      // flight), curtain off-screen-right (genuinely not covering
+      // anything — see the CURTAIN_HIDDEN_LEFT comment above for why
+      // that one can't be used here).
       planeControls.set({ x: PLANE_HIDDEN_LEFT, rotate: BASE_ROTATE, opacity: 1 });
-      curtainControls.set({ x: CURTAIN_HIDDEN_LEFT });
+      curtainControls.set({ x: CURTAIN_HIDDEN_RIGHT });
       setIsFlying(false);
     });
   }, [location, displayLocation, planeControls, curtainControls, prefersReduced]);
