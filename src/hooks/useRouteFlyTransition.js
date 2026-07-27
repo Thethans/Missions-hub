@@ -26,6 +26,13 @@ const COVER_DURATION = 2.4;
 const HOLD_MS = 250;
 const REVEAL_DURATION = 2.8;
 
+// public/images/route-fly-plane.png is drawn nose-up — BASE_ROTATE turns
+// that to nose-right (rotate(90deg) takes 12 o'clock to 3 o'clock), so it
+// actually reads as flying in its direction of travel instead of just
+// sliding sideways nose-first-into-nothing. The bank wobble below is a
+// small offset AROUND this base, not a replacement for it.
+const BASE_ROTATE = 90;
+
 // Gentle up/down lift and a slowly drifting bank angle, sampled at even
 // intervals across whichever phase duration is passed in — this is what
 // turns a flat left-to-right slide into something that reads as airborne.
@@ -37,11 +44,27 @@ function flightBob(baseYPercent) {
     .map((v) => `${v}%`);
 }
 
-function flightBank(startDeg, endDeg) {
-  const mid1 = startDeg + (endDeg - startDeg) * 0.3 - 3;
-  const mid2 = startDeg + (endDeg - startDeg) * 0.7 + 2;
-  return [startDeg, mid1, mid2, endDeg];
+function flightBank(startOffset, endOffset) {
+  const start = BASE_ROTATE + startOffset;
+  const end = BASE_ROTATE + endOffset;
+  const mid1 = start + (end - start) * 0.3 - 3;
+  const mid2 = start + (end - start) * 0.7 + 2;
+  return [start, mid1, mid2, end];
 }
+
+const PLANE_RESET_ROTATE = BASE_ROTATE - 4;
+
+// The panel is wider than the viewport (130vw, not 100vw) with a gradient
+// baked into its left ~23% — solid navy everywhere else. Sized/positioned
+// so that x:-30vw lands the solid portion exactly over the viewport (full
+// opaque coverage, no dissolve visible), while sweeping on to x:100vw
+// carries that soft-left-edge gradient segment across the viewport right
+// at the tail of the reveal — the "dissolves into the new page" moment —
+// rather than a hard-edged cut. See the .route-fly-panel comment in
+// styles.css for the exact math.
+const PANEL_HIDDEN_LEFT = '-130vw';
+const PANEL_COVERED = '-30vw';
+const PANEL_HIDDEN_RIGHT = '100vw';
 
 export default function useRouteFlyTransition() {
   const location = useLocation();
@@ -67,7 +90,7 @@ export default function useRouteFlyTransition() {
 
     (async () => {
       await Promise.all([
-        panelControls.start({ x: '0%', transition: { duration: COVER_DURATION, ease: COVER_EASE } }),
+        panelControls.start({ x: PANEL_COVERED, transition: { duration: COVER_DURATION, ease: COVER_EASE } }),
         planeControls.start({
           x: '0vw',
           y: flightBob(-50),
@@ -86,7 +109,7 @@ export default function useRouteFlyTransition() {
       if (runId.current !== id) return;
 
       await Promise.all([
-        panelControls.start({ x: '100%', transition: { duration: REVEAL_DURATION, ease: REVEAL_EASE } }),
+        panelControls.start({ x: PANEL_HIDDEN_RIGHT, transition: { duration: REVEAL_DURATION, ease: REVEAL_EASE } }),
         planeControls.start({
           x: '95vw',
           y: flightBob(-50),
@@ -98,8 +121,8 @@ export default function useRouteFlyTransition() {
       if (runId.current !== id) return;
 
       // Reset off-screen-left, ready for the next navigation.
-      panelControls.set({ x: '-100%' });
-      planeControls.set({ x: '-70vw', y: '-50%', rotate: -4, opacity: 0 });
+      panelControls.set({ x: PANEL_HIDDEN_LEFT });
+      planeControls.set({ x: '-70vw', y: '-50%', rotate: PLANE_RESET_ROTATE, opacity: 0 });
       setIsFlying(false);
     })();
   }, [location, displayLocation, panelControls, planeControls, prefersReduced]);

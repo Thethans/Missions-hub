@@ -10,19 +10,23 @@ import { motion } from 'framer-motion';
 // is pure transition chrome, never a thing a screen reader or keyboard
 // user needs to stop on.
 //
-// public/images/route-fly-plane.png: a top-down airplane line-art PNG,
-// transparent background, from Pixabay (cdn.pixabay.com/photo/2012/04/14/
-// 14/01/airplane-34037_1280.png, uploaded by Clker-Free-Vector-Images) —
-// free for commercial use under the Pixabay Content License, no
-// attribution required. Recolored from black-on-transparent to
-// paper-on-transparent via the CSS invert filter in styles.css since it
-// needs to read against the navy panel.
+// public/images/route-fly-plane.png: a solid top-down airplane silhouette
+// (filled, not an outline/blueprint), transparent background, from Pixabay
+// (cdn.pixabay.com/photo/2013/07/13/01/21/jet-155574_1280.png, uploaded by
+// OpenClipart-Vectors) — free for commercial use under the Pixabay Content
+// License, no attribution required. Recolored from solid-black to
+// solid-paper-white via the CSS invert filter in styles.css so it reads
+// against the navy panel. The source art is drawn nose-up; BASE_ROTATE in
+// useRouteFlyTransition.js turns that 90deg so the nose points into the
+// direction of travel (right) instead of sideways.
+const PLANE_INITIAL_ROTATE = 86; // BASE_ROTATE (90) - 4, matches the hook's reset value
+
 export default function RouteFlyOverlay({ panelControls, planeControls, isFlying }) {
   return (
     <>
       <motion.div
         className="route-fly-panel"
-        initial={{ x: '-100%' }}
+        initial={{ x: '-130vw' }}
         animate={panelControls}
         aria-hidden="true"
         style={{ pointerEvents: isFlying ? 'auto' : 'none' }}
@@ -35,7 +39,7 @@ export default function RouteFlyOverlay({ panelControls, planeControls, isFlying
           <img> stays a plain, non-animated child (sizing/filter only). */}
       <motion.div
         className="route-fly-plane-wrap"
-        initial={{ x: '-70vw', y: '-50%', rotate: -4, opacity: 0 }}
+        initial={{ x: '-70vw', y: '-50%', rotate: PLANE_INITIAL_ROTATE, opacity: 0 }}
         animate={planeControls}
         aria-hidden="true"
       >

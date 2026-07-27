@@ -3166,12 +3166,26 @@ a { color: var(--voyage-teal); }
    always have gaps around the fuselage/wings, so this navy panel is what's
    really doing the "cover the whole screen" work; the plane on top sells
    the "flying across" read. z-index sits above the nav (max elsewhere in
-   this file is 1001) and the mobile drawer. */
+   this file is 1001) and the mobile drawer.
+
+   Wider than the viewport (130vw) with the gradient baked into its own
+   left ~23% (30vw of the 130vw) rather than a flat fill, so there's a
+   dedicated "soft" segment that can sweep across the screen on its own —
+   a plain 100vw panel has nowhere to put a fade without punching a
+   transparent hole in the middle of "full coverage." At x:-30vw (see
+   PANEL_COVERED in the hook) the solid segment [30vw,130vw] lines up
+   exactly with the viewport for full opaque coverage; sweeping on to
+   x:100vw carries the soft [0,30vw] segment across the viewport right at
+   the tail of the reveal — the new page dissolving in through that fade
+   instead of a hard-edged cut. */
 .route-fly-panel {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 130vw;
+  height: 100%;
   z-index: 5000;
-  background: var(--ink-navy);
+  background: linear-gradient(to right, transparent 0%, var(--ink-navy) 23.08%, var(--ink-navy) 100%);
   will-change: transform;
 }
 
