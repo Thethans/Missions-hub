@@ -16,10 +16,11 @@ import { motion } from 'framer-motion';
 // OpenClipart-Vectors) — free for commercial use under the Pixabay Content
 // License, no attribution required. Recolored from solid-black to
 // solid-paper-white via the CSS invert filter in styles.css so it reads
-// against the navy panel. The source art is drawn nose-up; BASE_ROTATE in
-// useRouteFlyTransition.js turns that 90deg so the nose points into the
-// direction of travel (right) instead of sideways.
-const PLANE_INITIAL_ROTATE = 86; // BASE_ROTATE (90) - 4, matches the hook's reset value
+// against the navy panel. The source art is drawn nose-up; BASE_ROTATE
+// (90deg, matched here in `initial` and held constant for the whole
+// flight in useRouteFlyTransition.js) turns that so the nose points into
+// the direction of travel (right) instead of sideways.
+const BASE_ROTATE = 90;
 
 export default function RouteFlyOverlay({ panelControls, planeControls, isFlying }) {
   return (
@@ -31,15 +32,15 @@ export default function RouteFlyOverlay({ panelControls, planeControls, isFlying
         aria-hidden="true"
         style={{ pointerEvents: isFlying ? 'auto' : 'none' }}
       />
-      {/* x/y/rotate all live on this one motion.div (see
-          useRouteFlyTransition.js's flightBob/flightBank) — framer composes
-          them into a single transform matrix correctly as long as they're
-          all on the same element, which is what gives the gentle bob/bank
-          its "gliding" read instead of a flat horizontal slide. The inner
-          <img> stays a plain, non-animated child (sizing/filter only). */}
+      {/* x/y/rotate all live on this one motion.div — framer composes
+          multiple animated transform properties into a single matrix
+          correctly as long as they're all on the same element (mixing an
+          animated element with a statically-transformed one is what
+          actually breaks). The inner <img> stays a plain, non-animated
+          child (sizing/filter only). */}
       <motion.div
         className="route-fly-plane-wrap"
-        initial={{ x: '-70vw', y: '-50%', rotate: PLANE_INITIAL_ROTATE, opacity: 0 }}
+        initial={{ x: '-70vw', y: '-50%', rotate: BASE_ROTATE, opacity: 0 }}
         animate={planeControls}
         aria-hidden="true"
       >

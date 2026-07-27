@@ -3205,11 +3205,11 @@ a { color: var(--voyage-teal); }
   width: 48vw;
   height: auto;
   max-width: 720px;
-  /* Source PNG is black line-art on transparent (see RouteFlyOverlay.jsx
-     for provenance) — invert flips it to paper-white so it reads against
-     the navy panel, same as the rest of this transition's palette. Bank
-     angle is animated on the parent .route-fly-plane-wrap instead of a
-     static rotate here — see useRouteFlyTransition.js's flightBank(). */
+  /* Source PNG is a solid black silhouette on transparent (see
+     RouteFlyOverlay.jsx for provenance) — invert flips it to solid paper-
+     white so it reads against the navy panel. Rotation (nose-right) is
+     animated on the parent .route-fly-plane-wrap, held constant for the
+     whole flight — see BASE_ROTATE in useRouteFlyTransition.js. */
   filter: invert(1) drop-shadow(0 12px 40px rgba(22, 35, 59, 0.5));
 }
 
