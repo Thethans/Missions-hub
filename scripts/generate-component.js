@@ -75,7 +75,12 @@ async function fetchOpportunities() {
 // ── Design tokens ────────────────────────────────────────────────────
 
 function parseTokens() {
-  const css = fs.readFileSync(TOKENS_PATH, 'utf-8');
+  const rawCss = fs.readFileSync(TOKENS_PATH, 'utf-8');
+  // Strip comments first — a token name mentioned in a comment's prose
+  // (e.g. "--ink-navy: the map token is..." explaining another token) would
+  // otherwise match the same regex as a real declaration and clobber that
+  // token's actual value, since later matches win on duplicate keys.
+  const css = rawCss.replace(/\/\*[\s\S]*?\*\//g, '');
   const tokens = {};
   for (const match of css.matchAll(/--([\w-]+)\s*:\s*([^;]+)/g)) {
     if (match[1].startsWith('topo')) continue;

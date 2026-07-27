@@ -8,6 +8,7 @@
 //   --status-unreached: #b5482f
 //   --status-formative: #d9a441
 //   --status-reached: #4c8a5e
+//   --status-unreached-on-navy: #e0793b
 //   --line: rgba(22, 35, 59, 0.15)
 //   --muted-text: rgba(22, 35, 59, 0.65)
 //   --font-display: 'Fraunces Variable', Georgia, serif
@@ -33,8 +34,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-25T15:35:03.051Z"
-// Opportunities: 1063 across 27 agencies
+// Generated: "2026-07-27T20:37:56.330Z"
+// Opportunities: 1335 across 29 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -127,6 +128,7 @@ const REGIONS = [
   "Latin America",
   "Middle East / North Africa",
   "North America",
+  "Oceania",
   "Oceania / Asia-Pacific",
   "South Asia",
   "Southeast Asia",
@@ -398,7 +400,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters — Sets for multi-select (union/OR within a category, intersection/AND across categories)
+  // `search` is the live, uncommitted text box value; pressing Enter commits
+  // it into `searchTerms`, a stack of independent search chips that are all
+  // ANDed together (see matchedIds below) — each added term can only narrow
+  // the result set further, never widen it, same intersection model the
+  // agency/region/role/term filters already use.
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
+  const [searchTerms, setSearchTerms] = useState(() => searchParams.getAll('sq'));
   const [selectedAgencies, setSelectedAgencies] = useState(() => {
     const fromUrl = parseSetParam(searchParams, 'agency');
     if (fromUrl.size > 0) return fromUrl;
@@ -421,6 +429,21 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     return quizScores ? SORT_RELEVANCE : SORT_MIXED;
   });
   const [page, setPage] = useState(() => Math.max(1, parseInt(searchParams.get('page'), 10) || 1));
+
+  // Promotes the current text box value into its own permanent search chip
+  // (deduped) and clears the box for the next term — this is what lets
+  // someone stack "medical" + "Kenya" as two independent, intersected
+  // filters instead of one search replacing the last.
+  function commitSearchTerm() {
+    const term = search.trim();
+    if (!term) return;
+    setSearchTerms((prev) => (prev.includes(term) ? prev : [...prev, term]));
+    setSearch('');
+  }
+
+  function removeSearchTerm(term) {
+    setSearchTerms((prev) => prev.filter((t) => t !== term));
+  }
 
   function toggleFilter(setter, value) {
     setter(prev => {
@@ -597,14 +620,25 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   );
 
   // null = no active search (every row passes); otherwise the set of ids
-  // Fuse matched, so `search` can be intersected with every other filter via
+  // Fuse matched, so search can be intersected with every other filter via
   // a plain Set.has() the same way agency/region/role/term already are —
   // that's what makes search narrow within the current filter selection
   // rather than replace it.
+  //
+  // Every committed search chip PLUS whatever's still being typed (the
+  // debounced draft) is Fused independently, then the per-term id sets are
+  // intersected — an opportunity has to match every term to survive, so
+  // each additional chip can only shrink the result set, never grow it.
   const matchedIds = useMemo(() => {
-    if (!debouncedSearch.trim()) return null;
-    return new Set(searchIndex.search(debouncedSearch).map((r) => r.item.id));
-  }, [searchIndex, debouncedSearch]);
+    const terms = [...searchTerms];
+    const draft = debouncedSearch.trim();
+    if (draft) terms.push(draft);
+    if (terms.length === 0) return null;
+
+    return terms
+      .map((term) => new Set(searchIndex.search(term).map((r) => r.item.id)))
+      .reduce((a, b) => new Set([...a].filter((id) => b.has(id))));
+  }, [searchIndex, searchTerms, debouncedSearch]);
 
   // Every filter dimension applied except `search`/`showSavedOnly` (which
   // apply everywhere) and whichever dimension `skipKey` names — that's what
@@ -687,7 +721,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       return;
     }
     setPage(1);
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, sortMode, showSavedOnly]);
+  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, sortMode, showSavedOnly]);
 
   // Clamp if filters shrank the result set out from under the current page
   // (e.g. on page 5 of "ABWE", then also filter to a term length with none).
@@ -708,6 +742,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   useEffect(() => {
     const next = new URLSearchParams();
     if (search) next.set('q', search);
+    for (const term of searchTerms) next.append('sq', term);
     if (selectedAgencies.size > 0) next.set('agency', [...selectedAgencies].join(','));
     if (selectedRegions.size > 0) next.set('region', [...selectedRegions].join(','));
     if (selectedRoles.size > 0) next.set('category', [...selectedRoles].join(','));
@@ -717,7 +752,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (page > 1) next.set('page', String(page));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, sortMode, page]);
+  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, sortMode, page]);
 
   function toggleSave(id) {
     const wasSaved = savedIds.has(id);
@@ -746,6 +781,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
   function clearFilters() {
     setSearch('');
+    setSearchTerms([]);
     setSelectedAgencies(new Set());
     setSelectedRegions(new Set());
     setSelectedRoles(new Set());
@@ -754,21 +790,22 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   }
 
   const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size;
-  const hasActiveFilters = search || activeFilterCount > 0 || showSavedOnly;
+  const hasActiveFilters = search || searchTerms.length > 0 || activeFilterCount > 0 || showSavedOnly;
 
   // Removable-chip summary of every active filter, independent of whether
   // the filter panel itself is open — a visitor shouldn't have to reopen
   // the panel just to see (or undo) what's currently narrowing the list.
   const activeFilterChips = useMemo(() => {
     const chips = [];
-    if (search) chips.push({ key: 'search', label: `"${search}"`, onRemove: () => setSearch('') });
+    for (const term of searchTerms) chips.push({ key: `search-${term}`, label: `"${term}"`, onRemove: () => removeSearchTerm(term) });
+    if (search) chips.push({ key: 'search-draft', label: `"${search}"`, onRemove: () => setSearch('') });
     for (const a of selectedAgencies) chips.push({ key: `agency-${a}`, label: a, onRemove: () => toggleFilter(setSelectedAgencies, a) });
     for (const r of selectedRegions) chips.push({ key: `region-${r}`, label: r, onRemove: () => toggleFilter(setSelectedRegions, r) });
     for (const r of selectedRoles) chips.push({ key: `role-${r}`, label: r, onRemove: () => toggleFilter(setSelectedRoles, r) });
     for (const t of selectedTerms) chips.push({ key: `term-${t}`, label: t, onRemove: () => toggleFilter(setSelectedTerms, t) });
     if (showSavedOnly) chips.push({ key: 'saved', label: 'Saved only', onRemove: () => setShowSavedOnly(false) });
     return chips;
-  }, [search, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly]);
+  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly]);
 
   // Below ~640px the filter panel becomes a bottom sheet (see .opp-filters
   // in styles.css) — this gives it the keyboard behavior a sheet actually
@@ -820,12 +857,26 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         <div className="opp-search-wrap">
           <MagnifyingGlass size={18} className="opp-search-icon" />
           <input
-            type="search"
+            // type="text" with an explicit role rather than type="search" —
+            // sidesteps the native browser affordances (its own clear-icon,
+            // autofill/history dropdown) that come with type="search" and
+            // aren't needed here, since commitSearchTerm below already
+            // fully owns clearing the box. role="searchbox" keeps the same
+            // accessible semantics screen readers would get from the native
+            // type either way.
+            type="text"
+            role="searchbox"
             className="opp-search"
             placeholder="Search opportunities..."
             aria-label="Search opportunities"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                commitSearchTerm();
+              }
+            }}
           />
         </div>
         <button

@@ -806,6 +806,44 @@ describe('OpportunitiesExplorer fuzzy search', () => {
       expect(screen.getByText('Accountant')).toBeInTheDocument();
     });
   }, TIMEOUT);
+
+  it('stacks multiple committed search terms as an intersection, not a replacement', async () => {
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Nurse Practitioner'));
+
+    const searchBox = screen.getByPlaceholderText(/search opportunities/i);
+
+    // "ABWE" alone matches both ABWE listings.
+    await user.type(searchBox, 'ABWE{Enter}');
+    await waitFor(() => {
+      expect(screen.getByText('Nurse Practitioner')).toBeInTheDocument();
+      expect(screen.getByText('Accountant')).toBeInTheDocument();
+      expect(screen.queryByText('Linguistics Consultant')).not.toBeInTheDocument();
+    });
+
+    // Committing "ABWE" clears the box for the next term and shows it as
+    // its own removable chip.
+    expect(searchBox).toHaveValue('');
+    const activeFilters = screen.getByLabelText('Active filters');
+    expect(within(activeFilters).getByText('"ABWE"')).toBeInTheDocument();
+
+    // Adding "medical" on top narrows the ABWE result further — an
+    // opportunity now has to match BOTH terms, not just the most recent one.
+    await user.type(searchBox, 'medical');
+    await waitFor(() => {
+      expect(screen.getByText('Nurse Practitioner')).toBeInTheDocument();
+      expect(screen.queryByText('Accountant')).not.toBeInTheDocument();
+    });
+
+    // Removing the "ABWE" chip drops back to just the "medical" term.
+    await user.click(within(activeFilters).getByText('"ABWE"'));
+    await waitFor(() => {
+      expect(screen.getByText('Nurse Practitioner')).toBeInTheDocument();
+      expect(screen.queryByText('Accountant')).not.toBeInTheDocument();
+      expect(screen.queryByText('Linguistics Consultant')).not.toBeInTheDocument();
+    });
+  }, TIMEOUT);
 });
 
 const LISTING_TYPE_SAMPLE = [
