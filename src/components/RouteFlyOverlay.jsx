@@ -27,13 +27,15 @@ export default function RouteFlyOverlay({ panelControls, planeControls, isFlying
         aria-hidden="true"
         style={{ pointerEvents: isFlying ? 'auto' : 'none' }}
       />
-      {/* Framer drives `transform` on whatever element animate/initial sit
-          on, overwriting the whole property each frame — so the static
-          rotate lives on the plain inner <img>, and the outer motion.div
-          only ever carries x/y/opacity, or the two would fight. */}
+      {/* x/y/rotate all live on this one motion.div (see
+          useRouteFlyTransition.js's flightBob/flightBank) — framer composes
+          them into a single transform matrix correctly as long as they're
+          all on the same element, which is what gives the gentle bob/bank
+          its "gliding" read instead of a flat horizontal slide. The inner
+          <img> stays a plain, non-animated child (sizing/filter only). */}
       <motion.div
         className="route-fly-plane-wrap"
-        initial={{ x: '-70vw', y: '-50%', opacity: 0 }}
+        initial={{ x: '-70vw', y: '-50%', rotate: -4, opacity: 0 }}
         animate={planeControls}
         aria-hidden="true"
       >

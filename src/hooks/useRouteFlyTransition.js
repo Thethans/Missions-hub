@@ -12,11 +12,36 @@ import usePrefersReducedMotion from './usePrefersReducedMotion.js';
 // cover), then animate off to reveal it. Without this indirection the new
 // page would pop in instantly and the "cover" would just be decoration
 // layered on top of an already-swapped page.
-const COVER_EASE = [0.76, 0, 0.24, 1];
-const REVEAL_EASE = [0.16, 1, 0.3, 1];
-const COVER_DURATION = 0.38;
-const HOLD_MS = 90;
-const REVEAL_DURATION = 0.46;
+//
+// A slow, deliberate pace (a few seconds each way) plus a gentle vertical
+// bob and drifting bank angle on the plane — not just a straight
+// horizontal slide — is what sells "gliding through the air" rather than
+// "a UI panel sliding." The panel shares the plane's duration so the two
+// stay in lockstep: the wipe reaches full coverage exactly when the plane
+// reaches center, instead of the panel finishing early and leaving the
+// plane to coast across a screen that's already blank navy.
+const COVER_EASE = [0.45, 0, 0.4, 1];
+const REVEAL_EASE = [0.4, 0, 0.35, 1];
+const COVER_DURATION = 2.4;
+const HOLD_MS = 250;
+const REVEAL_DURATION = 2.8;
+
+// Gentle up/down lift and a slowly drifting bank angle, sampled at even
+// intervals across whichever phase duration is passed in — this is what
+// turns a flat left-to-right slide into something that reads as airborne.
+// Percent strings, not bare numbers — framer-motion treats a unitless
+// number as pixels, which would silently blow up the vertical centering
+// this relies on (top: 50% + y: -50% == true-centered; y: -50 == -50px).
+function flightBob(baseYPercent) {
+  return [baseYPercent, baseYPercent - 2.5, baseYPercent + 1.5, baseYPercent - 1.5, baseYPercent]
+    .map((v) => `${v}%`);
+}
+
+function flightBank(startDeg, endDeg) {
+  const mid1 = startDeg + (endDeg - startDeg) * 0.3 - 3;
+  const mid2 = startDeg + (endDeg - startDeg) * 0.7 + 2;
+  return [startDeg, mid1, mid2, endDeg];
+}
 
 export default function useRouteFlyTransition() {
   const location = useLocation();
@@ -43,7 +68,13 @@ export default function useRouteFlyTransition() {
     (async () => {
       await Promise.all([
         panelControls.start({ x: '0%', transition: { duration: COVER_DURATION, ease: COVER_EASE } }),
-        planeControls.start({ x: '0vw', opacity: 1, transition: { duration: Math.max(0.1, COVER_DURATION - 0.05), ease: COVER_EASE } })
+        planeControls.start({
+          x: '0vw',
+          y: flightBob(-50),
+          rotate: flightBank(-4, 6),
+          opacity: 1,
+          transition: { duration: COVER_DURATION, ease: COVER_EASE, y: { ease: 'easeInOut' }, rotate: { ease: 'easeInOut' } }
+        })
       ]);
       if (runId.current !== id) return;
 
@@ -56,13 +87,19 @@ export default function useRouteFlyTransition() {
 
       await Promise.all([
         panelControls.start({ x: '100%', transition: { duration: REVEAL_DURATION, ease: REVEAL_EASE } }),
-        planeControls.start({ x: '95vw', opacity: 0, transition: { duration: REVEAL_DURATION + 0.05, ease: REVEAL_EASE } })
+        planeControls.start({
+          x: '95vw',
+          y: flightBob(-50),
+          rotate: flightBank(6, 2),
+          opacity: 0,
+          transition: { duration: REVEAL_DURATION, ease: REVEAL_EASE, y: { ease: 'easeInOut' }, rotate: { ease: 'easeInOut' } }
+        })
       ]);
       if (runId.current !== id) return;
 
       // Reset off-screen-left, ready for the next navigation.
       panelControls.set({ x: '-100%' });
-      planeControls.set({ x: '-70vw', opacity: 0 });
+      planeControls.set({ x: '-70vw', y: '-50%', rotate: -4, opacity: 0 });
       setIsFlying(false);
     })();
   }, [location, displayLocation, panelControls, planeControls, prefersReduced]);
