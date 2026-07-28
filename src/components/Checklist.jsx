@@ -147,25 +147,48 @@ function ProfileSetup({ initial, onSaved, anonymous }) {
   return (
     <form className="checklist-setup" onSubmit={handleSubmit}>
       <h2>{initial ? 'Update your profile' : 'A couple quick questions'}</h2>
+      <p className="checklist-setup-intro">
+        These two answers build your checklist — your role determines which preparation steps
+        apply, and your destination's access level determines how much of it needs to stay private.
+      </p>
       <label>
         Role type
-        <select value={roleType} onChange={(e) => setRoleType(e.target.value)} required>
+        <select
+          value={roleType}
+          onChange={(e) => setRoleType(e.target.value)}
+          required
+          aria-describedby="checklist-role-hint"
+        >
           <option value="" disabled>Select a role…</option>
           {ROLE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+        <p id="checklist-role-hint" className="checklist-field-hint">
+          Long-term, short-term, and marketplace-tentmaker roles unlock different steps — from
+          support raising to a tentmaking role's own work-permit paperwork.
+        </p>
       </label>
       <label>
         Destination access-level
-        <select value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)} required>
+        <select
+          value={accessLevel}
+          onChange={(e) => setAccessLevel(e.target.value)}
+          required
+          aria-describedby="checklist-access-hint"
+        >
           <option value="" disabled>Select an access level…</option>
           {ACCESS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+        <p id="checklist-access-hint" className="checklist-field-hint">
+          Open access is standard preparation. Creative and restricted access add items like extra
+          permits, evacuation coverage, and a digital-security review — the more sensitive the
+          field, the less of your prep can be public.
+        </p>
       </label>
-      <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Continue'}</button>
+      <button type="submit" disabled={saving}>{saving ? 'Generating…' : 'Generate my checklist'}</button>
       {error && <p className="checklist-error" role="alert">{error}</p>}
     </form>
   );

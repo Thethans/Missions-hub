@@ -162,12 +162,15 @@ a { color: var(--voyage-teal); }
   left: 0.58em;
 }
 
-/* Sits over the dotless-ı, in the same slot a normal "i"'s tittle would occupy. */
+/* Sits over the dotless-ı, in the same slot a normal "i"'s tittle would
+   occupy — position measured against the real "i" glyph's ink (canvas
+   pixel-scan of the rendered font) and the line box's actual baseline
+   (a zero-size vertical-align:baseline marker), not eyeballed. */
 .brand-dot--wordmark {
-  width: 0.12em;
-  height: 0.12em;
-  top: 0.06em;
-  left: 0.79em;
+  width: 0.24em;
+  height: 0.24em;
+  top: 0.27em;
+  left: 0.54em;
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
@@ -2265,6 +2268,21 @@ a { color: var(--voyage-teal); }
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+}
+
+.checklist-setup-intro {
+  color: var(--muted-text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.checklist-field-hint {
+  color: var(--muted-text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  font-weight: 400;
+  margin: 0.2rem 0 0;
 }
 
 .checklist-auth button, .checklist-setup button {

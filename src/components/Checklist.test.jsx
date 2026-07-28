@@ -69,7 +69,7 @@ async function completeAnonymousProfile(user) {
   await waitFor(() => screen.getByText('A couple quick questions'));
   await user.selectOptions(screen.getByLabelText(/role type/i), 'long_term');
   await user.selectOptions(screen.getByLabelText(/destination access-level/i), 'open_access');
-  await user.click(screen.getByRole('button', { name: /continue/i }));
+  await user.click(screen.getByRole('button', { name: /generate my checklist/i }));
   await waitFor(() => screen.getByText(/complete/i));
 }
 
