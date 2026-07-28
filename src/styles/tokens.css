@@ -3,6 +3,13 @@
   --ink-navy: #16233b;
   --atlas-paper: #faf7f0;
   --voyage-teal: #2b6e76;
+  /* Structural/utility accent — marks "this is active/highlighted" (nav
+     tabs, progress fills, featured-card borders, saved-icon states). Not
+     part of the engagement-status system (unreached/formative/reached);
+     never use it to encode people-group status. Text on a solid clay fill
+     must be --ink-navy, not --atlas-paper — clay is too light for paper
+     text to clear contrast. */
+  --warm-clay: #d98e5c;
   --status-unreached: #b5482f;
   --status-formative: #d9a441;
   --status-reached: #4c8a5e;

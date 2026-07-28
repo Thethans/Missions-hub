@@ -168,12 +168,13 @@ a { color: var(--voyage-teal); }
 }
 
 .site-nav-links a.active {
-  background: linear-gradient(135deg, var(--voyage-teal), #1f4e54);
-  border-color: var(--voyage-teal);
-  box-shadow: 0 0 0 1px rgba(43, 110, 118, 0.4), 0 4px 16px -4px rgba(43, 110, 118, 0.75);
+  background: var(--warm-clay);
+  color: var(--ink-navy);
+  border-color: var(--warm-clay);
+  box-shadow: 0 0 0 1px rgba(217, 142, 92, 0.4), 0 4px 16px -4px rgba(217, 142, 92, 0.6);
 }
 
-.site-nav-links a.active .site-nav-tag { color: rgba(250, 247, 240, 0.85); }
+.site-nav-links a.active .site-nav-tag { color: rgba(22, 35, 59, 0.7); }
 
 .site-nav-underline {
   position: absolute;
@@ -267,12 +268,13 @@ a { color: var(--voyage-teal); }
 }
 
 .site-nav-drawer a.active {
-  background: linear-gradient(135deg, var(--voyage-teal), #1f4e54);
-  border-color: var(--voyage-teal);
+  background: var(--warm-clay);
+  color: var(--ink-navy);
+  border-color: var(--warm-clay);
   font-variation-settings: 'wght' 600;
 }
 
-.site-nav-drawer a.active .site-nav-tag { color: rgba(250, 247, 240, 0.85); }
+.site-nav-drawer a.active .site-nav-tag { color: rgba(22, 35, 59, 0.7); }
 
 @media (max-width: 768px) {
   .site-nav-links--desktop { display: none; }
@@ -1724,6 +1726,7 @@ a { color: var(--voyage-teal); }
   margin: 0 auto;
   background: white;
   border: 1px solid var(--line);
+  border-top: 3px solid var(--warm-clay);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--space-6);
@@ -2324,7 +2327,7 @@ a { color: var(--voyage-teal); }
 }
 
 .checklist-progress-fill {
-  background: var(--voyage-teal);
+  background: var(--warm-clay);
   height: 100%;
   transition: width 0.2s ease;
 }
@@ -2573,7 +2576,11 @@ a { color: var(--voyage-teal); }
 
 .opp-icon-btn:hover { color: var(--voyage-teal); border-color: var(--voyage-teal); }
 
-.opp-icon-btn--saved { color: var(--status-unreached); border-color: var(--status-unreached); }
+.opp-icon-btn--saved {
+  color: var(--warm-clay);
+  border-color: var(--warm-clay);
+  background: rgba(217, 142, 92, 0.16);
+}
 
 .opp-saved-toggle {
   gap: var(--space-1);

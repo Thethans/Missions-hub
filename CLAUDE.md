@@ -41,7 +41,10 @@ All visual values come from CSS variables in `src/styles/tokens.css`. Never hard
 colors, fonts, spacing, radii, or shadows — if a needed value doesn't exist, add a
 token first.
 
-- Colors: `--ink-navy #16233b`, `--atlas-paper #faf7f0`, `--voyage-teal #2b6e76`;
+- Colors: `--ink-navy #16233b`, `--atlas-paper #faf7f0`, `--voyage-teal #2b6e76`,
+  `--warm-clay #d98e5c` (structural/utility accent for active tabs, progress
+  fills, featured-card borders, saved-icon states — text on solid clay is
+  `--ink-navy`, never `--atlas-paper`; not part of the status system below);
   status: `--status-unreached`, `--status-formative`, `--status-reached`;
   derived: `--line`, `--muted-text`
 - Type: `--font-display` (Fraunces — headings only), `--font-body` (Inter),
