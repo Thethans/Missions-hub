@@ -5,6 +5,7 @@ import { supabase } from '../../supabaseClient.js';
 import useMemberSession from './hooks/useMemberSession';
 import MemberLoginSheet from './components/sheets/MemberLoginSheet';
 import PrototypeBadge from './components/PrototypeBadge';
+import AdminMissionaries from './components/AdminMissionaries';
 import './prayer-map.css';
 
 interface VerifiedMemberRow {
@@ -331,6 +332,8 @@ export default function AdminPage() {
             </tbody>
           </table>
         )}
+
+        <AdminMissionaries />
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
-// Shared shapes for the prayer-map feature. All data here is hardcoded mock
-// data (see missionaries.ts) — nothing is fetched. In a real build these would
-// be Supabase records; see // TODO(real): notes at the integration points.
+// Shared shapes for the prayer-map feature. Missionary records are fetched
+// from Supabase (see useMissionaries.ts); missionaries.ts is kept only as
+// that hook's fallback for when supabase is unavailable — see its own
+// top-of-file comment. Confidential text (SensitiveRequest below) is a
+// separate table, RLS-gated — see REAL_AUTH_DESIGN.md.
 
 /**
  * Prayer-request cadence/severity.

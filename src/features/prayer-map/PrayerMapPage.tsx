@@ -9,7 +9,7 @@ import MemberLoginSheet from './components/sheets/MemberLoginSheet';
 import PaySheet from './components/sheets/PaySheet';
 import useMemberSession from './hooks/useMemberSession';
 import usePrayerState from './hooks/usePrayerState';
-import { missionaries } from './data/missionaries';
+import useMissionaries from './hooks/useMissionaries';
 import { withDerivedBudget } from './data/deriveBudget';
 import './prayer-map.css';
 
@@ -20,6 +20,7 @@ export default function PrayerMapPage() {
 
   const session = useMemberSession();
   const prayer = usePrayerState();
+  const { missionaries, loading: missionariesLoading } = useMissionaries();
 
   usePageMeta({
     title: 'Missionary Support Map',
@@ -71,7 +72,11 @@ export default function PrayerMapPage() {
       </section>
 
       <div className="page-map">
-        <PrayerWorldMap onSelect={setSelectedId} selectedId={selectedId} />
+        {/* PrayerWorldMap builds its markers exactly once on mount (SPEC §6),
+            so it can't be handed missionaries after the fact — hold off
+            mounting it at all until the fetch settles, same as gating
+            render on any other required data. */}
+        {!missionariesLoading && <PrayerWorldMap missionaries={missionaries} onSelect={setSelectedId} selectedId={selectedId} />}
       </div>
 
       {selectedWithBudget && (

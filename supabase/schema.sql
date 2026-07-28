@@ -278,6 +278,64 @@ returns table (request_user_id uuid, email text, requested_at timestamptz) as $$
   order by u.created_at desc;
 $$ language sql security definer set search_path = public;
 
+-- Prayer map: missionary records (Stage 2 of REAL_AUTH_DESIGN.md) --------
+-- Public, non-confidential missionary data (name, location, ministry,
+-- budget line items, non-sensitive prayer requests, updates) — previously
+-- hardcoded in src/features/prayer-map/data/missionaries.ts, now
+-- admin-editable via /prayer-map/admin instead of requiring a code deploy.
+-- Confidential prayer text stays exactly where Stage 1 put it
+-- (missionary_sensitive_requests, above) — this table only ever holds what
+-- was already public in the old static file.
+create table if not exists missionaries (
+  id text primary key, -- matches the existing string ids (e.g. 'johnson-ethiopia')
+  name text not null,
+  name_note text,
+  location text not null,
+  lat double precision not null,
+  lng double precision not null,
+  role text not null,
+  ministry text not null,
+  prayer_count integer not null default 0,
+  support_goal integer not null default 0,
+  -- BudgetLine[], PrayerRequest[], MissionaryUpdate[] — see data/types.ts.
+  -- Kept as jsonb rather than normalized child tables: these are small,
+  -- always-edited-as-a-unit lists (a handful of rows each) with no need to
+  -- query into their fields independently, and matching the existing
+  -- Missionary/MissionaryWithBudget shape as one row keeps the client-side
+  -- code (deriveBudget.ts, MissionaryCard.tsx) unchanged.
+  budget jsonb not null default '[]',
+  prayer_requests jsonb not null default '[]',
+  sensitive_count integer not null default 0,
+  updates jsonb not null default '[]',
+  location_sensitive boolean not null default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table missionaries enable row level security;
+
+-- Public read — same as the static file it replaces, this is all
+-- non-confidential data meant for every visitor, member or not.
+drop policy if exists "Anyone can view missionaries" on missionaries;
+create policy "Anyone can view missionaries"
+  on missionaries for select
+  using (true);
+
+drop policy if exists "Active admins can add missionaries" on missionaries;
+create policy "Active admins can add missionaries"
+  on missionaries for insert
+  with check (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "Active admins can update missionaries" on missionaries;
+create policy "Active admins can update missionaries"
+  on missionaries for update
+  using (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "Active admins can delete missionaries" on missionaries;
+create policy "Active admins can delete missionaries"
+  on missionaries for delete
+  using (is_active_verified_admin(auth.uid()));
+
 -- Opportunities: auth-linked favorites -----------------------------------
 -- Favorites used to live only in localStorage (fielded_saved_opps), so they
 -- were device-owned — sign in on a second device and the list was empty.

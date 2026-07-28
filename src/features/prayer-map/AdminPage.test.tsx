@@ -104,6 +104,16 @@ function buildSupabaseMock() {
           }
         };
       }
+      if (table === 'missionaries') {
+        // AdminMissionaries (rendered as part of the full admin view) fetches
+        // this on mount too — its own behavior is covered in
+        // AdminMissionaries.test.tsx, this just needs to not crash/error here.
+        return {
+          select: () => ({
+            order: () => Promise.resolve({ data: [], error: null })
+          })
+        };
+      }
       throw new Error(`Unexpected table in test: ${table}`);
     },
     rpc: (fn: string) => {

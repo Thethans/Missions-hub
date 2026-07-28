@@ -1505,3 +1505,104 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.pm-admin-add-missionary {
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.pm-admin-missionary-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.pm-admin-missionary-form h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.pm-admin-missionary-form label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-navy);
+}
+.pm-admin-missionary-form input,
+.pm-admin-missionary-form textarea {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 400;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-navy);
+}
+.pm-admin-missionary-form input:focus-visible,
+.pm-admin-missionary-form textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.pm-admin-json-field {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.pm-admin-form-hint {
+  font-weight: 400;
+  color: var(--muted-text);
+}
+
+.pm-admin-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.pm-admin-checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: var(--space-2) !important;
+}
+
+.pm-admin-form-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.pm-admin-form-actions button[type='submit'] {
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: var(--space-3) var(--space-4);
+}
+.pm-admin-form-actions button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pm-admin-form-actions button[type='button'] {
+  border: 1px solid var(--line);
+  cursor: pointer;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-navy);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: var(--space-3) var(--space-4);
+}

@@ -1341,7 +1341,18 @@ a { color: var(--voyage-teal); }
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
-  background: var(--glass-light-bg);
+  /* Deliberately more opaque than --glass-light-bg (45%): that token
+     assumes a light --atlas-paper backdrop, but this card floats over the
+     map canvas at a fixed screen position, which can just as easily be
+     dark ocean as light landmass. Measured worst case (this card over dark
+     navy ocean): at 45% opacity even solid ink-navy text only reaches
+     4.29:1 against WCAG AA's 4.5:1 minimum, and the muted-text elements
+     below dropped to 2.61:1. 85% opacity clears AA with real margin
+     (11.65:1 solid text) regardless of what's underneath, while still
+     reading as a frosted/blurred surface, not a flat opaque card.
+     Standalone background here on purpose, not a change to the shared
+     token used elsewhere over --atlas-paper. */
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--glass-light-border);
   border-radius: 14px;
   box-shadow: var(--glass-light-sheen), var(--glass-shadow);
@@ -1357,11 +1368,14 @@ a { color: var(--voyage-teal); }
   background: none;
   cursor: pointer;
   font-size: 1rem;
-  color: var(--muted-text);
+  /* Solid, not --muted-text (65% opacity) — see the contrast-math comment
+     on .map-popup-card above; a translucent text color over a translucent
+     background compounds the same worst-case-backdrop problem. */
+  color: var(--ink-navy);
 }
 
 .map-popup-name { font-family: var(--font-body); font-weight: 600; margin: 0 0 var(--space-1); }
-.map-popup-meta { margin: 0 0 var(--space-3); color: var(--muted-text); font-size: 0.9rem; }
+.map-popup-meta { margin: 0 0 var(--space-3); color: var(--ink-navy); opacity: 0.75; font-size: 0.9rem; }
 
 .map-popup-stats {
   display: grid;
@@ -1370,7 +1384,7 @@ a { color: var(--voyage-teal); }
   margin: 0 0 var(--space-3);
 }
 
-.map-popup-stats dt { font-size: 0.75rem; color: var(--muted-text); margin: 0; }
+.map-popup-stats dt { font-size: 0.75rem; color: var(--ink-navy); opacity: 0.75; margin: 0; }
 .map-popup-stats dd { font-family: var(--font-mono); margin: 0; }
 
 .map-popup-status { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: 0.9rem; }

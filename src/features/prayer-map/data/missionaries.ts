@@ -16,10 +16,16 @@ import karimGathering from '../assets/updates/karim-gathering.jpg';
 import karimPaperwork from '../assets/updates/karim-paperwork.jpg';
 import karimSeason from '../assets/updates/karim-season.jpg';
 
-// Hardcoded mock data — the 5 missionaries from fielded-prototype-reference.html.
-// Nothing here is fetched or stored.
-// TODO(real): source these from Supabase (admin-editable), with prayerCount and
-// `raised` computed from real prayer/giving events rather than static numbers.
+// Originally hardcoded mock data — the 6 missionaries from
+// fielded-prototype-reference.html. Since Stage 2 of REAL_AUTH_DESIGN.md,
+// this is no longer the primary source: the same records now live in the
+// `missionaries` Supabase table (admin-editable via /prayer-map/admin, see
+// AdminMissionaries.tsx and supabase/seed_missionaries.sql), fetched by
+// useMissionaries.ts. This file is kept as that hook's fallback — if
+// supabase is null (missing env vars) or the fetch fails, the map still
+// renders this instead of going blank. `prayerCount` here is still a
+// static number either way; TODO(real): compute it from real prayer
+// events rather than a stored count, in Supabase or here.
 //
 // The reference prototype positioned pins by SVG pixel (cx/cy) on a flat map
 // image. This build uses a real MapLibre basemap, so each pin carries real

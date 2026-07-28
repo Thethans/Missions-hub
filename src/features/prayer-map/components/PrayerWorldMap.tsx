@@ -5,17 +5,21 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // Reuse the existing atlas basemap (demotiles vector source, no API key) rather
 // than introducing a second map style. It's plain JS; allowJs lets TS infer it.
 import basemapStyle from '../../../map/basemapStyle.js';
-import { missionaries } from '../data/missionaries';
+import type { Missionary } from '../data/types';
 import { createMissionaryPinElement, createApproximatePinElement } from './MissionaryPin';
 
 interface PrayerWorldMapProps {
+  /** Fetched once by the parent (see useMissionaries) — this component only
+   *  ever mounts after that fetch settles, so markers still build exactly
+   *  once (SPEC §6), just against real data instead of a static import. */
+  missionaries: Missionary[];
   /** Called with a missionary id when its pin is clicked. */
   onSelect: (id: string) => void;
   /** Currently open missionary, or null. Drives the flyTo. */
   selectedId: string | null;
 }
 
-export default function PrayerWorldMap({ onSelect, selectedId }: PrayerWorldMapProps) {
+export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: PrayerWorldMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   // Hold the latest onSelect without making the map-build effect depend on it,
@@ -63,7 +67,12 @@ export default function PrayerWorldMap({ onSelect, selectedId }: PrayerWorldMapP
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+    // missionaries only in the deps list for correctness — in practice this
+    // still only ever runs once, since the parent doesn't mount this
+    // component until the fetch settles (see PrayerMapPage.tsx), so the
+    // prop is stable for this component's whole lifetime, same as the old
+    // static import was.
+  }, [missionaries]);
 
   // Glide to the selected pin when one opens (not on close). Creative-access
   // missionaries stay more zoomed out — flying in tight would still visually
@@ -79,7 +88,7 @@ export default function PrayerWorldMap({ onSelect, selectedId }: PrayerWorldMapP
     // zooms in to at least the normal target.
     const zoom = m.locationSensitive ? Math.min(map.getZoom(), 2.4) : Math.max(map.getZoom(), 3.2);
     map.flyTo({ center: [m.lng, m.lat], zoom, speed: 0.8 });
-  }, [selectedId]);
+  }, [selectedId, missionaries]);
 
   return (
     <div className="pm-map-wrap">
