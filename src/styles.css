@@ -167,10 +167,10 @@ a { color: var(--voyage-teal); }
    pixel-scan of the rendered font) and the line box's actual baseline
    (a zero-size vertical-align:baseline marker), not eyeballed. */
 .brand-dot--wordmark {
-  width: 0.24em;
-  height: 0.24em;
-  top: 0.27em;
-  left: 0.54em;
+  width: 0.26em;
+  height: 0.26em;
+  top: 0.29em;
+  left: 0.56em;
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }

@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 // plus one fixed accent — the ember dot — used two ways from the Atlas
 // brand toolkit ("Fielded Logo Variations"):
 //   - Monogram: the dot sits on the F like a diacritic (the app-icon mark).
-//   - Wordmark: the "i" is set dotless (ı) and the same dot marks it instead.
-// Both share a layoutId so toggling between them (see BrandLockup, used by
-// TopNav's scroll-collapsed state) glides the dot across rather than
-// cutting — "same dot ... never changes."
+//   - Wordmark: a bigger ember dot is layered exactly over the "i"'s own
+//     tittle (a real "i", not a dotless ı — Fraunces draws U+0131 at
+//     x-height with no ascender, so there's no stem left for a dot to sit
+//     on; a real "i" keeps the correct tall letterform and we just cover
+//     its natural dot).
+// Both dots share a layoutId so toggling between them (see BrandLockup,
+// used by TopNav's scroll-collapsed state) glides the dot across rather
+// than cutting — "same dot ... never changes."
 function EmberDot({ layoutId, variant, transition }) {
   return (
     <motion.span
@@ -42,7 +46,7 @@ export default function BrandLockup({ expanded, layoutId = 'nav-brand-dot' }) {
             animate="animate"
             exit="exit"
           >
-            <span className="brand-lockup-i">ı</span>elded
+            <span className="brand-lockup-i">i</span>elded
           </motion.span>
         )}
       </AnimatePresence>
