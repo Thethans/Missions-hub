@@ -336,6 +336,29 @@ create policy "Active admins can delete missionaries"
   on missionaries for delete
   using (is_active_verified_admin(auth.uid()));
 
+-- Storage bucket for missionary update photos, uploaded from the admin's
+-- "Updates" editor (AdminMissionaries.tsx) instead of requiring a photo
+-- already hosted somewhere else. Public bucket — these are the same
+-- non-confidential update photos that used to ship as Vite-bundled assets.
+insert into storage.buckets (id, name, public)
+values ('missionary-photos', 'missionary-photos', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Public can view missionary photos" on storage.objects;
+create policy "Public can view missionary photos"
+  on storage.objects for select
+  using (bucket_id = 'missionary-photos');
+
+drop policy if exists "Active admins can upload missionary photos" on storage.objects;
+create policy "Active admins can upload missionary photos"
+  on storage.objects for insert
+  with check (bucket_id = 'missionary-photos' and is_active_verified_admin(auth.uid()));
+
+drop policy if exists "Active admins can delete missionary photos" on storage.objects;
+create policy "Active admins can delete missionary photos"
+  on storage.objects for delete
+  using (bucket_id = 'missionary-photos' and is_active_verified_admin(auth.uid()));
+
 -- Opportunities: auth-linked favorites -----------------------------------
 -- Favorites used to live only in localStorage (fielded_saved_opps), so they
 -- were device-owned — sign in on a second device and the list was empty.

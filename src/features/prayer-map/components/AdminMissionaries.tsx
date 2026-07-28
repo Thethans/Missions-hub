@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { supabase } from '../../../supabaseClient.js';
+import type { BudgetLine, MissionaryUpdate, PrayerRequest, PrayerRequestType } from '../data/types';
+import PhotoUpload from './PhotoUpload';
 
 interface MissionaryRow {
   id: string;
@@ -13,10 +15,10 @@ interface MissionaryRow {
   ministry: string;
   prayer_count: number;
   support_goal: number;
-  budget: unknown;
-  prayer_requests: unknown;
+  budget: BudgetLine[];
+  prayer_requests: PrayerRequest[];
   sensitive_count: number;
-  updates: unknown;
+  updates: MissionaryUpdate[];
   location_sensitive: boolean;
 }
 
@@ -33,9 +35,9 @@ interface FormState {
   support_goal: string;
   sensitive_count: string;
   location_sensitive: boolean;
-  budget: string;
-  prayer_requests: string;
-  updates: string;
+  budget: BudgetLine[];
+  prayer_requests: PrayerRequest[];
+  updates: MissionaryUpdate[];
 }
 
 const EMPTY_FORM: FormState = {
@@ -51,9 +53,9 @@ const EMPTY_FORM: FormState = {
   support_goal: '0',
   sensitive_count: '0',
   location_sensitive: false,
-  budget: '[]',
-  prayer_requests: '[]',
-  updates: '[]'
+  budget: [],
+  prayer_requests: [],
+  updates: []
 };
 
 function rowToForm(row: MissionaryRow): FormState {
@@ -70,10 +72,145 @@ function rowToForm(row: MissionaryRow): FormState {
     support_goal: String(row.support_goal),
     sensitive_count: String(row.sensitive_count),
     location_sensitive: row.location_sensitive,
-    budget: JSON.stringify(row.budget, null, 2),
-    prayer_requests: JSON.stringify(row.prayer_requests, null, 2),
-    updates: JSON.stringify(row.updates, null, 2)
+    budget: row.budget,
+    prayer_requests: row.prayer_requests,
+    updates: row.updates
   };
+}
+
+const PRAYER_REQUEST_TYPES: PrayerRequestType[] = ['sticky', 'auto', 'urgent'];
+
+function BudgetEditor({ value, onChange }: { value: BudgetLine[]; onChange: (v: BudgetLine[]) => void }) {
+  const update = (i: number, patch: Partial<BudgetLine>) =>
+    onChange(value.map((line, idx) => (idx === i ? { ...line, ...patch } : line)));
+  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const add = () => onChange([...value, { item: '', purpose: '', amount: 0 }]);
+
+  return (
+    <div className="pm-admin-list-editor">
+      <span className="pm-admin-list-editor-label">Budget line items</span>
+      {value.map((line, i) => (
+        <div className="pm-admin-list-row" key={i}>
+          <input
+            placeholder="Item (e.g. Housing & utilities)"
+            value={line.item}
+            onChange={(e) => update(i, { item: e.target.value })}
+            aria-label={`Budget item ${i + 1} name`}
+          />
+          <input
+            placeholder="Purpose"
+            value={line.purpose}
+            onChange={(e) => update(i, { purpose: e.target.value })}
+            aria-label={`Budget item ${i + 1} purpose`}
+          />
+          <input
+            type="number"
+            placeholder="Amount"
+            value={line.amount}
+            onChange={(e) => update(i, { amount: Number(e.target.value) || 0 })}
+            aria-label={`Budget item ${i + 1} monthly amount`}
+            className="pm-admin-list-amount"
+          />
+          <button type="button" className="pm-admin-list-remove" onClick={() => remove(i)} aria-label={`Remove ${line.item || 'this budget line'}`}>
+            ✕
+          </button>
+        </div>
+      ))}
+      <button type="button" className="pm-admin-list-add" onClick={add}>
+        + Add budget line
+      </button>
+    </div>
+  );
+}
+
+function PrayerRequestEditor({ value, onChange }: { value: PrayerRequest[]; onChange: (v: PrayerRequest[]) => void }) {
+  const update = (i: number, patch: Partial<PrayerRequest>) =>
+    onChange(value.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const add = () => onChange([...value, { text: '', type: 'sticky' }]);
+
+  return (
+    <div className="pm-admin-list-editor">
+      <span className="pm-admin-list-editor-label">Prayer requests</span>
+      {value.map((r, i) => (
+        <div className="pm-admin-list-row" key={i}>
+          <input
+            placeholder="Request text"
+            value={r.text}
+            onChange={(e) => update(i, { text: e.target.value })}
+            aria-label={`Prayer request ${i + 1} text`}
+            className="pm-admin-list-grow"
+          />
+          <select
+            value={r.type}
+            onChange={(e) => update(i, { type: e.target.value as PrayerRequestType })}
+            aria-label={`Prayer request ${i + 1} type`}
+          >
+            {PRAYER_REQUEST_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="pm-admin-list-remove" onClick={() => remove(i)} aria-label="Remove this prayer request">
+            ✕
+          </button>
+        </div>
+      ))}
+      <button type="button" className="pm-admin-list-add" onClick={add}>
+        + Add prayer request
+      </button>
+    </div>
+  );
+}
+
+function UpdateEditor({ value, onChange }: { value: MissionaryUpdate[]; onChange: (v: MissionaryUpdate[]) => void }) {
+  const update = (i: number, patch: Partial<MissionaryUpdate>) =>
+    onChange(value.map((u, idx) => (idx === i ? { ...u, ...patch } : u)));
+  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const add = () => onChange([...value, { date: '', title: '', text: '', photo: '', photoWidth: 0, photoHeight: 0 }]);
+
+  return (
+    <div className="pm-admin-list-editor">
+      <span className="pm-admin-list-editor-label">Updates</span>
+      {value.map((u, i) => (
+        <div className="pm-admin-update-row" key={i}>
+          <div className="pm-admin-list-row">
+            <input
+              placeholder="Date (e.g. 2 days ago)"
+              value={u.date}
+              onChange={(e) => update(i, { date: e.target.value })}
+              aria-label={`Update ${i + 1} date`}
+            />
+            <input
+              placeholder="Title"
+              value={u.title}
+              onChange={(e) => update(i, { title: e.target.value })}
+              aria-label={`Update ${i + 1} title`}
+              className="pm-admin-list-grow"
+            />
+            <button type="button" className="pm-admin-list-remove" onClick={() => remove(i)} aria-label={`Remove update: ${u.title || 'untitled'}`}>
+              ✕
+            </button>
+          </div>
+          <textarea
+            placeholder="Update text"
+            value={u.text}
+            onChange={(e) => update(i, { text: e.target.value })}
+            rows={3}
+            aria-label={`Update ${i + 1} text`}
+          />
+          <PhotoUpload
+            value={u.photo}
+            onChange={(photo, photoWidth, photoHeight) => update(i, { photo, photoWidth, photoHeight })}
+          />
+        </div>
+      ))}
+      <button type="button" className="pm-admin-list-add" onClick={add}>
+        + Add update
+      </button>
+    </div>
+  );
 }
 
 /**
@@ -83,12 +220,12 @@ function rowToForm(row: MissionaryRow): FormState {
  * text is managed elsewhere entirely (missionary_sensitive_requests has no
  * admin UI yet — it's still seeded via SQL, same as before this feature).
  *
- * Scalar fields get real inputs; budget/prayer_requests/updates (arrays of
- * small objects — line items, requests, dated posts with a photo path) are
- * edited as raw JSON textareas rather than a nested form builder for each.
- * Simpler to build and maintain, and this admin is already comfortable
- * editing structured data directly (see the SQL steps used to bootstrap
- * this very account).
+ * Budget/prayer requests/updates are structured repeatable field groups
+ * (BudgetEditor/PrayerRequestEditor/UpdateEditor above), not raw JSON —
+ * a stray comma in hand-edited JSON used to silently break the save with
+ * no field-level guidance. Update photos upload directly to Supabase
+ * Storage via PhotoUpload rather than requiring an admin to already have
+ * a hosted URL.
  */
 export default function AdminMissionaries() {
   const [rows, setRows] = useState<MissionaryRow[] | null>(null);
@@ -134,18 +271,6 @@ export default function AdminMissionaries() {
     if (!supabase) return;
     setFormError(null);
 
-    let budget: unknown;
-    let prayerRequests: unknown;
-    let updates: unknown;
-    try {
-      budget = JSON.parse(form.budget);
-      prayerRequests = JSON.parse(form.prayer_requests);
-      updates = JSON.parse(form.updates);
-    } catch (err) {
-      setFormError(`Budget, prayer requests, and updates must each be valid JSON: ${(err as Error).message}`);
-      return;
-    }
-
     const lat = Number(form.lat);
     const lng = Number(form.lng);
     if (!form.id.trim() || Number.isNaN(lat) || Number.isNaN(lng)) {
@@ -167,9 +292,9 @@ export default function AdminMissionaries() {
       support_goal: Number(form.support_goal) || 0,
       sensitive_count: Number(form.sensitive_count) || 0,
       location_sensitive: form.location_sensitive,
-      budget,
-      prayer_requests: prayerRequests,
-      updates
+      budget: form.budget,
+      prayer_requests: form.prayer_requests,
+      updates: form.updates
     };
 
     const { error } = isNew
@@ -307,33 +432,9 @@ export default function AdminMissionaries() {
             Location-sensitive (creative access — map shows a soft area, not a pin)
           </label>
 
-          <label>
-            Budget (JSON array of {'{ item, purpose, amount }'})
-            <textarea
-              value={form.budget}
-              onChange={(e) => setForm({ ...form, budget: e.target.value })}
-              rows={6}
-              className="pm-admin-json-field"
-            />
-          </label>
-          <label>
-            Prayer requests (JSON array of {'{ text, type: "sticky"|"auto"|"urgent" }'})
-            <textarea
-              value={form.prayer_requests}
-              onChange={(e) => setForm({ ...form, prayer_requests: e.target.value })}
-              rows={4}
-              className="pm-admin-json-field"
-            />
-          </label>
-          <label>
-            Updates (JSON array of {'{ date, title, text, photo, photoWidth, photoHeight }'})
-            <textarea
-              value={form.updates}
-              onChange={(e) => setForm({ ...form, updates: e.target.value })}
-              rows={6}
-              className="pm-admin-json-field"
-            />
-          </label>
+          <BudgetEditor value={form.budget} onChange={(budget) => setForm({ ...form, budget })} />
+          <PrayerRequestEditor value={form.prayer_requests} onChange={(prayer_requests) => setForm({ ...form, prayer_requests })} />
+          <UpdateEditor value={form.updates} onChange={(updates) => setForm({ ...form, updates })} />
 
           {formError && (
             <p className="pm-login-error" role="alert">

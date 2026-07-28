@@ -133,7 +133,7 @@ describe('AdminMissionaries', () => {
     );
   });
 
-  it('rejects invalid JSON in the budget field without submitting', async () => {
+  it('adds and fills a budget line item through the structured editor', async () => {
     const user = userEvent.setup();
     render(<AdminMissionaries />);
     await screen.findByText(/no missionaries yet/i);
@@ -147,14 +147,33 @@ describe('AdminMissionaries', () => {
     await user.type(screen.getByLabelText(/^role$/i), 'Testing');
     await user.type(screen.getByLabelText(/ministry overview/i), 'Overview text');
 
-    const budgetField = screen.getByLabelText(/^budget/i);
-    await user.clear(budgetField);
-    await user.type(budgetField, 'not valid json');
+    await user.click(screen.getByRole('button', { name: /add budget line/i }));
+    await user.type(screen.getByLabelText(/budget item 1 name/i), 'Housing');
+    await user.type(screen.getByLabelText(/budget item 1 purpose/i), 'Rent');
+    await user.type(screen.getByLabelText(/budget item 1 monthly amount/i), '500');
 
     await user.click(screen.getByRole('button', { name: /^add missionary$/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/must each be valid json/i);
-    expect(insertSpy).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(insertSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          budget: [{ item: 'Housing', purpose: 'Rent', amount: 500 }]
+        })
+      )
+    );
+  });
+
+  it('adds a prayer request and removes it via the structured editor', async () => {
+    const user = userEvent.setup();
+    render(<AdminMissionaries />);
+    await screen.findByText(/no missionaries yet/i);
+
+    await user.click(screen.getByRole('button', { name: /add missionary/i }));
+    await user.click(screen.getByRole('button', { name: /add prayer request/i }));
+    expect(screen.getByLabelText(/prayer request 1 text/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /remove this prayer request/i }));
+    expect(screen.queryByLabelText(/prayer request 1 text/i)).not.toBeInTheDocument();
   });
 
   it('pre-fills the form and updates an existing missionary', async () => {
