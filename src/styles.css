@@ -129,10 +129,11 @@ a { color: var(--voyage-teal); }
 }
 
 /* Brand lockup — the "F" monogram and the "Fielded" wordmark, from the
-   Atlas brand toolkit ("Fielded Logo Variations"). One ember dot (see
-   --brand-ember) does double duty as the F's diacritic and the wordmark's
-   dotless-ı marker; BrandLockup (TopNav) animates the same dot between the
-   two via a shared framer-motion layoutId. */
+   Atlas brand toolkit ("Fielded Logo Variations"). One ember accent (see
+   --brand-ember) does double duty: a plain circle diacritic on the bare F,
+   and the wordmark "i"'s own tittle recolored in place (see
+   .brand-lockup-i-dot below for why it's a clipped duplicate glyph rather
+   than a positioned circle). */
 .brand-lockup {
   position: relative;
   display: inline-flex;
@@ -145,7 +146,22 @@ a { color: var(--voyage-teal); }
 
 .brand-lockup-suffix { position: relative; white-space: nowrap; }
 
-.brand-lockup-i { position: relative; }
+.brand-lockup-i-wrap { position: relative; display: inline-block; }
+
+/* The real "i", recolored orange in place: a second copy of the same
+   character, same font/size, stacked exactly on top (top:0/left:0 over an
+   inline-block wrapper sized to the glyph) and clipped to roughly the top
+   third where the tittle sits. Same glyph, same position — nothing to
+   measure, so it can't drift out of alignment the way a manually-placed
+   circle would. */
+.brand-lockup-i-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--brand-ember);
+  clip-path: inset(0 0 64% 0);
+  pointer-events: none;
+}
 
 .brand-dot {
   position: absolute;
@@ -160,20 +176,6 @@ a { color: var(--voyage-teal); }
   height: 0.19em;
   top: 0.02em;
   left: 0.58em;
-}
-
-/* Covers the real "i"'s own tittle entirely (not a separate floating
-   mark) — horizontal center matches the "i" span's actual rendered box
-   (F and i are separate DOM elements, so no F-i kerning pulls them
-   together the way it would in one text run); vertical center matches
-   the glyph's ink position relative to the line's true baseline (found
-   with a zero-size vertical-align:baseline marker, since line-height is
-   "normal" and the box's own top/bottom don't reveal the baseline). */
-.brand-dot--wordmark {
-  width: 0.22em;
-  height: 0.22em;
-  top: 0.285em;
-  left: 0.642em;
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
