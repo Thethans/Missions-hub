@@ -162,15 +162,18 @@ a { color: var(--voyage-teal); }
   left: 0.58em;
 }
 
-/* Sits over the dotless-ı, in the same slot a normal "i"'s tittle would
-   occupy — position measured against the real "i" glyph's ink (canvas
-   pixel-scan of the rendered font) and the line box's actual baseline
-   (a zero-size vertical-align:baseline marker), not eyeballed. */
+/* Covers the real "i"'s own tittle entirely (not a separate floating
+   mark) — horizontal center matches the "i" span's actual rendered box
+   (F and i are separate DOM elements, so no F-i kerning pulls them
+   together the way it would in one text run); vertical center matches
+   the glyph's ink position relative to the line's true baseline (found
+   with a zero-size vertical-align:baseline marker, since line-height is
+   "normal" and the box's own top/bottom don't reveal the baseline). */
 .brand-dot--wordmark {
-  width: 0.26em;
-  height: 0.26em;
-  top: 0.29em;
-  left: 0.56em;
+  width: 0.22em;
+  height: 0.22em;
+  top: 0.285em;
+  left: 0.642em;
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
