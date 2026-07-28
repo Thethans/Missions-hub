@@ -148,6 +148,31 @@ describe('MapPage', () => {
     consoleError.mockRestore();
   });
 
+  it('shows a timeout error if MapLibre never fires load or error at all (e.g. WebGL context creation silently failing)', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.useFakeTimers();
+    try {
+      render(
+        <MemoryRouter initialEntries={['/map']}>
+          <MapPage />
+        </MemoryRouter>
+      );
+
+      await vi.waitFor(() => expect(lastMockMap).not.toBeNull());
+      // Deliberately never call __triggerLoad or __triggerError.
+
+      expect(screen.getByText(/finding unreached peoples/i)).toBeInTheDocument();
+
+      await vi.advanceTimersByTimeAsync(20000);
+
+      expect(screen.getByRole('alert')).toHaveTextContent(/taking longer than expected/i);
+      expect(screen.queryByText(/finding unreached peoples/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+      consoleError.mockRestore();
+    }
+  });
+
   it('seeds the detail panel with a featured people group once data loads, instead of only instructional text (P3-C)', async () => {
     render(
       <MemoryRouter initialEntries={['/map']}>

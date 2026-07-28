@@ -154,6 +154,14 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // failure was previously unhandled entirely, leaving a blank/broken canvas
   // with no message at all.
   const [tileError, setTileError] = useState(false);
+  // Neither of the two states above covers every way this can go wrong:
+  // if WebGL context creation itself hangs or silently no-ops (seen in
+  // practice under resource pressure — e.g. a browser that's already
+  // exhausted its WebGL context budget from other tabs/maps), MapLibre
+  // never fires 'load' *or* 'error', and "Finding unreached peoples…"
+  // was stuck forever with no message and no way out. This is the
+  // fallback for that case specifically.
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
   // Now that both status and religion are pure visibility flips (no
   // setFilter anywhere), this should resolve within a single poll cycle
   // almost always — kept as a defensive safety net rather than removed
@@ -194,11 +202,20 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     });
     mapRef.current = map;
 
+    // Backstop for 'load'/'error' both failing to fire at all (see
+    // loadTimedOut above) — cleared the moment either does, in the 'load'
+    // and 'error' handlers below.
+    const loadTimeout = window.setTimeout(() => {
+      console.error('MapLibre never fired load or error within 20s — WebGL context likely failed silently');
+      setLoadTimedOut(true);
+    }, 20000);
+
     // MapLibre fires 'error' for tile/style/glyph fetch failures — none of
     // which reject a promise or throw anywhere React would see them, so
     // without this the canvas just sits blank or half-rendered with nothing
     // telling the visitor (or error monitoring) that anything went wrong.
     map.on('error', (e) => {
+      window.clearTimeout(loadTimeout);
       console.error('MapLibre error:', e.error);
       setTileError(true);
     });
@@ -211,6 +228,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     window.addEventListener('resize', onWindowResize);
 
     map.on('load', async () => {
+      window.clearTimeout(loadTimeout);
       map.resize();
       let data;
       try {
@@ -409,6 +427,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
     });
 
     return () => {
+      window.clearTimeout(loadTimeout);
       window.removeEventListener('resize', onWindowResize);
       map.remove();
     };
@@ -540,6 +559,10 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       ) : dataError ? (
         <p className="map-data-error" role="alert">
           Couldn't load people-group data right now — try refreshing the page.
+        </p>
+      ) : loadTimedOut ? (
+        <p className="map-data-error" role="alert">
+          The map is taking longer than expected to load — try refreshing the page.
         </p>
       ) : (
         <>
