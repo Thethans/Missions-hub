@@ -1,27 +1,52 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// A map-pin containing a small globe — reads instantly as "a place on the
-// map / the field," which is what Fielded is about. Filled in brand teal
-// with a paper-colored globe so it stays legible on the dark navy nav.
-// Hex values are inlined rather than var(--token) because CSS custom
-// properties don't resolve inside SVG presentation attributes.
-export default function BrandMark({ size = 30 }) {
+// Fielded's mark is one letterform (the wordmark's own "F", Fraunces 600)
+// plus one fixed accent — the ember dot — used two ways from the Atlas
+// brand toolkit ("Fielded Logo Variations"):
+//   - Monogram: the dot sits on the F like a diacritic (the app-icon mark).
+//   - Wordmark: the "i" is set dotless (ı) and the same dot marks it instead.
+// Both share a layoutId so toggling between them (see BrandLockup, used by
+// TopNav's scroll-collapsed state) glides the dot across rather than
+// cutting — "same dot ... never changes."
+function EmberDot({ layoutId, variant, transition }) {
   return (
-    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {/* Pin body (teardrop) */}
-      <path
-        d="M50 5 C30 5 14 21 14 41 C14 60 38 82 47.5 92.6 A3.3 3.3 0 0 0 52.5 92.6 C62 82 86 60 86 41 C86 21 70 5 50 5 Z"
-        fill="#2b6e76"
-      />
-      {/* Globe disc sitting in the pin's head */}
-      <circle cx="50" cy="40" r="19" fill="#faf7f0" />
-      {/* Meridians + equator drawn back in teal */}
-      <g stroke="#2b6e76" strokeWidth="1.5" fill="none" strokeLinecap="round">
-        <ellipse cx="50" cy="40" rx="7.5" ry="19" />
-        <line x1="31" y1="40" x2="69" y2="40" />
-        <path d="M34.5 29 Q50 34.5 65.5 29" />
-        <path d="M34.5 51 Q50 45.5 65.5 51" />
-      </g>
-    </svg>
+    <motion.span
+      layoutId={layoutId}
+      className={`brand-dot brand-dot--${variant}`}
+      transition={transition ?? { type: 'spring', stiffness: 420, damping: 34 }}
+    />
+  );
+}
+
+const suffixMotion = {
+  initial: { opacity: 0, x: -4 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.2, delay: 0.05 } },
+  exit: { opacity: 0, x: -4, transition: { duration: 0.12 } }
+};
+
+// Animated nav lockup — collapses to the bare "F" monogram or expands to
+// the full "Fielded" wordmark, with the ember dot sharing layout across
+// both states via `layoutId`.
+export default function BrandLockup({ expanded, layoutId = 'nav-brand-dot' }) {
+  return (
+    <span className="brand-lockup" aria-hidden="true">
+      <span className="brand-lockup-f">F</span>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.span
+            key="suffix"
+            className="brand-lockup-suffix"
+            variants={suffixMotion}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            <span className="brand-lockup-i">ı</span>elded
+          </motion.span>
+        )}
+      </AnimatePresence>
+      <EmberDot layoutId={layoutId} variant={expanded ? 'wordmark' : 'monogram'} />
+    </span>
   );
 }

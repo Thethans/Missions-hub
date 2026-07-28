@@ -3,6 +3,13 @@
   --ink-navy: #16233b;
   --atlas-paper: #faf7f0;
   --voyage-teal: #2b6e76;
+  /* The logo's one fixed color — the destination dot on the F monogram and
+     the dotless-ı in the "Fielded" wordmark. Brand identity, not a status
+     or UI-state color; never reassign it the way --warm-clay is reused
+     across components. Same hex as --status-unreached-on-navy is a
+     coincidence of two independent palettes, not a shared meaning — don't
+     swap one token for the other. */
+  --brand-ember: #e0793b;
   /* Structural/utility accent — marks "this is active/highlighted" (nav
      tabs, progress fills, featured-card borders, saved-icon states). Not
      part of the engagement-status system (unreached/formative/reached);

@@ -120,18 +120,54 @@ a { color: var(--voyage-teal); }
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
   color: var(--atlas-paper);
   text-decoration: none;
 }
 
-.site-nav-logo-mark {
+/* Brand lockup — the "F" monogram and the "Fielded" wordmark, from the
+   Atlas brand toolkit ("Fielded Logo Variations"). One ember dot (see
+   --brand-ember) does double duty as the F's diacritic and the wordmark's
+   dotless-ı marker; BrandLockup (TopNav) animates the same dot between the
+   two via a shared framer-motion layoutId. */
+.brand-lockup {
+  position: relative;
   display: inline-flex;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.brand-lockup-f { position: relative; }
+
+.brand-lockup-suffix { position: relative; white-space: nowrap; }
+
+.brand-lockup-i { position: relative; }
+
+.brand-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--brand-ember);
+  pointer-events: none;
+}
+
+/* Sits like a diacritic on the F's top-right stroke. */
+.brand-dot--monogram {
+  width: 0.19em;
+  height: 0.19em;
+  top: 0.02em;
+  left: 0.58em;
+}
+
+/* Sits over the dotless-ı, in the same slot a normal "i"'s tittle would occupy. */
+.brand-dot--wordmark {
+  width: 0.12em;
+  height: 0.12em;
+  top: 0.06em;
+  left: 0.79em;
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }

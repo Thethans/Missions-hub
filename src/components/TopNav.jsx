@@ -1,9 +1,16 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import RouteLine from './RouteLine.jsx';
-import BrandMark from './BrandMark.jsx';
+import BrandLockup from './BrandMark.jsx';
 import { routeImports, deepPrefetchImports } from '../routeImports.js';
 import { List, X } from '@phosphor-icons/react';
+import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
+
+// Below this scroll depth the nav lockup collapses from the full "Fielded"
+// wordmark to the bare F monogram, freeing up header space — the ember dot
+// glides from the wordmark's dotless-ı to the F's diacritic slot via
+// BrandLockup's shared layoutId rather than swapping instantly.
+const COLLAPSE_THRESHOLD = 80;
 
 const LINKS = [
   { to: '/', label: 'Home', end: true, tag: '01' },
@@ -17,8 +24,17 @@ const LINKS = [
 export default function TopNav() {
   const [hovered, setHovered] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const prefetched = useRef(new Set());
   const location = useLocation();
+  const prefersReduced = usePrefersReducedMotion();
+
+  useEffect(() => {
+    const onScroll = () => setCollapsed(window.scrollY > COLLAPSE_THRESHOLD);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const prefetch = (to) => {
     if (prefetched.current.has(to)) return;
@@ -78,11 +94,8 @@ export default function TopNav() {
 
   return (
     <header className="site-nav">
-      <NavLink to="/" className="site-nav-logo">
-        <span className="site-nav-logo-mark" aria-hidden="true">
-          <BrandMark size={26} />
-        </span>
-        Fielded
+      <NavLink to="/" className="site-nav-logo" aria-label="Fielded — Home">
+        <BrandLockup expanded={!collapsed || prefersReduced} />
       </NavLink>
 
       {/* Desktop nav */}
