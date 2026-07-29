@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { track } from '@vercel/analytics';
 import { CaretLeft, CaretRight, CheckCircle } from '@phosphor-icons/react';
 import agencies from '../data/agencies.json';
 import { QUESTIONS, NEUTRAL_VALUES } from '../data/quizQuestions.js';
@@ -73,6 +74,7 @@ export default function MatchQuiz() {
         matches,
         timestamp: Date.now()
       }));
+      track('quiz_completed', { matchCount: matches.length });
     } catch {
       // localStorage unavailable (private browsing, quota) — results still
       // render for this session, they just won't survive a reload.

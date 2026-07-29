@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { track } from '@vercel/analytics';
 import { supabase } from '../supabaseClient.js';
 
 const ROLE_OPTIONS = [
@@ -68,6 +69,7 @@ function SignInForm() {
     e.preventDefault();
     setSending(true);
     setError(null);
+    track('checklist_signup_started');
     const { error: authError } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: window.location.origin }

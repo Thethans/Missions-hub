@@ -96,6 +96,23 @@ Fonts are self-hosted via `@fontsource` — never add font CDN links.
 - Supabase tables: `opportunities`, `inquiries`, checklist tables, prayer-map tables
   (see `supabase/schema.sql`).
 
+## Analytics
+
+Pageviews come from `<Analytics />` (`@vercel/analytics/react`) in
+`src/layouts/RootLayout.jsx`. Conversion-funnel events use `track()` from
+`@vercel/analytics` (not the `/react` entrypoint). Payloads are IDs/counts
+only — never answer content, emails, or other PII. This is the full set of
+custom events; add new ones here rather than inventing similarly-named
+variants elsewhere:
+
+| Event | Fired from | Payload |
+| --- | --- | --- |
+| `quiz_completed` | `MatchQuiz.jsx`, `handleSubmit`, after the localStorage write succeeds | `{ matchCount }` |
+| `opportunity_saved` | `OpportunitiesExplorer.template.jsx`, `toggleSave`, only on the save transition (not unsave) | `{ opportunityId }` |
+| `opportunity_clickthrough` | `OpportunitiesExplorer.template.jsx`, the external `<a href={opp.url}>` listing link | `{ opportunityId, agency }` |
+| `opportunity_inquiry_opened` | `OpportunitiesExplorer.template.jsx`, `openInquiry` (wraps `setInquiryOpp`) | `{ opportunityId }` |
+| `checklist_signup_started` | `Checklist.jsx`, `SignInForm.handleSubmit`, when the magic-link request fires | none |
+
 ## Voice and content templates
 
 Tone: expository and theologically precise, with dry warmth. Plain sentences,

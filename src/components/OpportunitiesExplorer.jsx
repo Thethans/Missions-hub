@@ -5,6 +5,8 @@
 //   --ink-navy: #16233b
 //   --atlas-paper: #faf7f0
 //   --voyage-teal: #2b6e76
+//   --brand-ember: #e0793b
+//   --warm-clay: #d98e5c
 //   --status-unreached: #b5482f
 //   --status-formative: #d9a441
 //   --status-reached: #4c8a5e
@@ -34,11 +36,12 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-28T06:08:03.640Z"
-// Opportunities: 1335 across 29 agencies
+// Generated: "2026-07-29T16:17:50.019Z"
+// Opportunities: 1331 across 29 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { track } from '@vercel/analytics';
 import { MagnifyingGlass, Funnel, Heart, EnvelopeSimple, MapPin, Briefcase, Clock, Info, X, CaretDown, SortAscending, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import Fuse from 'fuse.js';
 import { supabase } from '../supabaseClient.js';
@@ -283,7 +286,13 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
         </div>
 
         <div className="opp-card-footer">
-          <a href={opp.url} target="_blank" rel="noreferrer" className="opp-card-link">
+          <a
+            href={opp.url}
+            target="_blank"
+            rel="noreferrer"
+            className="opp-card-link"
+            onClick={() => track('opportunity_clickthrough', { opportunityId: opp.id, agency: opp.agency })}
+          >
             View details &rarr;
           </a>
           <button
@@ -798,6 +807,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       return next;
     });
 
+    if (!wasSaved) track('opportunity_saved', { opportunityId: id });
+
     // Signed in: Supabase is the source of truth, so the edit goes there
     // (and follows the user across devices). Signed out: the localStorage
     // effect above is the only persistence, same as before this feature.
@@ -812,6 +823,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
         if (error) console.error('Failed to sync saved opportunity to Supabase:', error);
       });
     }
+  }
+
+  function openInquiry(opp) {
+    track('opportunity_inquiry_opened', { opportunityId: opp.id });
+    setInquiryOpp(opp);
   }
 
   function clearFilters() {
@@ -1108,7 +1124,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
                     opp={opp}
                     saved={savedIds.has(opp.id)}
                     onToggleSave={toggleSave}
-                    onInquire={setInquiryOpp}
+                    onInquire={openInquiry}
                   />
                 ))}
               </div>
