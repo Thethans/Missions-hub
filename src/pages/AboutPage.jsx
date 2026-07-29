@@ -107,9 +107,11 @@ const SECTIONS = [
           a real name, working independently and not on behalf of any sending agency or company.
         </p>
         <p>
-          Questions, corrections, or something looks wrong: email{' '}
-          <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a> for any
-          inquiries.
+          Found an agency listing that's outdated or wrong, have a question about how the
+          matching works, or just want to say hello: email{' '}
+          <a href="mailto:emailfieldedhub@gmail.com">emailfieldedhub@gmail.com</a>. Corrections
+          get read and acted on — the accuracy of this whole site depends on people flagging
+          what it gets wrong.
         </p>
       </>
     )
