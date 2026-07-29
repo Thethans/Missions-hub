@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import useMemberSession from './useMemberSession';
 
@@ -162,5 +162,78 @@ describe('useMemberSession', () => {
     });
 
     expect(response).toEqual({ sent: false, error: 'Invalid email' });
+  });
+
+  describe('auto-sign-out exemption for admins', () => {
+    const IDLE_LIMIT_MS = 15 * 60 * 1000;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('idle-times-out a regular verified member after 15 minutes of inactivity', async () => {
+      mockSession = { user: { id: 'user-6' } };
+      verifiedMembersRow = { is_admin: false, revoked_at: null };
+
+      const { result } = renderHook(() => useMemberSession());
+      // Fake timers stop vi.waitFor's own polling from ever firing, so flush
+      // the pending getSession()/checkMembership promise chain directly.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(result.current.authState).toBe('verified');
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_LIMIT_MS);
+      });
+
+      expect(result.current.authState).toBe('guest');
+      expect(signOutMock).toHaveBeenCalled();
+    });
+
+    it('never idle-times-out an admin, even well past the normal 15-minute limit', async () => {
+      mockSession = { user: { id: 'admin-2' } };
+      verifiedMembersRow = { is_admin: true, revoked_at: null };
+
+      const { result } = renderHook(() => useMemberSession());
+      // Fake timers stop vi.waitFor's own polling from ever firing, so flush
+      // the pending getSession()/checkMembership promise chain directly.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(result.current.authState).toBe('verified');
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_LIMIT_MS * 10);
+      });
+
+      expect(result.current.authState).toBe('verified');
+      expect(signOutMock).not.toHaveBeenCalled();
+    });
+
+    it('never fires the absolute session-limit sign-out for an admin', async () => {
+      mockSession = { user: { id: 'admin-3' } };
+      verifiedMembersRow = { is_admin: true, revoked_at: null };
+
+      const { result } = renderHook(() => useMemberSession());
+      // Fake timers stop vi.waitFor's own polling from ever firing, so flush
+      // the pending getSession()/checkMembership promise chain directly.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(result.current.authState).toBe('verified');
+
+      const ABSOLUTE_LIMIT_MS = 8 * 60 * 60 * 1000;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(ABSOLUTE_LIMIT_MS + IDLE_LIMIT_MS);
+      });
+
+      expect(result.current.authState).toBe('verified');
+      expect(signOutMock).not.toHaveBeenCalled();
+    });
   });
 });

@@ -13,7 +13,9 @@ export type AuthState = 'guest' | 'pending-verification' | 'verified';
 // Client-side idle/absolute timers are a UX nicety (handy on a shared/kiosk
 // device) — not the security boundary. Real enforcement is the Supabase
 // project's JWT expiry / refresh-token settings, which should be configured
-// to match or be tighter than these values.
+// to match or be tighter than these values. Admins (verified_members.is_admin)
+// are exempt from all three auto-sign-out triggers below (idle, absolute,
+// leave-screen) — see the timer effect further down.
 const IDLE_LIMIT_MS = 15 * 60 * 1000; // sign out after 15 min of no interaction
 const IDLE_WARN_MS = 60 * 1000; // warn 60s before idle sign-out
 const ABSOLUTE_LIMIT_MS = 8 * 60 * 60 * 1000; // hard cap: 8 hours after verification
@@ -190,9 +192,15 @@ export default function useMemberSession({ leaveScreenSignOut = true }: MemberSe
     };
   }, [checkMembership]);
 
-  // All idle/absolute/leave-screen timers + listeners live only once verified.
+  // All idle/absolute/leave-screen timers + listeners live only once
+  // verified — and never at all for admins. Idle/absolute timeouts and
+  // leave-screen sign-out exist for the shared/kiosk-device threat model
+  // (see the module comment above); an admin mid-task in the allowlist
+  // panel shouldn't get logged out because they stepped away or left it
+  // open a while, so admins are exempt from all three. Regular verified
+  // members keep the existing behavior unchanged.
   useEffect(() => {
-    if (authState !== 'verified') return;
+    if (authState !== 'verified' || isAdmin) return;
 
     resetIdle();
 
@@ -229,7 +237,7 @@ export default function useMemberSession({ leaveScreenSignOut = true }: MemberSe
       if (onBlur) window.removeEventListener('blur', onBlur);
       if (onVisibility) document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [authState, resetIdle, signOut, clearIdleTimers, leaveScreenSignOut]);
+  }, [authState, isAdmin, resetIdle, signOut, clearIdleTimers, leaveScreenSignOut]);
 
   // Clear the info-toast timer on unmount.
   useEffect(() => () => window.clearTimeout(infoToastTimer.current), []);
