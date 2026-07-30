@@ -60,6 +60,7 @@ export default function StatsStrip() {
           <motion.div
             key={item.label}
             className="stat"
+            data-reveal
             // initial={false} under reduced motion — see RevealOnScroll.jsx
             // for why this beats an opacity:0 that depends on whileInView.
             initial={prefersReduced ? false : { opacity: 0, y: 20 }}

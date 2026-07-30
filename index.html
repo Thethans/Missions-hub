@@ -1,5 +1,16 @@
 <!doctype html>
-<html lang="en">
+<!--
+  data-hydration-reset="data-app-booted": scripts/prerender.js strips this
+  attribute (its existing reset mechanism for JS-set DOM state that would
+  misrepresent the page's real pre-JS condition in a static snapshot)
+  before writing the captured HTML to disk. Puppeteer's own prerender pass
+  runs real JS, so main.jsx's `data-app-booted` flag (see the comment
+  there and styles.css's "SCROLL-REVEAL SAFETY NET") would otherwise get
+  baked permanently into the file it produces — defeating that safety net
+  for exactly the no-JS/JS-failure visitors it exists to protect, since
+  the flag would already read as "booted" before their own JS ever runs.
+-->
+<html lang="en" data-hydration-reset="data-app-booted">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

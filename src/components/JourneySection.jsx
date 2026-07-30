@@ -82,6 +82,7 @@ export default function JourneySection() {
       <motion.h2
         ref={headingRef}
         className="journey-heading"
+        data-reveal
         style={{ y: headingY }}
         initial={prefersReduced ? false : { opacity: 0, scale: 0.94, letterSpacing: '0.3em', filter: 'blur(6px)' }}
         whileInView={{ opacity: 1, scale: 1, letterSpacing: '0.01em', filter: 'blur(0px)' }}
@@ -122,6 +123,7 @@ export default function JourneySection() {
             <motion.div
               key={step.n}
               className="journey-step"
+              data-reveal
               ref={(el) => (stepRefs.current[i] = el)}
               initial={
                 prefersReduced
@@ -138,6 +140,7 @@ export default function JourneySection() {
                   the other two are aria-hidden decorative repeats. */}
               <motion.span
                 className="journey-step-number"
+                data-reveal
                 initial={prefersReduced ? false : { opacity: 0, scale: 1.6 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.5 }}
@@ -146,6 +149,7 @@ export default function JourneySection() {
                 {step.n}
               </motion.span>
               <motion.h3
+                data-reveal
                 initial={prefersReduced ? false : { opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
@@ -154,6 +158,7 @@ export default function JourneySection() {
                 {step.title}
               </motion.h3>
               <motion.p
+                data-reveal
                 initial={prefersReduced ? false : { opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}

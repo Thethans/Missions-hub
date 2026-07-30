@@ -60,6 +60,45 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 a { color: var(--voyage-teal); }
 
+/* ==== SCROLL-REVEAL SAFETY NET ==== */
+
+/* Framer Motion's whileInView/animate entrances (RevealOnScroll.jsx,
+   HomePage.jsx's hero, JourneySection.jsx, Capabilities.jsx,
+   StatsStrip.jsx) set opacity/filter:blur()/transform as literal inline
+   styles so a pre-reveal state exists at all. scripts/prerender.js never
+   scrolls the page before capturing page.content(), so any of these
+   below-the-fold elements get that hidden inline state baked into the
+   static HTML crawlers and no-JS visitors receive. If hydration never
+   runs (script blocked, chunk failure, a React error before mount), or
+   prefers-reduced-motion is on for a visitor whose JS never got the
+   chance to read it, nothing would otherwise clear that inline style and
+   the content stays invisible/blurred/offset forever.
+
+   This is a pure-CSS fallback, independent of JS or React: CSS animations
+   sit above inline styles in the cascade regardless of specificity, so
+   this forces every [data-reveal] element to its real, final, legible
+   state — but only once html:data-app-booted is *absent*, i.e. only when
+   main.jsx never got the chance to set it (see the comment there). The
+   selector re-evaluates live as that attribute appears, so the instant
+   the app actually boots (milliseconds, normally) this stops matching and
+   the animation is cancelled outright — it never gets a chance to fire
+   for a visitor whose JS is working fine but who simply hasn't scrolled
+   a section into view yet within the delay window. On that normal
+   working path this rule has zero effect: animation timing, easing, and
+   blur amount are completely untouched. */
+@keyframes reveal-safety-net {
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    letter-spacing: normal;
+  }
+}
+
+html:not([data-app-booted]) [data-reveal] {
+  animation: reveal-safety-net 0.01s linear 4s forwards;
+}
+
 /* ==== LAYOUT SHELL ==== */
 
 .app-shell { display: flex; flex-direction: column; min-height: 100vh; }

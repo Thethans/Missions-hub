@@ -51,6 +51,7 @@ function CapabilityCard({ item, index }) {
     <motion.div
       ref={tilt.ref}
       className="capability-wrapper"
+      data-reveal
       // initial={false} under reduced motion — see RevealOnScroll.jsx for
       // why this beats an opacity:0 that depends on whileInView firing.
       initial={prefersReduced ? false : { opacity: 0, y: 50, scale: 0.92 }}
@@ -77,6 +78,7 @@ export default function Capabilities() {
     <section className="capabilities">
       <SpotlightOverlay />
       <motion.h2
+        data-reveal
         initial={prefersReduced ? false : { opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.5 }}

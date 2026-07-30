@@ -43,3 +43,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Signals to the CSS scroll-reveal safety net (styles.css, "SCROLL-REVEAL
+// SAFETY NET") that this script actually ran. If it never runs at all —
+// JS disabled, the bundle fails to load, a syntax error before this point —
+// this attribute never appears, and that CSS fallback forces every
+// [data-reveal] element visible after a few seconds instead of leaving it
+// however scripts/prerender.js's static snapshot happened to capture it.
+document.documentElement.setAttribute('data-app-booted', '');

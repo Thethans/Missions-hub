@@ -8,6 +8,10 @@ export default function RevealOnScroll({ children, index = 0, className }) {
   return (
     <motion.div
       className={className}
+      // data-reveal: pure-CSS safety net (see styles.css) that forces this
+      // element visible if JS never runs/hydrates — see the "SCROLL-REVEAL
+      // SAFETY NET" section there for why.
+      data-reveal
       // initial={false} under reduced motion (rather than opacity:0 that a
       // whileInView transition would resolve) so the content is never
       // dependent on an IntersectionObserver callback actually firing to

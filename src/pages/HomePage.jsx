@@ -42,6 +42,7 @@ function HeroHeadline() {
   return (
     <motion.h1
       className="hero-wordmark"
+      data-reveal
       style={{ fontVariationSettings }}
       variants={heroWordmarkRise}
     >
@@ -117,15 +118,15 @@ export default function HomePage() {
             initial={prefersReduced ? false : 'hidden'}
             animate="show"
           >
-            <motion.span className="hero-eyebrow" variants={heroRise}>
+            <motion.span className="hero-eyebrow" data-reveal variants={heroRise}>
               Live map of unreached people groups worldwide
             </motion.span>
             <HeroHeadline />
-            <motion.p className="hero-tagline" variants={heroRise}>Get to the field.</motion.p>
-            <motion.p variants={heroRise}>
+            <motion.p className="hero-tagline" data-reveal variants={heroRise}>Get to the field.</motion.p>
+            <motion.p data-reveal variants={heroRise}>
               Find the people still waiting to hear, the agencies who can send you, and everything in between.
             </motion.p>
-            <motion.div variants={heroRise}>
+            <motion.div data-reveal variants={heroRise}>
               <motion.span ref={ctaMagnetic.ref} style={ctaMagnetic.style} className="magnetic-wrap">
                 <Link to="/quiz" className="cta-button">Take the quiz</Link>
               </motion.span>
