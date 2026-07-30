@@ -44,15 +44,27 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
     // inside 'load'. (Gating on 'load' meant that if the external tile source
     // was slow or unreachable, the pins never appeared.)
     for (const m of missionaries) {
-      const el = m.locationSensitive
-        ? createApproximatePinElement(m, (id) => onSelectRef.current(id))
-        : createMissionaryPinElement(m, (id) => onSelectRef.current(id));
-      // MapLibre's Marker.addTo() unconditionally overwrites aria-label with
-      // its own generic "Map marker" string, clobbering the descriptive label
-      // set by the pin factory — reapply it after addTo() runs.
-      const ariaLabel = el.getAttribute('aria-label');
-      new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([m.lng, m.lat]).addTo(map);
-      if (ariaLabel) el.setAttribute('aria-label', ariaLabel);
+      // A single malformed record (e.g. out-of-range lat/lng from a typo in
+      // the admin form) must not take down the whole map for every visitor —
+      // MapLibre throws synchronously on an invalid LngLat, which would
+      // otherwise abort this loop mid-way and trip the page's ErrorBoundary.
+      if (!Number.isFinite(m.lat) || !Number.isFinite(m.lng) || Math.abs(m.lat) > 90 || Math.abs(m.lng) > 180) {
+        console.error(`Skipping map pin for "${m.name}" (${m.id}): invalid coordinates [${m.lng}, ${m.lat}]`);
+        continue;
+      }
+      try {
+        const el = m.locationSensitive
+          ? createApproximatePinElement(m, (id) => onSelectRef.current(id))
+          : createMissionaryPinElement(m, (id) => onSelectRef.current(id));
+        // MapLibre's Marker.addTo() unconditionally overwrites aria-label with
+        // its own generic "Map marker" string, clobbering the descriptive label
+        // set by the pin factory — reapply it after addTo() runs.
+        const ariaLabel = el.getAttribute('aria-label');
+        new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([m.lng, m.lat]).addTo(map);
+        if (ariaLabel) el.setAttribute('aria-label', ariaLabel);
+      } catch (err) {
+        console.error(`Skipping map pin for "${m.name}" (${m.id}):`, err);
+      }
     }
 
     // The container may not be at its final size the instant the map mounts

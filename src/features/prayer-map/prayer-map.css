@@ -1640,6 +1640,12 @@
 .pm-admin-list-amount {
   width: 90px;
   flex: none;
+  -moz-appearance: textfield;
+}
+.pm-admin-list-amount::-webkit-outer-spin-button,
+.pm-admin-list-amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .pm-admin-list-remove {

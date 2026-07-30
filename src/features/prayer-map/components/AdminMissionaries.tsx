@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { supabase } from '../../../supabaseClient.js';
 import type { BudgetLine, MissionaryUpdate, PrayerRequest, PrayerRequestType } from '../data/types';
+import { monthlyNeedOf } from '../data/deriveBudget';
 import PhotoUpload from './PhotoUpload';
 
 interface MissionaryRow {
@@ -32,7 +33,8 @@ interface FormState {
   role: string;
   ministry: string;
   prayer_count: string;
-  support_goal: string;
+  /** Dollar amount currently raised each month — support_goal (%) is computed from this against the budget total, never hand-typed. */
+  current_support: string;
   sensitive_count: string;
   location_sensitive: boolean;
   budget: BudgetLine[];
@@ -50,7 +52,7 @@ const EMPTY_FORM: FormState = {
   role: '',
   ministry: '',
   prayer_count: '0',
-  support_goal: '0',
+  current_support: '0',
   sensitive_count: '0',
   location_sensitive: false,
   budget: [],
@@ -69,7 +71,7 @@ function rowToForm(row: MissionaryRow): FormState {
     role: row.role,
     ministry: row.ministry,
     prayer_count: String(row.prayer_count),
-    support_goal: String(row.support_goal),
+    current_support: String(Math.round((monthlyNeedOf({ budget: row.budget }) * row.support_goal) / 100)),
     sensitive_count: String(row.sensitive_count),
     location_sensitive: row.location_sensitive,
     budget: row.budget,
@@ -277,8 +279,15 @@ export default function AdminMissionaries() {
       setFormError('ID, latitude, and longitude are required (lat/lng must be numbers).');
       return;
     }
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      setFormError('Latitude must be between -90 and 90, and longitude between -180 and 180.');
+      return;
+    }
 
     setSaving(true);
+    const monthlyNeed = monthlyNeedOf({ budget: form.budget });
+    const currentSupport = Number(form.current_support) || 0;
+    const supportGoal = monthlyNeed > 0 ? Math.round((currentSupport / monthlyNeed) * 100) : 0;
     const payload = {
       id: form.id.trim(),
       name: form.name,
@@ -289,7 +298,7 @@ export default function AdminMissionaries() {
       role: form.role,
       ministry: form.ministry,
       prayer_count: Number(form.prayer_count) || 0,
-      support_goal: Number(form.support_goal) || 0,
+      support_goal: supportGoal,
       sensitive_count: Number(form.sensitive_count) || 0,
       location_sensitive: form.location_sensitive,
       budget: form.budget,
@@ -407,11 +416,11 @@ export default function AdminMissionaries() {
               />
             </label>
             <label>
-              Support goal (%)
+              Current monthly support raised ($)
               <input
                 type="number"
-                value={form.support_goal}
-                onChange={(e) => setForm({ ...form, support_goal: e.target.value })}
+                value={form.current_support}
+                onChange={(e) => setForm({ ...form, current_support: e.target.value })}
               />
             </label>
             <label>
@@ -433,6 +442,16 @@ export default function AdminMissionaries() {
           </label>
 
           <BudgetEditor value={form.budget} onChange={(budget) => setForm({ ...form, budget })} />
+          <p className="pm-admin-form-hint">
+            {(() => {
+              const monthlyNeed = monthlyNeedOf({ budget: form.budget });
+              const currentSupport = Number(form.current_support) || 0;
+              const pct = monthlyNeed > 0 ? Math.round((currentSupport / monthlyNeed) * 100) : 0;
+              return monthlyNeed > 0
+                ? `${pct}% funded — $${currentSupport.toLocaleString()} raised of $${monthlyNeed.toLocaleString()}/mo needed (from the budget lines above)`
+                : 'Add budget line items above to calculate percent funded.';
+            })()}
+          </p>
           <PrayerRequestEditor value={form.prayer_requests} onChange={(prayer_requests) => setForm({ ...form, prayer_requests })} />
           <UpdateEditor value={form.updates} onChange={(updates) => setForm({ ...form, updates })} />
 
