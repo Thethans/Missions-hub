@@ -26,7 +26,7 @@ describe('App', () => {
     // present — confirms routing + the eager HomePage tree both mount. (The
     // hero tagline "Get to the field." isn't used here since RootLayout's
     // visually-hidden route announcement also contains that phrase.)
-    expect(screen.getByRole('link', { name: /fielded/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Fielded — Home' })).toBeInTheDocument();
     expect(screen.getByText(/find the people still waiting to hear/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /take the quiz/i })).toBeInTheDocument();
   });
