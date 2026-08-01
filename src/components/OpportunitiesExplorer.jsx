@@ -36,7 +36,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-07-29T16:17:50.019Z"
+// Generated: "2026-08-01T23:05:40.338Z"
 // Opportunities: 1331 across 29 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -74,6 +74,21 @@ const SORT_AGENCY = 'agency';
 // bug: raw alphabetical-by-agency reads as an ABWE directory since ABWE
 // alone accounts for the first ~250 rows.
 const SORT_MIXED = 'mixed';
+const SORT_ROLE = 'role';
+const SORT_LOCATION = 'location';
+
+// Blank-valued rows sort after every real value (never mixed in
+// alphabetically before "A"), then fall back to agency/title so the order
+// is still stable and predictable within a tie or an all-blank group.
+function sortByField(list, field) {
+  return [...list].sort((a, b) => {
+    const av = a[field] || '';
+    const bv = b[field] || '';
+    if (!av && bv) return 1;
+    if (av && !bv) return -1;
+    return av.localeCompare(bv) || a.agency.localeCompare(b.agency) || a.title.localeCompare(b.title);
+  });
+}
 
 const PAGE_SIZE = 24;
 
@@ -456,7 +471,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   const [quizScores] = useState(loadQuizAgencyScores);
   const [sortMode, setSortMode] = useState(() => {
     const fromUrl = searchParams.get('sort');
-    if (fromUrl === SORT_AGENCY || (fromUrl === SORT_RELEVANCE && quizScores)) return fromUrl;
+    if (fromUrl === SORT_AGENCY || fromUrl === SORT_ROLE || fromUrl === SORT_LOCATION || (fromUrl === SORT_RELEVANCE && quizScores)) return fromUrl;
     if (fromUrl === SORT_MIXED) return SORT_MIXED;
     return quizScores ? SORT_RELEVANCE : SORT_MIXED;
   });
@@ -629,7 +644,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // typing rather than on every keystroke — the list is already in memory
   // (static snapshot fetched once on mount), so this is purely to avoid
   // re-scoring the whole set on each keypress, not to avoid a network call.
-  const debouncedSearch = useDebouncedValue(search, 200);
+  const debouncedSearch = useDebouncedValue(search, 350);
 
   // One Fuse index over the full in-memory list, rebuilt only when the
   // opportunities set itself changes (initial load / live-fetch swap) — not
@@ -737,6 +752,10 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
     if (sortMode === SORT_AGENCY) {
       list = [...list].sort((a, b) => a.agency.localeCompare(b.agency) || a.title.localeCompare(b.title));
+    } else if (sortMode === SORT_ROLE) {
+      list = sortByField(list, 'role_type');
+    } else if (sortMode === SORT_LOCATION) {
+      list = sortByField(list, 'location');
     } else if (sortMode === SORT_RELEVANCE && quizScores) {
       list = [...list].sort((a, b) => (quizScores.get(b.agency) ?? -1) - (quizScores.get(a.agency) ?? -1));
     } else {
@@ -963,6 +982,8 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
             {quizScores && <option value={SORT_RELEVANCE}>Relevance</option>}
             <option value={SORT_AGENCY}>Agency A–Z</option>
             <option value={SORT_MIXED}>All agencies (mixed)</option>
+            <option value={SORT_ROLE}>Role type A–Z</option>
+            <option value={SORT_LOCATION}>Location A–Z</option>
           </select>
         </label>
       </div>
@@ -1108,7 +1129,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
           {filtered.length === 0 ? (
             <div className="opp-empty" role="status">
-              <p>No opportunities match your current filters.</p>
+              <p>
+                {activeFilterChips.length > 0
+                  ? `No opportunities match ${activeFilterChips.map((c) => c.label).join(', ')}.`
+                  : 'No opportunities match your current filters.'}
+              </p>
               {hasActiveFilters && (
                 <button type="button" className="cta-button" onClick={clearFilters}>
                   Clear filters

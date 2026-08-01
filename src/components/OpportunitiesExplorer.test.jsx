@@ -224,6 +224,15 @@ const MULTI_AGENCY_SAMPLE = [
   { id: 'a-3', agency: 'Mid Agency', title: 'Mid Role', url: 'https://example.org/m', location: null, region: null, role_type: null, term_length: null, description: null }
 ];
 
+// One row has a null role_type/location on purpose — blanks must sort after
+// every real value, never mixed in alphabetically before "A" (see
+// sortByField in OpportunitiesExplorer.template.jsx).
+const ROLE_LOCATION_SAMPLE = [
+  { id: 'r-1', agency: 'Zed Agency', title: 'Zed Role', url: 'https://example.org/z', location: 'Nairobi', region: null, role_type: 'medical', term_length: null, description: null },
+  { id: 'r-2', agency: 'Alpha Agency', title: 'Alpha Role', url: 'https://example.org/a', location: null, region: null, role_type: 'administration', term_length: null, description: null },
+  { id: 'r-3', agency: 'Mid Agency', title: 'Mid Role', url: 'https://example.org/m', location: 'Berlin', region: null, role_type: 'church planting', term_length: null, description: null }
+];
+
 // Scoped to the card header's agency label specifically — a plain
 // /Agency$/ text query also matches each card's "Inquire with {agency}"
 // button now that P2-C gives that button an object.
@@ -288,6 +297,37 @@ describe('OpportunitiesExplorer sorting', () => {
     expect(screen.getByText(/sorted by your quiz matches/i)).toBeInTheDocument();
     expect(agencyOrder()).toEqual(['Zed Agency', 'Mid Agency', 'Alpha Agency']);
     expect(within(screen.getByLabelText(/sort opportunities by/i)).getByRole('option', { name: 'Relevance' })).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('re-sorts by role type when Role type A–Z is chosen, blanks last', async () => {
+    mockFallbackFetch(ROLE_LOCATION_SAMPLE);
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
+
+    await waitFor(() => {
+      expect(screen.getByText('Zed Role')).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText(/sort opportunities by/i), 'role');
+
+    // administration (Alpha, but blank *location* doesn't matter here) →
+    // church planting (Mid) → medical (Zed)
+    expect(agencyOrder()).toEqual(['Alpha Agency', 'Mid Agency', 'Zed Agency']);
+  }, TIMEOUT);
+
+  it('re-sorts by location when Location A–Z is chosen, blanks last', async () => {
+    mockFallbackFetch(ROLE_LOCATION_SAMPLE);
+    const user = userEvent.setup();
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: "" });
+
+    await waitFor(() => {
+      expect(screen.getByText('Zed Role')).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText(/sort opportunities by/i), 'location');
+
+    // Berlin (Mid) → Nairobi (Zed) → blank location (Alpha) last
+    expect(agencyOrder()).toEqual(['Mid Agency', 'Zed Agency', 'Alpha Agency']);
   }, TIMEOUT);
 });
 
