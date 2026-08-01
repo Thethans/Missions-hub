@@ -47,6 +47,7 @@ function HeroHeadline() {
       variants={heroWordmarkRise}
     >
       Fielded
+      <span className="visually-hidden"> — a live map of unreached people groups, a mission-agency matcher, and a pre-field checklist</span>
     </motion.h1>
   );
 }

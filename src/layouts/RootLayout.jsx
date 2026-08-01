@@ -4,6 +4,30 @@ import { Analytics } from '@vercel/analytics/react';
 import TopNav from '../components/TopNav.jsx';
 import RouteLoadingBar from '../components/RouteLoadingBar.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
+import useJsonLd from '../hooks/useJsonLd.js';
+import { BASE_URL } from '../hooks/usePageMeta.js';
+
+// Site-level entity data, present on every route (unlike Faq.jsx's FAQPage
+// schema, which only applies to the homepage) — establishes the
+// Organization/WebSite identity Google otherwise has to guess at from
+// scratch. Only facts already stated elsewhere on the site (index.html's own
+// og:description, the footer copyright line) — no invented sameAs profiles
+// or contact details.
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Fielded',
+  url: BASE_URL,
+  logo: `${BASE_URL}/icon-512.png`,
+  description: 'A live map of unreached people groups, a transparent mission-agency matcher, and a pre-field checklist.'
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Fielded',
+  url: BASE_URL
+};
 
 const TITLES = {
   '/': 'Fielded — Get to the Field',
@@ -19,6 +43,8 @@ const TITLES = {
 export default function RootLayout() {
   const { pathname } = useLocation();
   const mainRef = useRef(null);
+  useJsonLd('organization', orgSchema);
+  useJsonLd('website', websiteSchema);
   // Derived synchronously from the current path (not '' + an effect): the
   // effect below only needs to fire on subsequent route changes now, so the
   // very first render already matches scripts/prerender.js's snapshot
