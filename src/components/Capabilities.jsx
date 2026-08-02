@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Globe, Compass, Briefcase, CheckSquare } from '@phosphor-icons/react';
 import agencies from '../data/agencies.json';
 import { QUESTIONS } from '../data/quizQuestions.js';
@@ -48,7 +48,7 @@ function CapabilityCard({ item, index }) {
   const tilt = useTilt();
   const prefersReduced = usePrefersReducedMotion();
   return (
-    <motion.div
+    <m.div
       ref={tilt.ref}
       className="capability-wrapper"
       data-reveal
@@ -68,7 +68,7 @@ function CapabilityCard({ item, index }) {
         </h3>
         <p>{item.desc}</p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -77,7 +77,7 @@ export default function Capabilities() {
   return (
     <section className="capabilities">
       <SpotlightOverlay />
-      <motion.h2
+      <m.h2
         data-reveal
         initial={prefersReduced ? false : { opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -85,7 +85,7 @@ export default function Capabilities() {
         transition={{ duration: 0.6, ease: EASE }}
       >
         What&rsquo;s actually in here
-      </motion.h2>
+      </m.h2>
       <div className="capabilities-grid">
         {ITEMS.map((item, i) => (
           <CapabilityCard key={item.title} item={item} index={i} />

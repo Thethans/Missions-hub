@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, animate, useInView } from 'framer-motion';
+import { m, animate, useInView } from 'framer-motion';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 // Static build-time import (not a runtime fetch) — see the comment in
 // scripts/fetch-joshua-project.mjs for why: this is what makes the real
@@ -57,7 +57,7 @@ export default function StatsStrip() {
     <section className="stats-strip">
       <div className="stats-strip-inner">
         {items.map((item, i) => (
-          <motion.div
+          <m.div
             key={item.label}
             className="stat"
             data-reveal
@@ -71,7 +71,7 @@ export default function StatsStrip() {
             <span className="stat-number"><CountUp value={item.number} /></span>
             <span className="stat-label">{item.label}</span>
             <span className="stat-context">{item.context}</span>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </section>

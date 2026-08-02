@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
+import { LazyMotion, domAnimation } from 'framer-motion';
 import TopNav from '../components/TopNav.jsx';
 import RouteLoadingBar from '../components/RouteLoadingBar.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
@@ -67,30 +68,38 @@ export default function RootLayout() {
   }, [pathname]);
 
   return (
-    <div className="app-shell">
-      <TopNav />
-      <main ref={mainRef} tabIndex={-1}>
-        <Suspense fallback={<RouteLoadingBar />}>
-          {/* Keyed by pathname so a crash on one route doesn't keep showing
-              the fallback after the visitor navigates elsewhere via
-              TopNav — nav/footer stay live either way since this boundary
-              only wraps the routed page content, not the whole shell. */}
-          <ErrorBoundary key={pathname}>
-            <Outlet />
-          </ErrorBoundary>
-        </Suspense>
-      </main>
-      <footer className="app-footer">
-        <div className="footer-content">
-          <p>&copy; 2026 Fielded. All rights reserved.</p>
-          <nav className="footer-links">
-            <a href="/terms">Terms of Service</a>
-            <a href="/privacy">Privacy Policy</a>
-          </nav>
-        </div>
-      </footer>
-      <p className="visually-hidden" role="status" aria-live="polite">{announcement}</p>
-      <Analytics />
-    </div>
+    // Every m.* component on the site (HomePage, Faq/OpportunitiesExplorer's
+    // RevealOnScroll, TopNav's BrandMark) renders somewhere under RootLayout,
+    // so one LazyMotion boundary here covers the whole routed tree — no
+    // per-page provider needed. domAnimation (not domMax) since nothing here
+    // uses drag or layout animations, see App.jsx's own route-splitting
+    // comment for the same "only pay for what a route actually needs" idea.
+    <LazyMotion features={domAnimation}>
+      <div className="app-shell">
+        <TopNav />
+        <main ref={mainRef} tabIndex={-1}>
+          <Suspense fallback={<RouteLoadingBar />}>
+            {/* Keyed by pathname so a crash on one route doesn't keep showing
+                the fallback after the visitor navigates elsewhere via
+                TopNav — nav/footer stay live either way since this boundary
+                only wraps the routed page content, not the whole shell. */}
+            <ErrorBoundary key={pathname}>
+              <Outlet />
+            </ErrorBoundary>
+          </Suspense>
+        </main>
+        <footer className="app-footer">
+          <div className="footer-content">
+            <p>&copy; 2026 Fielded. All rights reserved.</p>
+            <nav className="footer-links">
+              <a href="/terms">Terms of Service</a>
+              <a href="/privacy">Privacy Policy</a>
+            </nav>
+          </div>
+        </footer>
+        <p className="visually-hidden" role="status" aria-live="polite">{announcement}</p>
+        <Analytics />
+      </div>
+    </LazyMotion>
   );
 }

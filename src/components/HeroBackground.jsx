@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { m, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import atlas from '../data/heroAtlas.json';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import useMatchMedia from '../hooks/useMatchMedia.js';
@@ -200,13 +200,13 @@ export default function HeroBackground() {
         viewBox={mobile ? MOBILE_VIEWBOX : atlas.viewBox}
         preserveAspectRatio="xMidYMid slice"
       >
-        <motion.g style={parallaxActive ? { x: bgX, y: bgY } : undefined}>
+        <m.g style={parallaxActive ? { x: bgX, y: bgY } : undefined}>
           <Dots dots={atlas.dots} mobile={mobile} />
-        </motion.g>
-        <motion.g style={parallaxActive ? { x: fgX, y: fgY } : undefined}>
+        </m.g>
+        <m.g style={parallaxActive ? { x: fgX, y: fgY } : undefined}>
           <Routes routes={atlas.routes} animate={!prefersReduced} />
           <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
-        </motion.g>
+        </m.g>
       </svg>
       {!prefersReduced && <AmbientParticles />}
     </div>

@@ -1,12 +1,12 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
 export default function RevealOnScroll({ children, index = 0, className }) {
   const prefersReduced = usePrefersReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       className={className}
       // data-reveal: pure-CSS safety net (see styles.css) that forces this
       // element visible if JS never runs/hydrates — see the "SCROLL-REVEAL
@@ -22,6 +22,6 @@ export default function RevealOnScroll({ children, index = 0, className }) {
       transition={{ duration: 0.4, delay: index * 0.08 }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

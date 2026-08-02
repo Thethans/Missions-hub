@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 // Fielded's mark is one letterform (the wordmark's own "F", Fraunces 600)
 // plus one fixed accent, the ember dot — used two ways from the Atlas
@@ -30,7 +30,7 @@ export default function BrandLockup({ expanded }) {
       <span className="brand-lockup-f">F</span>
       <AnimatePresence initial={false}>
         {expanded && (
-          <motion.span
+          <m.span
             key="suffix"
             className="brand-lockup-suffix"
             variants={suffixMotion}
@@ -43,12 +43,12 @@ export default function BrandLockup({ expanded }) {
               <span className="brand-lockup-i brand-lockup-i-dot">i</span>
             </span>
             elded
-          </motion.span>
+          </m.span>
         )}
       </AnimatePresence>
       <AnimatePresence initial={false}>
         {!expanded && (
-          <motion.span
+          <m.span
             key="monogram-dot"
             className="brand-dot brand-dot--monogram"
             initial={{ opacity: 0, scale: 0.5 }}

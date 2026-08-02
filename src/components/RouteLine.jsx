@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { m, useScroll, useTransform } from 'framer-motion';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
 // One shared motion.path/pathLength mechanism, three usages of the same
@@ -17,7 +17,7 @@ export default function RouteLine({ variant, containerRef, hovered, pathD, viewB
   if (variant === 'scroll') {
     return (
       <svg viewBox={viewBox} className={className} preserveAspectRatio="none" aria-hidden="true">
-        <motion.path
+        <m.path
           d={pathD}
           fill="none"
           stroke="var(--voyage-teal)"
@@ -34,7 +34,7 @@ export default function RouteLine({ variant, containerRef, hovered, pathD, viewB
   if (variant === 'load') {
     return (
       <svg viewBox={viewBox} className={className} preserveAspectRatio="none" aria-hidden="true">
-        <motion.path
+        <m.path
           d={pathD}
           fill="none"
           stroke="currentColor"
@@ -51,7 +51,7 @@ export default function RouteLine({ variant, containerRef, hovered, pathD, viewB
 
   return (
     <svg viewBox={viewBox} className={className} preserveAspectRatio="none" aria-hidden="true">
-      <motion.path
+      <m.path
         d={pathD}
         fill="none"
         stroke="currentColor"

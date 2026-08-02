@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { m, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { JOURNEY_STEPS as STEPS } from '../data/journeySteps.js';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import Globe from './Globe.jsx';
@@ -79,7 +79,7 @@ export default function JourneySection() {
 
   return (
     <section className="journey" ref={sectionRef}>
-      <motion.h2
+      <m.h2
         ref={headingRef}
         className="journey-heading"
         data-reveal
@@ -90,12 +90,12 @@ export default function JourneySection() {
         transition={{ duration: 1.2, ease: EASE_DRAMATIC }}
       >
         Your journey
-      </motion.h2>
+      </m.h2>
       <div className="journey-layout">
         <div className="journey-steps">
           <div className="journey-lane" ref={laneRef}>
             <div className="journey-thread">
-              <motion.div className="journey-thread-fill" style={{ height: prefersReduced ? '100%' : threadHeight }} />
+              <m.div className="journey-thread-fill" style={{ height: prefersReduced ? '100%' : threadHeight }} />
             </div>
             {!prefersReduced &&
               PARTICLES.map((p, i) => (
@@ -120,7 +120,7 @@ export default function JourneySection() {
             ))}
           </div>
           {STEPS.map((step, i) => (
-            <motion.div
+            <m.div
               key={step.n}
               className="journey-step"
               data-reveal
@@ -138,7 +138,7 @@ export default function JourneySection() {
               {/* The one numeral of the three per step (watermark, this, and
                   the lane's JourneyDot) that assistive tech actually hears —
                   the other two are aria-hidden decorative repeats. */}
-              <motion.span
+              <m.span
                 className="journey-step-number"
                 data-reveal
                 initial={prefersReduced ? false : { opacity: 0, scale: 1.6 }}
@@ -147,8 +147,8 @@ export default function JourneySection() {
                 transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
               >
                 {step.n}
-              </motion.span>
-              <motion.h3
+              </m.span>
+              <m.h3
                 data-reveal
                 initial={prefersReduced ? false : { opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -156,8 +156,8 @@ export default function JourneySection() {
                 transition={{ duration: 0.6, delay: 0.16 }}
               >
                 {step.title}
-              </motion.h3>
-              <motion.p
+              </m.h3>
+              <m.p
                 data-reveal
                 initial={prefersReduced ? false : { opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -165,8 +165,8 @@ export default function JourneySection() {
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 {step.desc}
-              </motion.p>
-            </motion.div>
+              </m.p>
+            </m.div>
           ))}
         </div>
         <div className="journey-globe-col" aria-hidden="true">

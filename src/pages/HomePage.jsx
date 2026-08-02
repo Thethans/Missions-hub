@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useMotionValue, useMotionTemplate, animate, useScroll, useTransform } from 'framer-motion';
+import { m, useMotionValue, useMotionTemplate, animate, useScroll, useTransform } from 'framer-motion';
 import StatsStrip from '../components/StatsStrip.jsx';
 import JourneySection from '../components/JourneySection.jsx';
 import Capabilities from '../components/Capabilities.jsx';
@@ -40,7 +40,7 @@ function HeroHeadline() {
   }, [prefersReduced, wght, opsz]);
 
   return (
-    <motion.h1
+    <m.h1
       className="hero-wordmark"
       data-reveal
       style={{ fontVariationSettings }}
@@ -48,7 +48,7 @@ function HeroHeadline() {
     >
       Fielded
       <span className="visually-hidden"> — a live map of unreached people groups, a mission-agency matcher, and a pre-field checklist</span>
-    </motion.h1>
+    </m.h1>
   );
 }
 
@@ -107,33 +107,33 @@ export default function HomePage() {
           measurement (getBoundingClientRect includes CSS transforms), so
           the transform lives on the inner .hero-zoom wrapper instead. */}
       <section className="hero" ref={heroRef}>
-        <motion.div
+        <m.div
           className="hero-zoom"
           style={prefersReduced ? undefined : { opacity: heroOpacity, scale: heroScale }}
         >
           <HeroBackground />
           <div className="hero-scrim" aria-hidden="true" />
-          <motion.div
+          <m.div
             className="hero-content"
             variants={heroContainer}
             initial={prefersReduced ? false : 'hidden'}
             animate="show"
           >
-            <motion.span className="hero-eyebrow" data-reveal variants={heroRise}>
+            <m.span className="hero-eyebrow" data-reveal variants={heroRise}>
               Live map of unreached people groups worldwide
-            </motion.span>
+            </m.span>
             <HeroHeadline />
-            <motion.p className="hero-tagline" data-reveal variants={heroRise}>Get to the field.</motion.p>
-            <motion.p data-reveal variants={heroRise}>
+            <m.p className="hero-tagline" data-reveal variants={heroRise}>Get to the field.</m.p>
+            <m.p data-reveal variants={heroRise}>
               Find the people still waiting to hear, the agencies who can send you, and everything in between.
-            </motion.p>
-            <motion.div data-reveal variants={heroRise}>
-              <motion.span ref={ctaMagnetic.ref} style={ctaMagnetic.style} className="magnetic-wrap">
+            </m.p>
+            <m.div data-reveal variants={heroRise}>
+              <m.span ref={ctaMagnetic.ref} style={ctaMagnetic.style} className="magnetic-wrap">
                 <Link to="/quiz" className="cta-button">Take the quiz</Link>
-              </motion.span>
-            </motion.div>
-          </motion.div>
-        </motion.div>
+              </m.span>
+            </m.div>
+          </m.div>
+        </m.div>
       </section>
       <StatsStrip />
       <JourneySection />
