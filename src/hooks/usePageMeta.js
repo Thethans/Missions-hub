@@ -14,7 +14,7 @@ const DEFAULT_IMAGE = BASE_URL + '/og-image.png';
 const DEFAULT_DESC =
   'Find the people still waiting to hear, the agencies who can send you, and everything in between.';
 
-export default function usePageMeta({ title, description, path = '/' }) {
+export default function usePageMeta({ title, description, path = '/', noindex = false }) {
   useEffect(() => {
     const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Get to the Field`;
     const desc = description || DEFAULT_DESC;
@@ -30,10 +30,15 @@ export default function usePageMeta({ title, description, path = '/' }) {
     setMeta('twitter:title', fullTitle, 'name');
     setMeta('twitter:description', desc, 'name');
     setMeta('twitter:image', DEFAULT_IMAGE, 'name');
+    // Explicit every render (not just set-once on the noindex page) so
+    // navigating from a noindex route (currently only NotFoundPage) back to
+    // a real one always restores "index, follow" — nothing here relies on
+    // cleanup-on-unmount, matching setMeta's existing reuse-the-tag pattern.
+    setMeta('robots', noindex ? 'noindex, follow' : 'index, follow');
 
     const canonical = document.querySelector('link[rel="canonical"]');
     if (canonical) canonical.setAttribute('href', url);
-  }, [title, description, path]);
+  }, [title, description, path, noindex]);
 }
 
 function setMeta(key, content, attr = 'name') {
