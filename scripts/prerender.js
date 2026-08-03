@@ -33,6 +33,7 @@ const ROUTES = [
   '/checklist',
   '/missionary-support/onboarding',
   '/for-churches/onboarding',
+  '/admin/review-queue',
   '/about',
   '/terms',
   '/privacy',

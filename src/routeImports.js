@@ -10,6 +10,7 @@ export const routeImports = {
   '/checklist': () => import('./pages/ChecklistPage.jsx'),
   '/missionary-support/onboarding': () => import('./pages/MissionaryOnboardingPage.jsx'),
   '/for-churches/onboarding': () => import('./pages/ChurchOnboardingPage.jsx'),
+  '/admin/review-queue': () => import('./pages/AdminReviewQueuePage.jsx'),
   '/about': () => import('./pages/AboutPage.jsx'),
   '/terms': () => import('./pages/TermsPage.jsx'),
   '/privacy': () => import('./pages/PrivacyPage.jsx')

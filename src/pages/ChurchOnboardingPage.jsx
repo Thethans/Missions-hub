@@ -1,6 +1,7 @@
 import React from 'react';
 import Footer from '../components/Footer.jsx';
 import TypeGuardedOnboarding from '../components/TypeGuardedOnboarding.jsx';
+import ChurchOnboardingForm from '../components/ChurchOnboardingForm.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
 
 export default function ChurchOnboardingPage() {
@@ -15,13 +16,11 @@ export default function ChurchOnboardingPage() {
     <>
       <section className="page-hero">
         <h1>Church onboarding</h1>
-        <p>Sign in to start your profile — a real form comes next.</p>
+        <p>Sign in, then tell us about your church.</p>
       </section>
       <div className="page-body">
         <TypeGuardedOnboarding expectedType="church">
-          <p className="onboarding-loading" role="status">
-            You're signed in. The full profile form isn't built yet — check back soon.
-          </p>
+          <ChurchOnboardingForm />
         </TypeGuardedOnboarding>
       </div>
       <Footer />

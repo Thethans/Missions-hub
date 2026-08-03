@@ -681,3 +681,29 @@ drop trigger if exists prevent_dual_profile_church on church_profiles;
 create trigger prevent_dual_profile_church
   before insert on church_profiles
   for each row execute function prevent_dual_profile_type();
+
+-- The admin-update policies above only cover UPDATE — the review queue
+-- (Step 5) also needs to SELECT pending_review rows belonging to other
+-- users, which no existing select policy allows (missionary_profiles' own
+-- public-read policy is approved-only; church_profiles and both
+-- doctrinal_tags join tables are owner-read-only). Same
+-- is_active_verified_admin() reuse as the update policies.
+drop policy if exists "missionary_profiles_admin_read" on missionary_profiles;
+create policy "missionary_profiles_admin_read"
+  on missionary_profiles for select
+  using (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "church_profiles_admin_read" on church_profiles;
+create policy "church_profiles_admin_read"
+  on church_profiles for select
+  using (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "missionary_tags_admin_read" on missionary_doctrinal_tags;
+create policy "missionary_tags_admin_read"
+  on missionary_doctrinal_tags for select
+  using (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "church_tags_admin_read" on church_doctrinal_tags;
+create policy "church_tags_admin_read"
+  on church_doctrinal_tags for select
+  using (is_active_verified_admin(auth.uid()));

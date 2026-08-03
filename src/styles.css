@@ -2392,7 +2392,201 @@ html:not([data-app-booted]) [data-reveal] {
 }
 
 .onboarding-error { color: var(--status-unreached); }
+.onboarding-warning { color: var(--status-formative); }
 .onboarding-loading { text-align: center; margin-top: 3rem; }
+
+.onboarding-form {
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--atlas-paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.onboarding-form-intro {
+  color: var(--muted-text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.onboarding-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+.onboarding-form-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.onboarding-form-row label { flex: 1; }
+
+.onboarding-form input,
+.onboarding-form select,
+.onboarding-form textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.onboarding-form textarea { resize: vertical; }
+
+.onboarding-tags h3 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-2);
+}
+
+.onboarding-tag-group {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  margin: 0 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.onboarding-tag-group legend {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--muted-text);
+  padding: 0 var(--space-2);
+}
+
+.onboarding-tag-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+}
+
+.onboarding-form button {
+  align-self: flex-start;
+  font-family: inherit;
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  border: none;
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.onboarding-form button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.onboarding-form button:disabled { opacity: 0.7; cursor: default; }
+
+.onboarding-confirmation {
+  align-items: center;
+  text-align: center;
+  color: var(--status-reached);
+}
+
+.onboarding-confirmation h2,
+.onboarding-confirmation p { color: var(--ink-navy); }
+
+/* ==== ADMIN REVIEW QUEUE ==== */
+
+.review-queue {
+  max-width: 880px;
+  margin: 3rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.review-queue-section h2 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-4);
+}
+
+.review-queue-empty {
+  color: var(--muted-text);
+}
+
+.review-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.review-card {
+  background: var(--atlas-paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-6);
+}
+
+.review-card h3 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-3);
+}
+
+.review-card-fields {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-3);
+}
+
+.review-card-fields dt {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.review-card-fields dd {
+  margin: 0;
+}
+
+.review-card-tags {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-4);
+}
+
+.review-card-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.review-card-approve,
+.review-card-reject {
+  font-family: inherit;
+  color: var(--atlas-paper);
+  border: none;
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-card-approve:hover:not(:disabled),
+.review-card-reject:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.review-card-approve:disabled,
+.review-card-reject:disabled { opacity: 0.7; cursor: default; }
+
+.review-card-approve { background: var(--voyage-teal); }
+.review-card-reject { background: var(--status-unreached); }
 
 /* Low-pressure account prompt for anonymous checklist progress — a plain
    banner, not a modal/paywall, so it never blocks the checklist itself. */
