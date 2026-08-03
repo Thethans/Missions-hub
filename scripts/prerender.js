@@ -31,6 +31,8 @@ const ROUTES = [
   '/quiz',
   '/opportunities',
   '/checklist',
+  '/missionary-support/onboarding',
+  '/for-churches/onboarding',
   '/about',
   '/terms',
   '/privacy',

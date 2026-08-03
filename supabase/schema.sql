@@ -600,3 +600,84 @@ create policy "intro_requests_missionary_responds"
   on intro_requests for update
   using (auth.uid() = missionary_id)
   with check (auth.uid() = missionary_id);
+
+-- Missionary/church support-matching: admin review + status lock ---------
+-- The admin review queue (Step 5 of the missionary-support build plan) needs
+-- to update *other* users' rows, which the owner-only update policies above
+-- don't allow (their USING clause is auth.uid() = id). Reuses the same
+-- is_active_verified_admin()/verified_members admin concept the prayer-map
+-- feature already established above, rather than introducing a second admin
+-- mechanism.
+drop policy if exists "missionary_profiles_admin_update" on missionary_profiles;
+create policy "missionary_profiles_admin_update"
+  on missionary_profiles for update
+  using (is_active_verified_admin(auth.uid()))
+  with check (is_active_verified_admin(auth.uid()));
+
+drop policy if exists "church_profiles_admin_update" on church_profiles;
+create policy "church_profiles_admin_update"
+  on church_profiles for update
+  using (is_active_verified_admin(auth.uid()))
+  with check (is_active_verified_admin(auth.uid()));
+
+-- Status/verification are review-controlled fields: a profile owner can edit
+-- their own bio, region, etc., but must never be able to set status straight
+-- to 'approved' (or verification to 'agency_verified') via their own update
+-- — only an active admin (Step 5's review queue) may change those.
+create or replace function lock_missionary_profile_review_fields() returns trigger as $$
+begin
+  if (new.status is distinct from old.status or new.verification is distinct from old.verification)
+     and not is_active_verified_admin(auth.uid()) then
+    raise exception 'status and verification can only be changed by an admin';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists lock_missionary_profile_review_fields on missionary_profiles;
+create trigger lock_missionary_profile_review_fields
+  before update on missionary_profiles
+  for each row execute function lock_missionary_profile_review_fields();
+
+create or replace function lock_church_profile_review_fields() returns trigger as $$
+begin
+  if new.status is distinct from old.status
+     and not is_active_verified_admin(auth.uid()) then
+    raise exception 'status can only be changed by an admin';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists lock_church_profile_review_fields on church_profiles;
+create trigger lock_church_profile_review_fields
+  before update on church_profiles
+  for each row execute function lock_church_profile_review_fields();
+
+-- Dual-profile-type exclusivity: nothing today stops a single auth.users id
+-- from ending up with rows in both missionary_profiles and church_profiles
+-- (e.g. a race between two tabs). Raise loudly instead of allowing it.
+create or replace function prevent_dual_profile_type() returns trigger as $$
+begin
+  if tg_table_name = 'missionary_profiles' then
+    if exists (select 1 from church_profiles where id = new.id) then
+      raise exception 'This account already has a church profile.';
+    end if;
+  else
+    if exists (select 1 from missionary_profiles where id = new.id) then
+      raise exception 'This account already has a missionary profile.';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists prevent_dual_profile_missionary on missionary_profiles;
+create trigger prevent_dual_profile_missionary
+  before insert on missionary_profiles
+  for each row execute function prevent_dual_profile_type();
+
+drop trigger if exists prevent_dual_profile_church on church_profiles;
+create trigger prevent_dual_profile_church
+  before insert on church_profiles
+  for each row execute function prevent_dual_profile_type();
