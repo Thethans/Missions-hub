@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import type { MissionaryUpdate, PrayerRequest } from '../data/types';
+
+// CSS custom property carrying each photo's real aspect ratio into
+// .pm-update__photo (see prayer-map.css) — TypeScript's CSSProperties
+// doesn't know about arbitrary --custom-props, so this narrows the type
+// just enough to assign one without an `any`/`as unknown` escape hatch.
+type PhotoAspectStyle = CSSProperties & { '--pm-photo-aspect': string };
 
 interface UpdatesFeedProps {
   updates: MissionaryUpdate[];
@@ -57,6 +64,12 @@ export default function UpdatesFeed({ updates, prayerRequests, missionaryName }:
             width={u.photoWidth}
             height={u.photoHeight}
             loading="lazy"
+            // Fixed thumbnail height, width driven by the photo's own
+            // aspect ratio (see the CSS var read in .pm-update__photo) —
+            // a portrait update stays narrow-and-tall, a landscape one
+            // wide-and-short, instead of every photo getting cropped to
+            // fit one fixed landscape box regardless of its real shape.
+            style={{ '--pm-photo-aspect': `${u.photoWidth} / ${u.photoHeight}` } as PhotoAspectStyle}
           />
           <div className="pm-update__content">
             <div className="pm-update__head">
