@@ -403,3 +403,200 @@ alter table opportunities
   add column if not exists listing_type text,
   add column if not exists stale_flag boolean not null default false,
   add column if not exists merged_titles text[] not null default '{}';
+
+-- Missionary support-matching: profiles, doctrinal tags, intro requests ---
+-- Greenfield tables for the missionary/church support-matching feature
+-- (Phase 1). Distinct from `missionaries` above, which is the prayer-map's
+-- admin-managed public listing table — these are user-owned profiles keyed
+-- to auth.users, with their own approval workflow and doctrinal-tag join
+-- tables. Does not touch the pre-field checklist tables above.
+
+do $$ begin
+  create type profile_status as enum ('pending_review','approved','rejected','inactive');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type verification_level as enum ('self_reported','agency_verified');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type field_visibility as enum ('public','region_only','private');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type intro_status as enum ('requested','accepted','declined','expired');
+exception when duplicate_object then null; end $$;
+
+-- Doctrinal tags: fixed taxonomy — do not let users free-type tags.
+create table if not exists doctrinal_tags (
+  id text primary key,
+  label text not null,
+  category text not null
+);
+
+insert into doctrinal_tags (id, label, category) values
+  ('credobaptist', 'Believer''s Baptism', 'baptism'),
+  ('paedobaptist', 'Infant Baptism', 'baptism'),
+  ('complementarian', 'Complementarian', 'gender_roles'),
+  ('egalitarian', 'Egalitarian', 'gender_roles'),
+  ('cessationist', 'Cessationist', 'spiritual_gifts'),
+  ('continuationist', 'Continuationist', 'spiritual_gifts'),
+  ('reformed_soteriology', 'Reformed / Calvinist Soteriology', 'soteriology'),
+  ('arminian_soteriology', 'Arminian Soteriology', 'soteriology'),
+  ('premillennial', 'Premillennial', 'eschatology'),
+  ('amillennial', 'Amillennial', 'eschatology'),
+  ('kjv_only', 'KJV-Preferred/Only', 'bible_translation'),
+  ('congregational_polity', 'Congregational Polity', 'church_government'),
+  ('elder_led_polity', 'Elder-Led Polity', 'church_government')
+on conflict (id) do nothing;
+
+create table if not exists missionary_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  status profile_status not null default 'pending_review',
+  verification verification_level not null default 'self_reported',
+  display_name text not null,
+  agency_name text,
+  field_region text,
+  field_visibility field_visibility not null default 'region_only',
+  home_base_city text,
+  home_base_state text,
+  support_target_monthly numeric,
+  support_raised_pct numeric check (support_raised_pct >= 0 and support_raised_pct <= 100),
+  family_size int,
+  bio text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists missionary_doctrinal_tags (
+  missionary_id uuid not null references missionary_profiles(id) on delete cascade,
+  tag_id text not null references doctrinal_tags(id),
+  primary key (missionary_id, tag_id)
+);
+
+create table if not exists church_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  status profile_status not null default 'pending_review',
+  church_name text not null,
+  city text,
+  state text,
+  denomination text,
+  giving_capacity_tier text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists church_doctrinal_tags (
+  church_id uuid not null references church_profiles(id) on delete cascade,
+  tag_id text not null references doctrinal_tags(id),
+  primary key (church_id, tag_id)
+);
+
+create table if not exists intro_requests (
+  id uuid primary key default gen_random_uuid(),
+  church_id uuid not null references church_profiles(id) on delete cascade,
+  missionary_id uuid not null references missionary_profiles(id) on delete cascade,
+  status intro_status not null default 'requested',
+  message text,
+  created_at timestamptz not null default now(),
+  responded_at timestamptz
+);
+
+-- Prevent duplicate pending requests from the same church to the same missionary
+create unique index if not exists intro_requests_no_duplicate_pending
+  on intro_requests (church_id, missionary_id)
+  where status = 'requested';
+
+alter table missionary_profiles enable row level security;
+alter table church_profiles enable row level security;
+alter table missionary_doctrinal_tags enable row level security;
+alter table church_doctrinal_tags enable row level security;
+alter table intro_requests enable row level security;
+
+-- Missionary profiles: public can read approved rows; owner reads/writes their own regardless of status
+drop policy if exists "missionary_profiles_public_read_approved" on missionary_profiles;
+create policy "missionary_profiles_public_read_approved"
+  on missionary_profiles for select
+  using (status = 'approved');
+
+drop policy if exists "missionary_profiles_owner_read" on missionary_profiles;
+create policy "missionary_profiles_owner_read"
+  on missionary_profiles for select
+  using (auth.uid() = id);
+
+drop policy if exists "missionary_profiles_owner_write" on missionary_profiles;
+create policy "missionary_profiles_owner_write"
+  on missionary_profiles for insert
+  with check (auth.uid() = id);
+
+drop policy if exists "missionary_profiles_owner_update" on missionary_profiles;
+create policy "missionary_profiles_owner_update"
+  on missionary_profiles for update
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+-- Church profiles: same pattern (no public "browse churches" needed in Phase 1, but keep symmetry)
+drop policy if exists "church_profiles_owner_read" on church_profiles;
+create policy "church_profiles_owner_read"
+  on church_profiles for select
+  using (auth.uid() = id);
+
+drop policy if exists "church_profiles_owner_write" on church_profiles;
+create policy "church_profiles_owner_write"
+  on church_profiles for insert
+  with check (auth.uid() = id);
+
+drop policy if exists "church_profiles_owner_update" on church_profiles;
+create policy "church_profiles_owner_update"
+  on church_profiles for update
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+-- Doctrinal tag join tables: readable wherever the parent profile is readable; writable only by owner
+drop policy if exists "missionary_tags_read" on missionary_doctrinal_tags;
+create policy "missionary_tags_read"
+  on missionary_doctrinal_tags for select
+  using (
+    exists (
+      select 1 from missionary_profiles p
+      where p.id = missionary_id and (p.status = 'approved' or p.id = auth.uid())
+    )
+  );
+
+drop policy if exists "missionary_tags_write" on missionary_doctrinal_tags;
+create policy "missionary_tags_write"
+  on missionary_doctrinal_tags for all
+  using (auth.uid() = missionary_id)
+  with check (auth.uid() = missionary_id);
+
+drop policy if exists "church_tags_read" on church_doctrinal_tags;
+create policy "church_tags_read"
+  on church_doctrinal_tags for select
+  using (auth.uid() = church_id);
+
+drop policy if exists "church_tags_write" on church_doctrinal_tags;
+create policy "church_tags_write"
+  on church_doctrinal_tags for all
+  using (auth.uid() = church_id)
+  with check (auth.uid() = church_id);
+
+-- Intro requests: readable/writable only by the two parties involved
+drop policy if exists "intro_requests_parties_read" on intro_requests;
+create policy "intro_requests_parties_read"
+  on intro_requests for select
+  using (auth.uid() = church_id or auth.uid() = missionary_id);
+
+drop policy if exists "intro_requests_church_creates" on intro_requests;
+create policy "intro_requests_church_creates"
+  on intro_requests for insert
+  with check (
+    auth.uid() = church_id
+    and exists (select 1 from church_profiles c where c.id = church_id and c.status = 'approved')
+    and exists (select 1 from missionary_profiles m where m.id = missionary_id and m.status = 'approved')
+  );
+
+drop policy if exists "intro_requests_missionary_responds" on intro_requests;
+create policy "intro_requests_missionary_responds"
+  on intro_requests for update
+  using (auth.uid() = missionary_id)
+  with check (auth.uid() = missionary_id);
