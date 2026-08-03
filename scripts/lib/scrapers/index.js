@@ -27,6 +27,7 @@ import InterserveScraper from './interserve.js';
 import BaptistMidMissionsScraper from './bmm.js';
 import GFAScraper from './gfa.js';
 import TeamExpansionScraper from './teamexpansion.js';
+import ReachingAndTeachingScraper from './reachingandteaching.js';
 
 export const SCRAPERS = {
   imb:            new IMBScraper(),
@@ -58,6 +59,7 @@ export const SCRAPERS = {
   bmm:            new BaptistMidMissionsScraper(),
   gfa:            new GFAScraper(),
   teamexpansion:  new TeamExpansionScraper(),
+  reachingandteaching: new ReachingAndTeachingScraper(),
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);

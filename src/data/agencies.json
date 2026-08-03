@@ -864,5 +864,42 @@
       "familyFriendly": "not clearly stated"
     },
     "sourceUrl": "https://interserveusa.org/"
+  },
+  {
+    "name": "Reaching & Teaching",
+    "url": "https://rtim.org/",
+    "tradition": null,
+    "focus": [
+      "discipleship",
+      "church planting",
+      "leadership training"
+    ],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "career/long-term"
+    ],
+    "regions": [
+      "Middle East / North Africa",
+      "South Asia",
+      "Latin America",
+      "East Asia",
+      "Southeast Asia"
+    ],
+    "roles": [
+      "pastoral ministry",
+      "church planting",
+      "teaching/training",
+      "translation"
+    ],
+    "trainingRequired": null,
+    "sourceNotes": {
+      "tradition": "not explicitly stated (emphasizes expositional preaching and elder-led churches)",
+      "familyFriendly": "not addressed on site",
+      "trainingRequired": "not clearly stated for applicants",
+      "supportRaising": "stated directly on individual job postings (e.g. Regional Leader | MENA, Regional Mobilizer) as support-raised positions"
+    },
+    "sourceUrl": "https://rtim.org/about/"
   }
 ]
