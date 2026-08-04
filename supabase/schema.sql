@@ -768,3 +768,20 @@ drop trigger if exists on_intro_request_created on intro_requests;
 create trigger on_intro_request_created
   after insert on intro_requests
   for each row execute function notify_intro_request();
+
+-- Missionary dashboard (Step 9) --------------------------------------------
+-- The dashboard's intro-requests list joins church_profiles to show which
+-- church sent each request — no existing policy lets a missionary read a
+-- church's row for that (church_profiles' only select policies are
+-- owner-read and admin-read), so the join would silently come back null.
+-- Queries intro_requests, not church_profiles itself, so this isn't the
+-- self-recursive pattern flagged elsewhere in this file.
+drop policy if exists "church_profiles_read_by_requested_missionary" on church_profiles;
+create policy "church_profiles_read_by_requested_missionary"
+  on church_profiles for select
+  using (
+    exists (
+      select 1 from intro_requests ir
+      where ir.church_id = church_profiles.id and ir.missionary_id = auth.uid()
+    )
+  );

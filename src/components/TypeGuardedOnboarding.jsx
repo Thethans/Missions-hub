@@ -1,60 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient.js';
 import useSupabaseSession from '../hooks/useSupabaseSession.js';
 import useAccountProfileType from '../hooks/useAccountProfileType.js';
+import MagicLinkSignIn from './MagicLinkSignIn.jsx';
 
 const TYPE_LABEL = { missionary: 'missionary', church: 'church' };
 const ONBOARDING_PATH = { missionary: '/missionary-support/onboarding', church: '/for-churches/onboarding' };
-
-function MagicLinkSignIn({ redirectPath }) {
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState(null);
-  const [sending, setSending] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setSending(true);
-    setError(null);
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + redirectPath }
-    });
-    setSending(false);
-    if (authError) {
-      setError(authError.message);
-    } else {
-      setSent(true);
-    }
-  }
-
-  if (sent) {
-    return (
-      <div className="onboarding-auth">
-        <p>Check your email — we sent a sign-in link to <strong>{email}</strong>.</p>
-      </div>
-    );
-  }
-
-  return (
-    <form className="onboarding-auth" onSubmit={handleSubmit}>
-      <h2>Sign in to continue</h2>
-      <p>We'll email you a link — no password needed.</p>
-      <input
-        type="email"
-        required
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button type="submit" disabled={sending}>
-        {sending ? 'Sending…' : 'Send sign-in link'}
-      </button>
-      {error && <p className="onboarding-error" role="alert">{error}</p>}
-    </form>
-  );
-}
 
 // Shared by both onboarding routes (/missionary-support/onboarding and
 // /for-churches/onboarding). Which route you land on IS the type choice —

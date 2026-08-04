@@ -14,12 +14,18 @@ const USER = { id: 'user-1' };
 
 let insertProfile;
 let insertTags;
+let updateProfile;
+let deleteTags;
 let profileInsertError = null;
 let tagsInsertError = null;
+let profileUpdateError = null;
+let tagsDeleteError = null;
 
 function makeSupabaseMock() {
   insertProfile = vi.fn(() => Promise.resolve({ error: profileInsertError }));
   insertTags = vi.fn(() => Promise.resolve({ error: tagsInsertError }));
+  updateProfile = vi.fn(() => ({ eq: () => Promise.resolve({ error: profileUpdateError }) }));
+  deleteTags = vi.fn(() => ({ eq: () => Promise.resolve({ error: tagsDeleteError }) }));
 
   return {
     auth: {
@@ -30,10 +36,10 @@ function makeSupabaseMock() {
         return { select: () => ({ order: () => ({ order: () => Promise.resolve({ data: TAGS, error: null }) }) }) };
       }
       if (table === 'missionary_profiles') {
-        return { insert: insertProfile };
+        return { insert: insertProfile, update: updateProfile };
       }
       if (table === 'missionary_doctrinal_tags') {
-        return { insert: insertTags };
+        return { insert: insertTags, delete: deleteTags };
       }
       throw new Error(`Unexpected table: ${table}`);
     })
@@ -51,6 +57,8 @@ vi.mock('../supabaseClient.js', () => ({
 beforeEach(() => {
   profileInsertError = null;
   tagsInsertError = null;
+  profileUpdateError = null;
+  tagsDeleteError = null;
   mockSupabase = makeSupabaseMock();
 });
 
@@ -113,5 +121,69 @@ describe('MissionaryOnboardingForm', () => {
 
     await waitFor(() => screen.getByText(/under review/i));
     expect(screen.getByText(/doctrinal tags couldn't be/i)).toBeInTheDocument();
+  });
+
+  describe('edit mode (initial prop, as used by MissionaryDashboard)', () => {
+    const EXISTING_PROFILE = {
+      display_name: 'Jane Doe',
+      agency_name: 'Agency X',
+      field_region: 'West Africa',
+      field_visibility: 'private',
+      home_base_city: 'Springfield',
+      home_base_state: 'IL',
+      support_target_monthly: 4000,
+      support_raised_pct: 40,
+      family_size: 3,
+      bio: 'Existing bio.'
+    };
+
+    it('pre-fills the form from `initial` and updates instead of inserting on save', async () => {
+      const onSaved = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <MissionaryOnboardingForm
+          initial={{ profile: EXISTING_PROFILE, tagIds: ['credobaptist'] }}
+          onSaved={onSaved}
+        />
+      );
+      await waitFor(() => screen.getByText('Baptism'));
+
+      expect(screen.getByLabelText(/display name/i)).toHaveValue('Jane Doe');
+      expect(screen.getByLabelText("Believer's Baptism")).toBeChecked();
+      expect(screen.getByLabelText('Infant Baptism')).not.toBeChecked();
+
+      await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+      await waitFor(() => expect(updateProfile).toHaveBeenCalled());
+      const updatePayload = updateProfile.mock.calls[0][0];
+      expect(updatePayload).toMatchObject({ display_name: 'Jane Doe', field_visibility: 'private' });
+      expect(updatePayload).not.toHaveProperty('status');
+      expect(updatePayload).not.toHaveProperty('verification');
+      expect(insertProfile).not.toHaveBeenCalled();
+
+      await waitFor(() => expect(deleteTags).toHaveBeenCalled());
+      await waitFor(() => expect(insertTags).toHaveBeenCalledWith([{ missionary_id: 'user-1', tag_id: 'credobaptist' }]));
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      // Edit mode never shows the create-flow's "under review" confirmation.
+      expect(screen.queryByText(/under review/i)).not.toBeInTheDocument();
+    });
+
+    it('calls onCancel when Cancel is clicked, without saving', async () => {
+      const onCancel = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <MissionaryOnboardingForm
+          initial={{ profile: EXISTING_PROFILE, tagIds: [] }}
+          onSaved={vi.fn()}
+          onCancel={onCancel}
+        />
+      );
+      await waitFor(() => screen.getByText('Baptism'));
+
+      await user.click(screen.getByRole('button', { name: /cancel/i }));
+      expect(onCancel).toHaveBeenCalled();
+      expect(updateProfile).not.toHaveBeenCalled();
+    });
   });
 });

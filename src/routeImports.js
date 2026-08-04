@@ -8,6 +8,7 @@ export const routeImports = {
   '/quiz': () => import('./pages/QuizPage.jsx'),
   '/opportunities': () => import('./pages/OpportunitiesPage.jsx'),
   '/checklist': () => import('./pages/ChecklistPage.jsx'),
+  '/missionary-support': () => import('./pages/MissionaryDashboardPage.jsx'),
   '/missionary-support/onboarding': () => import('./pages/MissionaryOnboardingPage.jsx'),
   '/for-churches': () => import('./pages/ForChurchesPage.jsx'),
   '/for-churches/:missionaryId': () => import('./pages/MissionaryProfilePage.jsx'),

@@ -26,15 +26,36 @@ function numOrNull(value) {
   return value === '' ? null : Number(value);
 }
 
+function toFormState(profile) {
+  return {
+    display_name: profile.display_name || '',
+    agency_name: profile.agency_name || '',
+    field_region: profile.field_region || '',
+    field_visibility: profile.field_visibility || 'region_only',
+    home_base_city: profile.home_base_city || '',
+    home_base_state: profile.home_base_state || '',
+    support_target_monthly: profile.support_target_monthly ?? '',
+    support_raised_pct: profile.support_raised_pct ?? '',
+    family_size: profile.family_size ?? '',
+    bio: profile.bio || ''
+  };
+}
+
 // Renders once TypeGuardedOnboarding has confirmed the signed-in user has no
 // missionary_profiles or church_profiles row yet. Matches Checklist.jsx's
 // ProfileSetup pattern for auth: fetch the user id at submit time via
 // supabase.auth.getUser() rather than threading session down as a prop.
-export default function MissionaryOnboardingForm() {
-  const [form, setForm] = useState(INITIAL_FORM);
+//
+// Also reused, in edit mode, by MissionaryDashboard (Step 9): pass `initial`
+// (the existing profile row + its current tag ids) and `onSaved`/`onCancel`,
+// and the form switches from insert-and-show-review-confirmation to
+// update-and-call-onSaved.
+export default function MissionaryOnboardingForm({ initial, onSaved, onCancel }) {
+  const isEdit = !!initial;
+  const [form, setForm] = useState(() => (initial ? toFormState(initial.profile) : INITIAL_FORM));
   const [tags, setTags] = useState(null); // null = loading
   const [tagsError, setTagsError] = useState(null);
-  const [selectedTagIds, setSelectedTagIds] = useState(new Set());
+  const [selectedTagIds, setSelectedTagIds] = useState(() => new Set(initial?.tagIds || []));
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [tagsSaveWarning, setTagsSaveWarning] = useState(null);
@@ -90,11 +111,12 @@ export default function MissionaryOnboardingForm() {
       return;
     }
 
-    // status/verification are deliberately omitted — the DB defaults them to
-    // pending_review/self_reported and a trigger blocks any later attempt by
-    // this same user to change them (see supabase/schema.sql).
-    const { error: insertError } = await supabase.from('missionary_profiles').insert({
-      id: user.id,
+    // status/verification are deliberately omitted from both paths — the DB
+    // defaults them to pending_review/self_reported on insert, and a
+    // trigger blocks any later attempt by this same user to change them on
+    // update (see supabase/schema.sql), so an edit can never silently
+    // re-review or re-verify a profile.
+    const payload = {
       display_name: form.display_name,
       agency_name: form.agency_name || null,
       field_region: form.field_region || null,
@@ -105,12 +127,32 @@ export default function MissionaryOnboardingForm() {
       support_raised_pct: numOrNull(form.support_raised_pct),
       family_size: numOrNull(form.family_size),
       bio: form.bio || null
-    });
+    };
 
-    if (insertError) {
+    const { error: saveError } = isEdit
+      ? await supabase.from('missionary_profiles').update(payload).eq('id', user.id)
+      : await supabase.from('missionary_profiles').insert({ id: user.id, ...payload });
+
+    if (saveError) {
       setSubmitting(false);
-      setSubmitError(insertError.message);
+      setSubmitError(saveError.message);
       return;
+    }
+
+    // Edit mode reconciles the full tag set (delete then re-insert what's
+    // checked) so unchecking a tag actually removes it — create mode has
+    // nothing to delete yet, so it only ever inserts.
+    if (isEdit) {
+      const { error: deleteTagsError } = await supabase
+        .from('missionary_doctrinal_tags')
+        .delete()
+        .eq('missionary_id', user.id);
+      if (deleteTagsError) {
+        setSubmitting(false);
+        setTagsSaveWarning("Your profile was saved, but your doctrinal tags couldn't be updated.");
+        onSaved?.();
+        return;
+      }
     }
 
     if (selectedTagIds.size > 0) {
@@ -125,7 +167,11 @@ export default function MissionaryOnboardingForm() {
     }
 
     setSubmitting(false);
-    setSubmitted(true);
+    if (isEdit) {
+      onSaved?.();
+    } else {
+      setSubmitted(true);
+    }
   }
 
   if (submitted) {
@@ -145,9 +191,11 @@ export default function MissionaryOnboardingForm() {
 
   return (
     <form className="onboarding-form" onSubmit={handleSubmit}>
-      <h2>Your missionary profile</h2>
+      <h2>{isEdit ? 'Edit your missionary profile' : 'Your missionary profile'}</h2>
       <p className="onboarding-form-intro">
-        This goes to review before it's visible to any church — nothing here is public yet.
+        {isEdit
+          ? "Changes save immediately — they don't reset your review status."
+          : "This goes to review before it's visible to any church — nothing here is public yet."}
       </p>
 
       <label>
@@ -279,9 +327,16 @@ export default function MissionaryOnboardingForm() {
         </div>
       )}
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? 'Submitting…' : 'Submit for review'}
-      </button>
+      <div className="onboarding-form-actions">
+        <button type="submit" disabled={submitting}>
+          {isEdit ? (submitting ? 'Saving…' : 'Save changes') : (submitting ? 'Submitting…' : 'Submit for review')}
+        </button>
+        {isEdit && onCancel && (
+          <button type="button" className="onboarding-form-cancel" onClick={onCancel} disabled={submitting}>
+            Cancel
+          </button>
+        )}
+      </div>
       {submitError && <p className="onboarding-error" role="alert">{submitError}</p>}
     </form>
   );
