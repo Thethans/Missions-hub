@@ -36,6 +36,11 @@ const TITLES = {
   '/quiz': 'Find Your Mission Board — Fielded',
   '/opportunities': 'Opportunities — Fielded',
   '/checklist': 'Pre-Field Checklist — Fielded',
+  '/for-churches': 'For Churches — Fielded',
+  '/for-churches/onboarding': 'Church Onboarding — Fielded',
+  '/missionary-support': 'Missionary Dashboard — Fielded',
+  '/missionary-support/onboarding': 'Missionary Onboarding — Fielded',
+  '/admin/review-queue': 'Admin Review Queue — Fielded',
   '/about': 'About — Fielded',
   '/terms': 'Terms of Service — Fielded',
   '/privacy': 'Privacy Policy — Fielded'
@@ -92,6 +97,7 @@ export default function RootLayout() {
           <div className="footer-content">
             <p>&copy; 2026 Fielded. All rights reserved.</p>
             <nav className="footer-links">
+              <a href="/missionary-support">For Missionaries</a>
               <a href="/terms">Terms of Service</a>
               <a href="/privacy">Privacy Policy</a>
             </nav>

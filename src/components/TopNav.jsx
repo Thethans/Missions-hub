@@ -18,7 +18,8 @@ const LINKS = [
   { to: '/quiz', label: 'Agency Match', tag: '03' },
   { to: '/opportunities', label: 'Opportunities', tag: '04' },
   { to: '/checklist', label: 'Checklist', tag: '05' },
-  { to: '/about', label: 'About', tag: '06' }
+  { to: '/for-churches', label: 'For Churches', tag: '06' },
+  { to: '/about', label: 'About', tag: '07' }
 ];
 
 export default function TopNav() {
