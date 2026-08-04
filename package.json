@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:prerender": "vite build && node scripts/prerender.js",
+    "build:prerender": "node scripts/generate-sitemap.js && vite build && node scripts/prerender.js",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
@@ -19,6 +19,7 @@
     "backfill-sanitize": "node scripts/backfill-sanitize.js",
     "backfill-sanitize:dry": "node scripts/backfill-sanitize.js --dryRun",
     "generate-component": "node scripts/generate-component.js",
+    "generate-sitemap": "node scripts/generate-sitemap.js",
     "og:image": "node scripts/assets/render-og.mjs",
     "icons": "node scripts/assets/render-icons.mjs"
   },

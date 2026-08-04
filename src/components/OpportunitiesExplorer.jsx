@@ -36,7 +36,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-08-01T23:05:40.338Z"
+// Generated: "2026-08-04T18:22:27.007Z"
 // Opportunities: 1331 across 29 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -47,6 +47,7 @@ import Fuse from 'fuse.js';
 import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
 import useDebouncedValue from '../hooks/useDebouncedValue.js';
+import useJsonLd from '../hooks/useJsonLd.js';
 
 // Reuses the quiz's own scoring output (src/data/scoreAgency.js via
 // MatchQuiz.jsx) rather than a second scoring system — CLAUDE.md is explicit
@@ -772,6 +773,28 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [filtered, page]
   );
+
+  // Built from pageItems — the same cards actually rendered below, not the
+  // full 1,220-row dataset — so this always matches what's really on the
+  // page (including the default/no-filter view a crawler's first hit sees)
+  // rather than claiming a list the response doesn't contain. `null` while
+  // there's nothing to list yet (still loading, or a filtered/search result
+  // came back empty) so useJsonLd removes the tag instead of emitting an
+  // empty itemListElement.
+  const opportunitiesListSchema = useMemo(() => {
+    if (pageItems.length === 0) return null;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: pageItems.map((opp, i) => ({
+        '@type': 'ListItem',
+        position: (page - 1) * PAGE_SIZE + i + 1,
+        url: opp.url,
+        name: opp.title
+      }))
+    };
+  }, [pageItems, page]);
+  useJsonLd('opportunities-list', opportunitiesListSchema);
 
   // Reset to page 1 whenever the result set could have changed shape —
   // search, filters, or sort — but not on first mount, so a shared/reloaded
