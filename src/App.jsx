@@ -15,6 +15,8 @@ const QuizPage = lazy(routeImports['/quiz']);
 const OpportunitiesPage = lazy(routeImports['/opportunities']);
 const ChecklistPage = lazy(routeImports['/checklist']);
 const MissionaryOnboardingPage = lazy(routeImports['/missionary-support/onboarding']);
+const ForChurchesPage = lazy(routeImports['/for-churches']);
+const MissionaryProfilePage = lazy(routeImports['/for-churches/:missionaryId']);
 const ChurchOnboardingPage = lazy(routeImports['/for-churches/onboarding']);
 const AdminReviewQueuePage = lazy(routeImports['/admin/review-queue']);
 const AboutPage = lazy(routeImports['/about']);
@@ -34,7 +36,9 @@ export default function App() {
         <Route path="/opportunities" element={<OpportunitiesPage />} />
         <Route path="/checklist" element={<ChecklistPage />} />
         <Route path="/missionary-support/onboarding" element={<MissionaryOnboardingPage />} />
+        <Route path="/for-churches" element={<ForChurchesPage />} />
         <Route path="/for-churches/onboarding" element={<ChurchOnboardingPage />} />
+        <Route path="/for-churches/:missionaryId" element={<MissionaryProfilePage />} />
         <Route path="/admin/review-queue" element={<AdminReviewQueuePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/terms" element={<TermsPage />} />

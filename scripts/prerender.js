@@ -32,6 +32,7 @@ const ROUTES = [
   '/opportunities',
   '/checklist',
   '/missionary-support/onboarding',
+  '/for-churches',
   '/for-churches/onboarding',
   '/admin/review-queue',
   '/about',

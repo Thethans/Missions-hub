@@ -707,3 +707,64 @@ drop policy if exists "church_tags_admin_read" on church_doctrinal_tags;
 create policy "church_tags_admin_read"
   on church_doctrinal_tags for select
   using (is_active_verified_admin(auth.uid()));
+
+-- Intro request notification (Step 8) ------------------------------------
+-- Fires a Slack message on every intro_requests insert, containing the
+-- church name, missionary name, and message. No missionary-side inbox yet
+-- (per the build plan) — this is the only way the request surfaces, until
+-- volume justifies more.
+--
+-- The webhook URL is deliberately NOT in this file: a Slack incoming
+-- webhook URL is a bearer secret (anyone with it can post to the channel),
+-- so it doesn't belong in a file that gets committed to git. It's read at
+-- call time from Supabase Vault instead — see the separate one-off
+-- `vault.create_secret(...)` command (not part of this file) that stores
+-- the actual URL directly in the database.
+create extension if not exists pg_net with schema extensions;
+
+create or replace function notify_intro_request() returns trigger as $$
+declare
+  webhook_url text;
+  church_name text;
+  missionary_name text;
+begin
+  select decrypted_secret into webhook_url
+  from vault.decrypted_secrets
+  where name = 'intro_request_slack_webhook';
+
+  -- No secret configured yet — don't block the insert just because the
+  -- notification can't be sent.
+  if webhook_url is null then
+    return new;
+  end if;
+
+  select c.church_name into church_name from church_profiles c where c.id = new.church_id;
+  select m.display_name into missionary_name from missionary_profiles m where m.id = new.missionary_id;
+
+  -- Fire-and-forget: net.http_post queues the request asynchronously and
+  -- returns immediately, so a slow or failing webhook never blocks or
+  -- fails the actual intro_requests insert.
+  perform net.http_post(
+    url := webhook_url,
+    body := jsonb_build_object(
+      'text', format(
+        E'New intro request\n%s wants an intro to %s.%s',
+        coalesce(church_name, 'A church'),
+        coalesce(missionary_name, 'a missionary'),
+        case when new.message is not null and new.message <> ''
+          then E'\nMessage: ' || new.message
+          else ''
+        end
+      )
+    ),
+    headers := '{"Content-Type": "application/json"}'::jsonb
+  );
+
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public, extensions, vault;
+
+drop trigger if exists on_intro_request_created on intro_requests;
+create trigger on_intro_request_created
+  after insert on intro_requests
+  for each row execute function notify_intro_request();

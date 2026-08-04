@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
-
-const CATEGORY_LABELS = {
-  baptism: 'Baptism',
-  gender_roles: 'Gender Roles',
-  spiritual_gifts: 'Spiritual Gifts',
-  soteriology: 'Soteriology',
-  eschatology: 'Eschatology',
-  bible_translation: 'Bible Translation',
-  church_government: 'Church Government'
-};
+import { CATEGORY_LABELS, groupTagsByCategory } from '../data/doctrinalTagCategories.js';
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'Public — show my exact region' },
@@ -33,15 +24,6 @@ const INITIAL_FORM = {
 
 function numOrNull(value) {
   return value === '' ? null : Number(value);
-}
-
-function groupTagsByCategory(tags) {
-  const groups = new Map();
-  for (const tag of tags) {
-    if (!groups.has(tag.category)) groups.set(tag.category, []);
-    groups.get(tag.category).push(tag);
-  }
-  return groups;
 }
 
 // Renders once TypeGuardedOnboarding has confirmed the signed-in user has no

@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
-
-const CATEGORY_LABELS = {
-  baptism: 'Baptism',
-  gender_roles: 'Gender Roles',
-  spiritual_gifts: 'Spiritual Gifts',
-  soteriology: 'Soteriology',
-  eschatology: 'Eschatology',
-  bible_translation: 'Bible Translation',
-  church_government: 'Church Government'
-};
+import { CATEGORY_LABELS, groupTagsByCategory } from '../data/doctrinalTagCategories.js';
 
 const GIVING_CAPACITY_OPTIONS = [
   { value: 'small', label: 'Small' },
@@ -25,15 +16,6 @@ const INITIAL_FORM = {
   denomination: '',
   giving_capacity_tier: ''
 };
-
-function groupTagsByCategory(tags) {
-  const groups = new Map();
-  for (const tag of tags) {
-    if (!groups.has(tag.category)) groups.set(tag.category, []);
-    groups.get(tag.category).push(tag);
-  }
-  return groups;
-}
 
 // Mirrors MissionaryOnboardingForm.jsx's structure (see that file for the
 // reasoning behind the getUser()-at-submit-time pattern and the graceful
