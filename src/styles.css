@@ -2392,7 +2392,7 @@ html:not([data-app-booted]) [data-reveal] {
 }
 
 .onboarding-error { color: var(--status-unreached); }
-.onboarding-warning { color: var(--status-formative); }
+.onboarding-warning { color: var(--status-formative-text); }
 .onboarding-loading { text-align: center; margin-top: 3rem; }
 
 .onboarding-form {
@@ -2717,7 +2717,7 @@ html:not([data-app-booted]) [data-reveal] {
 
 .directory-badge--verified {
   border-color: var(--status-reached);
-  color: var(--status-reached);
+  color: var(--status-reached-text);
 }
 
 .directory-card-title {
@@ -3315,7 +3315,7 @@ html:not([data-app-booted]) [data-reveal] {
 .opp-icon-btn:hover { color: var(--voyage-teal); border-color: var(--voyage-teal); }
 
 .opp-icon-btn--saved {
-  color: var(--warm-clay);
+  color: var(--warm-clay-text);
   border-color: var(--warm-clay);
   background: rgba(217, 142, 92, 0.16);
 }

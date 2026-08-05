@@ -20,6 +20,15 @@
   --status-unreached: #b5482f;
   --status-formative: #d9a441;
   --status-reached: #4c8a5e;
+  /* Text/icon-only variants of --warm-clay/--status-formative/--status-reached
+     — those three fail WCAG AA (4.5:1 for text, 3:1 for icons) against
+     --atlas-paper when used as a small foreground color, even though they're
+     fine as fills, borders, and map colors (3:1 only). Darkened just enough
+     to clear 4.5:1; use these instead of the base token wherever one of the
+     three is applied to `color` on text or an icon under ~24px. */
+  --warm-clay-text: #996441;
+  --status-formative-text: #8f6c2b;
+  --status-reached-text: #457d55;
   /* Same "unreached" meaning as --status-unreached, brightened for use on
      --ink-navy: the map token is a muted brick-red tuned to read against
      the map's light paper basemap, and goes muddy/desaturated on navy — the

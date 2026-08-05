@@ -881,7 +881,7 @@
 .pm-news__done {
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--status-reached);
+  color: var(--status-reached-text);
 }
 
 /* ---- Sticky support footer ----------------------------------------------- */
@@ -1184,7 +1184,7 @@
 .pm-login-sent p {
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--status-reached);
+  color: var(--status-reached-text);
   line-height: 1.5;
   margin: 0 0 var(--space-4);
 }
