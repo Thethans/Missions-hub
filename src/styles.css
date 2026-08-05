@@ -3044,6 +3044,76 @@ html:not([data-app-booted]) [data-reveal] {
   border: 1px dashed var(--line);
 }
 
+/* Accordion — "Show more details" reveals the full field checklist
+   (including region, held out of the compact tag row above) plus the
+   untruncated description and a named "not listed" line for whichever
+   field is genuinely missing. See OpportunitiesExplorer.template.jsx. */
+.opp-card-expand { margin-bottom: var(--space-3); }
+
+.opp-card-expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--voyage-teal);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.opp-card-expand-toggle:hover { text-decoration: underline; }
+
+.opp-card-detail {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--line);
+}
+
+.opp-card-detail-desc {
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-2);
+}
+
+.opp-card-detail-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.opp-card-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 0.8rem;
+}
+
+.opp-card-detail-row dt {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+  color: var(--muted-text);
+  font-weight: 600;
+}
+
+.opp-card-detail-row dd {
+  margin: 0;
+  /* Left-aligned, not right — "Not listed — worth asking the agency" wraps
+     to a second line on narrow cards, and right-aligned wrapped text reads
+     back-to-front (short word first, rest of the sentence below it). */
+  text-align: left;
+  color: var(--ink-navy);
+}
+
+.opp-card-detail-unknown {
+  font-style: italic;
+  color: var(--muted-text);
+}
+
 .opp-card-footer {
   margin-top: auto;
   display: flex;

@@ -710,12 +710,45 @@ describe('OpportunitiesExplorer completeness indicator', () => {
     expect(within(card).getByText(/few details/i)).toBeInTheDocument();
   }, TIMEOUT);
 
-  it('flags a listing with no description at all, even with other fields present', async () => {
+  it('does not flag a listing with no description when other fields are known', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('No Description At All'));
+
+    // location/role_type/term_length are all populated on thin-3 — only the
+    // description is missing, so the blanket "few details" note (which used
+    // to cover the whole card) must not appear; the known fields still show
+    // as normal tags instead of being hidden behind it.
+    const card = screen.getByText('No Description At All').closest('.opp-card');
+    expect(within(card).queryByText(/few details/i)).not.toBeInTheDocument();
+    expect(within(card).getByText('Togo')).toBeInTheDocument();
+    expect(within(card).getByText('administration')).toBeInTheDocument();
+    expect(within(card).getByText('short-term (under 2 years)')).toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('hides the auto-generated boilerplate sentence for a thin listing', async () => {
+    renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
+    await waitFor(() => screen.getByText('Lead Mason'));
+
+    // Lead Mason's `description` is the generated one-liner, not real
+    // scraped text — showing it as prose duplicated the "few details" note
+    // right underneath it, so the compact view should omit it entirely.
+    const card = screen.getByText('Lead Mason').closest('.opp-card');
+    expect(within(card).queryByText(/reach out to the agency directly/i)).not.toBeInTheDocument();
+  }, TIMEOUT);
+
+  it('expands to show the full field checklist, including a genuinely missing field', async () => {
+    const user = userEvent.setup();
     renderExplorer(OpportunitiesExplorer, { agencyFilter: '' });
     await waitFor(() => screen.getByText('No Description At All'));
 
     const card = screen.getByText('No Description At All').closest('.opp-card');
-    expect(within(card).getByText(/few details/i)).toBeInTheDocument();
+    // Region isn't shown in the compact tag row (thin-3 has no region set).
+    expect(within(card).queryByText('Region')).not.toBeInTheDocument();
+
+    await user.click(within(card).getByRole('button', { name: /show more details/i }));
+
+    expect(within(card).getByText('Region')).toBeInTheDocument();
+    expect(within(card).getByText(/not listed — worth asking the agency/i)).toBeInTheDocument();
   }, TIMEOUT);
 });
 

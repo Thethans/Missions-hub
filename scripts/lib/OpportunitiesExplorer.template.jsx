@@ -162,8 +162,36 @@ function FilterChip({ label, active, count, onClick }) {
   );
 }
 
+// The four structured facts a listing can carry (matches the columns the
+// filter/search/URL layers already key off). Each gets its own icon/label so
+// the expanded detail view can name exactly which fact is missing, instead
+// of one blanket "few details" note standing in for all of them regardless
+// of how much is actually known.
+const CARD_FIELDS = [
+  { key: 'role_type', label: 'Role type', Icon: Briefcase },
+  { key: 'location', label: 'Location', Icon: MapPin },
+  { key: 'term_length', label: 'Term length', Icon: Clock },
+  // Reuses the MapPin glyph rather than a second geography icon — the label
+  // text is what tells region and location apart, and most listings that
+  // have a region also have a more specific location, so it's held out of
+  // the compact row (see compactFields below) to avoid the two repeating.
+  { key: 'region', label: 'Region', Icon: MapPin }
+];
+
 function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
+  const [expanded, setExpanded] = useState(false);
   const thin = isThinListing(opp);
+
+  const compactFields = CARD_FIELDS.filter((f) => f.key !== 'region' && opp[f.key]);
+  const hasAnyStructuredField = CARD_FIELDS.some((f) => opp[f.key]);
+  const hasRealDescription = !thin && Boolean(opp.description);
+
+  // Genuinely nothing beyond a title/agency (at best the auto-generated
+  // one-liner) — the only case that still gets the blanket "check the
+  // agency's site" note, and the only case with no accordion, since there's
+  // nothing further to expand into.
+  const nothingOnFile = !hasAnyStructuredField && !hasRealDescription;
+
   return (
     <RevealOnScroll className="opp-card-wrapper">
       <article className="opp-card">
@@ -183,32 +211,57 @@ function OpportunityCard({ opp, saved, onToggleSave, onInquire }) {
 
         <h2 className="opp-card-title">{opp.title}</h2>
 
-        {opp.description && (
+        {hasRealDescription && (
           <p className="opp-card-desc">{opp.description}</p>
         )}
 
         <div className="opp-card-meta">
-          {opp.location && (
-            <span className="opp-card-tag">
-              <MapPin size={14} weight="bold" /> {opp.location}
+          {compactFields.map(({ key, Icon }) => (
+            <span className="opp-card-tag" key={key}>
+              <Icon size={14} weight="bold" /> {opp[key]}
             </span>
-          )}
-          {opp.role_type && (
-            <span className="opp-card-tag">
-              <Briefcase size={14} weight="bold" /> {opp.role_type}
-            </span>
-          )}
-          {opp.term_length && (
-            <span className="opp-card-tag">
-              <Clock size={14} weight="bold" /> {opp.term_length}
-            </span>
-          )}
-          {thin && (
+          ))}
+          {nothingOnFile && (
             <span className="opp-card-tag opp-card-tag--thin">
               <Info size={14} weight="bold" /> Few details — check the agency's site
             </span>
           )}
         </div>
+
+        {/* Only rendered when there's something beyond the compact tags to
+            reveal (untruncated description, region, or a field that's
+            genuinely null and worth naming) — see nothingOnFile above. */}
+        {!nothingOnFile && (
+          <div className="opp-card-expand">
+            <button
+              type="button"
+              className="opp-card-expand-toggle"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-controls={`opp-detail-${opp.id}`}
+            >
+              {expanded ? 'Show less' : 'Show more details'}
+              <CaretDown size={14} className={`opp-caret${expanded ? ' opp-caret--open' : ''}`} />
+            </button>
+            {expanded && (
+              <div className="opp-card-detail" id={`opp-detail-${opp.id}`}>
+                {hasRealDescription && <p className="opp-card-detail-desc">{opp.description}</p>}
+                <dl className="opp-card-detail-fields">
+                  {CARD_FIELDS.map(({ key, label, Icon }) => (
+                    <div className="opp-card-detail-row" key={key}>
+                      <dt><Icon size={14} weight="bold" /> {label}</dt>
+                      <dd>
+                        {opp[key] || (
+                          <span className="opp-card-detail-unknown">Not listed — worth asking the agency</span>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="opp-card-footer">
           <a
