@@ -14,7 +14,7 @@
 //   --line: rgba(22, 35, 59, 0.15)
 //   --muted-text: rgba(22, 35, 59, 0.65)
 //   --font-display: 'Fraunces Variable', Georgia, serif
-//   --font-body: 'Inter Variable', system-ui, sans-serif
+//   --font-body: 'Karla Variable', system-ui, sans-serif
 //   --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace
 //   --space-1: 4px
 //   --space-2: 8px
@@ -36,8 +36,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-08-04T18:22:27.007Z"
-// Opportunities: 1331 across 29 agencies
+// Generated: "2026-08-15T15:08:02.004Z"
+// Opportunities: 1176 across 30 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -184,7 +184,6 @@ const ROLE_TYPES = [
   "children/youth ministry",
   "church planting",
   "construction/maintenance",
-  "deaf ministry",
   "discipleship training",
   "education/TESOL",
   "evangelism/discipleship",
@@ -198,6 +197,7 @@ const ROLE_TYPES = [
   "research",
   "short-term missions",
   "sports ministry",
+  "staff/leadership",
   "technology",
   "theological education",
   "training/leadership",

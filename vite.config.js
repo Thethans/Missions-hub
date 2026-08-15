@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-// Fraunces/Inter load via @fontsource's `font-display: swap`, so the
+// Fraunces/Karla load via @fontsource's `font-display: swap`, so the
 // browser paints with a fallback font first and reflows once the webfont
 // arrives — Lighthouse traced this swap as the largest CLS contributor on
 // every route (footer position shifting as heading/body font metrics
@@ -11,7 +11,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 // so preload the two variable-font files the whole site depends on to pull
 // the fetch forward and shrink the fallback-to-webfont gap.
 function preloadCriticalFonts() {
-  const critical = [/fraunces-latin-full-normal-.*\.woff2$/, /inter-latin-wght-normal-.*\.woff2$/];
+  const critical = [/fraunces-latin-full-normal-.*\.woff2$/, /karla-latin-wght-normal-.*\.woff2$/];
   return {
     name: 'preload-critical-fonts',
     transformIndexHtml: {

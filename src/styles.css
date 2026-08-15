@@ -1159,86 +1159,79 @@ html:not([data-app-booted]) [data-reveal] {
   text-align: left;
 }
 
-/* Fixed 2 columns (not auto-fit) — with exactly 4 cards, auto-fit's
-   minmax(260px,1fr) comfortably fits 3 per row at this max-width, leaving
-   the 4th stranded alone on its own row. A deliberate 2x2 stays balanced
-   regardless of container width. */
-.capabilities-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-8);
-  max-width: 1000px;
-  margin: 0 auto;
+/* A bounded, left-hung column of rows rather than a symmetric card grid —
+   four parallel things (not a sequence, so no numbering) read down the
+   page like a spec sheet instead of four repeated boxes. Narrower than the
+   1000px heading above it on purpose: the ragged right edge next to all
+   that open navy is the asymmetry a centered/justified grid never has. */
+.capabilities-list {
+  display: flex;
+  flex-direction: column;
+  max-width: 700px;
 }
 
-.capability-card {
-  height: 100%;
-  text-align: left;
+.capability-row {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: var(--space-6);
+  align-items: start;
+  padding: var(--space-6) 0;
+  border-top: 1px solid rgba(250, 247, 240, 0.14);
+}
+
+.capability-row:last-child {
+  border-bottom: 1px solid rgba(250, 247, 240, 0.14);
+}
+
+/* The icon's own small glass disc — its own recipe (round, half the
+   capability-card's old radius, no drop shadow) rather than reusing the
+   card treatment now that there's no card. */
+.capability-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
   background: var(--glass-dark-bg);
   border: 1px solid var(--glass-dark-border);
-  border-radius: 16px;
-  box-shadow: var(--glass-dark-sheen);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  padding: var(--space-8);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
-}
-
-.capability-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--glass-dark-sheen), 0 18px 42px rgba(0, 0, 0, 0.35);
-  border-color: rgba(43, 110, 118, 0.5);
-}
-
-/* Large mono numeral replaces the old icon-in-a-circle badge — reuses the
-   same 01/02/03 numbering language as the nav and Journey section instead
-   of a generic icon motif, and doubles as the card's visual anchor. */
-.capability-number {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 1.75rem;
   color: var(--voyage-teal);
-  margin-bottom: var(--space-4);
-  line-height: 1;
+  flex-shrink: 0;
 }
 
-.capability-card h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-3);
-  font-size: 1.1rem;
+.capability-copy h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.15rem;
   color: var(--atlas-paper);
 }
 
-.capability-card h3 svg { color: var(--voyage-teal); flex-shrink: 0; }
-
-.capability-card p { margin: 0; color: rgba(250, 247, 240, 0.7); line-height: 1.6; }
+.capability-copy p { margin: 0; color: rgba(250, 247, 240, 0.7); line-height: 1.6; max-width: 54ch; }
 
 @media (max-width: 640px) {
   .capabilities h2 { text-align: center; }
+  .capability-row { grid-template-columns: 2.5rem 1fr; gap: var(--space-4); }
+  .capability-glyph { width: 2.5rem; height: 2.5rem; }
 }
 
 /* ==== HOME: MAP TEASER ==== */
 
-/* Flanked by a SectionDivider on both edges — more compact vertical padding
-   than the section-padding default, matching Capabilities' same reasoning. */
+/* Full-bleed, asymmetric composition — not the bounded, evenly-margined
+   two-column card every other section on the page uses. The visual runs to
+   the true edge of the viewport with no radius/shadow/max-width holding it
+   back; only the copy column keeps the site's normal reading padding. The
+   surrounding SectionDividers (HomePage.jsx) still bracket the section as
+   before — its own background is still paper, this only changes what sits
+   inside it. */
 .map-teaser {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: var(--space-12) var(--space-6);
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: var(--space-12);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  align-items: stretch;
+  min-height: 460px;
 }
 
 .map-teaser-visual {
   background: var(--ink-navy);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
   overflow: hidden;
-  aspect-ratio: 2 / 1;
 }
 
 .map-preview-graphic { width: 100%; height: 100%; display: block; }
@@ -1251,13 +1244,20 @@ html:not([data-app-booted]) [data-reveal] {
 .map-preview-dot.status-formative { fill: var(--status-formative); fill-opacity: 0.55; }
 .map-preview-dot.status-reached { fill: none; stroke: var(--status-reached); stroke-width: 1.5; }
 
-.map-teaser-content { text-align: left; }
+.map-teaser-content {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-12) var(--space-8);
+}
 .map-teaser h2 { margin: 0 0 var(--space-3); font-size: clamp(1.5rem, 3vw, 2rem); }
 .map-teaser p { color: var(--muted-text); margin: 0 0 var(--space-8); font-size: 1.05rem; line-height: 1.6; }
 
 @media (max-width: 768px) {
-  .map-teaser { grid-template-columns: 1fr; text-align: center; }
-  .map-teaser-content { text-align: center; }
+  .map-teaser { grid-template-columns: 1fr; }
+  .map-teaser-visual { min-height: 280px; }
+  .map-teaser-content { padding: var(--space-8) var(--space-6); }
 }
 
 /* ==== HOME: FAQ ==== */
@@ -1386,7 +1386,6 @@ html:not([data-app-booted]) [data-reveal] {
   .journey-dot { width: 34px; height: 34px; font-size: 0.7rem; }
   .journey-step { padding: var(--space-6); }
   .journey-step-watermark { font-size: 7rem; }
-  .capabilities-grid { grid-template-columns: 1fr; }
 }
 
 /* ==== MAP ==== */

@@ -1,7 +1,8 @@
 import React, { useId, useState } from 'react';
-import RevealOnScroll from './RevealOnScroll.jsx';
+import { m } from 'framer-motion';
 import SpotlightOverlay from './SpotlightOverlay.jsx';
 import useJsonLd from '../hooks/useJsonLd.js';
+import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
 // Real, honest Q&A about how this specific site works — no invented stats
 // or claims, just a plain description of what's actually built.
@@ -30,11 +31,23 @@ const ITEMS = [
 
 function FaqItem({ item, index }) {
   const [open, setOpen] = useState(false);
+  const prefersReduced = usePrefersReducedMotion();
   // useId (not index-based) so the id/aria-controls pairing stays unique and
   // stable even if items are ever reordered or filtered.
   const panelId = useId();
   return (
-    <RevealOnScroll index={index} className="faq-item-wrapper">
+    // Its own settle-into-place reveal (opacity + a slight scale, no
+    // vertical rise) rather than RevealOnScroll's shared fade-and-rise —
+    // deliberately calmer/slower, since this is reference content someone
+    // is about to read closely, not a card being scanned past.
+    <m.div
+      className="faq-item-wrapper"
+      data-reveal
+      initial={prefersReduced ? false : { opacity: 0, scale: 0.98 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.55, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="faq-item">
         <button
           className="faq-question"
@@ -58,7 +71,7 @@ function FaqItem({ item, index }) {
           </div>
         </div>
       </div>
-    </RevealOnScroll>
+    </m.div>
   );
 }
 
