@@ -9,6 +9,7 @@ const STATUS_LABEL = {
 
 export default function MapPopupCard({ properties, onClose }) {
   const closeRef = useRef(null);
+  const cardRef = useRef(null);
 
   // Move focus into the card the moment it appears — the primary path to
   // opening it is now keyboard-driven (MapAccessibleSearch), so a keyboard
@@ -18,11 +19,32 @@ export default function MapPopupCard({ properties, onClose }) {
     closeRef.current?.focus();
   }, []);
 
-  // Escape is the standard way to dismiss any dialog — this one had no
-  // keyboard path to close it at all beyond tabbing to the ✕ button.
+  // Escape closes (as before); Tab/Shift+Tab now wraps focus at the card's
+  // own edges instead of escaping into TopNav/the rest of the page behind
+  // it — role="dialog" plus aria-modal="true" without an actual focus trap
+  // tells assistive tech one thing and lets sighted keyboard users do
+  // another (same fix already applied to OpportunitiesExplorer's
+  // InquiryModal; this card just hadn't gotten it yet).
   useEffect(() => {
     function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusable = cardRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -43,7 +65,7 @@ export default function MapPopupCard({ properties, onClose }) {
   }, []);
 
   return (
-    <div className="map-popup-card" role="dialog" aria-label={`${properties.name} profile`}>
+    <div className="map-popup-card" role="dialog" aria-modal="true" aria-label={`${properties.name} profile`} ref={cardRef}>
       <button ref={closeRef} className="map-popup-close" onClick={onClose} aria-label="Close">✕</button>
       <h3 className="map-popup-name">{properties.name}</h3>
       <p className="map-popup-meta">{properties.country} — {properties.religion}</p>

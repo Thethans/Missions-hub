@@ -2,6 +2,12 @@ import React, { useMemo, useState } from 'react';
 
 const MAX_RESULTS = 20;
 
+const STATUS_LABEL = {
+  unreached: 'Unreached',
+  formative: 'Formative',
+  reached: 'Reached'
+};
+
 // A fully keyboard-operable alternative to clicking a point on the map
 // canvas. MapLibre's WebGL canvas has no native keyboard/focus path, and
 // with 16,000+ points a one-tab-stop-per-marker approach wouldn't be usable
@@ -45,25 +51,38 @@ export default function MapAccessibleSearch({ features, onSelect }) {
         onChange={(e) => setQuery(e.target.value)}
       />
       {query.trim() && (
-        <div className="map-search-results" role="region" aria-label="Search results">
+        // aria-live so a screen-reader user typing into the box hears the
+        // result count change without having to navigate to this region
+        // manually after every keystroke — same pattern as
+        // OpportunitiesExplorer's own results-count text.
+        <div className="map-search-results" role="region" aria-label="Search results" aria-live="polite">
           {results.length === 0 ? (
             <p className="map-search-empty">No matches.</p>
           ) : (
-            <ul className="map-search-list">
-              {results.map(({ index, feature }) => (
-                <li key={index}>
-                  <button
-                    type="button"
-                    className="map-search-result"
-                    onClick={() => selectResult({ index, feature })}
-                  >
-                    <span className={`map-search-result-dot status-${feature.properties.progressStatus}`} />
-                    <span className="map-search-result-name">{feature.properties.name}</span>
-                    <span className="map-search-result-country">{feature.properties.country}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="visually-hidden">
+                {results.length} {results.length === 1 ? 'result' : 'results'}
+              </p>
+              <ul className="map-search-list">
+                {results.map(({ index, feature }) => {
+                  const statusLabel = STATUS_LABEL[feature.properties.progressStatus] || feature.properties.progressStatus;
+                  return (
+                    <li key={index}>
+                      <button
+                        type="button"
+                        className="map-search-result"
+                        onClick={() => selectResult({ index, feature })}
+                      >
+                        <span className={`map-search-result-dot status-${feature.properties.progressStatus}`} aria-hidden="true" />
+                        <span className="map-search-result-name">{feature.properties.name}</span>
+                        <span className="map-search-result-country">{feature.properties.country}</span>
+                        <span className="visually-hidden"> — {statusLabel}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </div>
       )}

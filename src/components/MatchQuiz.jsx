@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { track } from '@vercel/analytics';
 import { CaretLeft, CaretRight, CheckCircle } from '@phosphor-icons/react';
@@ -56,6 +56,24 @@ export default function MatchQuiz() {
   const answered = hasAnyAnswer(answers);
   const currentQuestion = QUESTIONS[step];
   const isLastStep = step === TOTAL_STEPS - 1;
+
+  // Advancing via Back/Next/a step-dot changes which question is on screen,
+  // but nothing else about the page does — no navigation, no route change,
+  // nothing RootLayout's own route announcer would catch. Without this, a
+  // screen-reader user has no signal the question changed at all unless
+  // they happen to re-explore the page after clicking. Skipped on first
+  // mount (ref starts true) so there's no spurious announcement before
+  // anyone's touched anything — same "effect only fires on subsequent
+  // changes" convention RootLayout's own route announcement already uses.
+  const [stepAnnouncement, setStepAnnouncement] = useState('');
+  const isFirstStepRender = React.useRef(true);
+  useEffect(() => {
+    if (isFirstStepRender.current) {
+      isFirstStepRender.current = false;
+      return;
+    }
+    setStepAnnouncement(`Question ${step + 1} of ${TOTAL_STEPS}: ${currentQuestion.text}`);
+  }, [step, currentQuestion]);
 
   function goToStep(index) {
     setStep(Math.max(0, Math.min(TOTAL_STEPS - 1, index)));
@@ -152,13 +170,19 @@ export default function MatchQuiz() {
         <span className="matcher-progress-label">Question {step + 1} of {TOTAL_STEPS}</span>
       </div>
 
-      <div className="matcher-steps" role="tablist" aria-label="Jump to a question">
+      {/* Plain buttons with aria-current="step", not role="tablist"/"tab":
+          these are stops in a linear wizard, not independent panels of
+          content — real tabs imply arrow-key navigation and a matching
+          role="tabpanel", neither of which existed here, so a screen
+          reader announced "tab 1 of 8" and then arrow keys did nothing.
+          aria-current="step" is the pattern WAI-ARIA actually recommends
+          for a multi-step process indicator like this one. */}
+      <div className="matcher-steps" role="group" aria-label="Jump to a question">
         {QUESTIONS.map((q, i) => (
           <button
             key={q.key}
             type="button"
-            role="tab"
-            aria-selected={i === step}
+            aria-current={i === step ? 'step' : undefined}
             aria-label={`Question ${i + 1}${isAnswered(q, answers) ? ' (answered)' : ''}`}
             className={`matcher-step-dot${i === step ? ' matcher-step-dot--current' : ''}${isAnswered(q, answers) ? ' matcher-step-dot--answered' : ''}`}
             onClick={() => goToStep(i)}
@@ -167,6 +191,8 @@ export default function MatchQuiz() {
           </button>
         ))}
       </div>
+
+      <p className="visually-hidden" role="status" aria-live="polite">{stepAnnouncement}</p>
 
       <QuizQuestion
         key={currentQuestion.key}

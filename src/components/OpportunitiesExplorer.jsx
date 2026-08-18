@@ -36,7 +36,7 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-08-15T15:08:02.004Z"
+// Generated: "2026-08-18T16:19:59.055Z"
 // Opportunities: 1176 across 30 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -795,6 +795,47 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     };
   }, [pageItems, page]);
   useJsonLd('opportunities-list', opportunitiesListSchema);
+
+  // JobPosting per listing, built only from fields the scraped data
+  // actually has. Deliberately missing Google's `datePosted` (a required
+  // field for Job rich results) — neither the ingestion pipeline nor the
+  // agency pages it scrapes expose a real per-listing post date, only a
+  // bulk `created_at` re-scrape timestamp (see SORT_MIXED above for the
+  // same honesty call on a different feature). Using that as `datePosted`
+  // would misrepresent when the role was actually posted, so it's left out
+  // rather than guessed — this markup is valid schema.org JobPosting data
+  // and still useful context for general indexing, but won't itself
+  // qualify for Google's Job experience without a real posting date.
+  // `employmentType` is skipped for the same reason: term_length describes
+  // a commitment *duration* ("short-term (under 2 years)"), not an
+  // employmentType classification (FULL_TIME/CONTRACTOR/VOLUNTEER/...) —
+  // forcing one into the other would be a category error, not just an
+  // approximation. `baseSalary` is skipped because these roles are
+  // typically support-raised, not salaried — there's no real figure to
+  // report. Listings with neither `location` nor `region` are excluded
+  // entirely rather than emitted without `jobLocation` (also required):
+  // same "render nothing rather than an incomplete/guessed field" rule
+  // CLAUDE.md already states for agency data elsewhere in this app.
+  const jobPostingSchema = useMemo(() => {
+    const withLocation = pageItems.filter((opp) => opp.location || opp.region);
+    if (withLocation.length === 0) return null;
+    return {
+      '@context': 'https://schema.org',
+      '@graph': withLocation.map((opp) => ({
+        '@type': 'JobPosting',
+        identifier: { '@type': 'PropertyValue', name: 'Fielded', value: opp.id },
+        title: opp.title,
+        description: opp.description,
+        url: opp.url,
+        hiringOrganization: { '@type': 'Organization', name: opp.agency },
+        jobLocation: {
+          '@type': 'Place',
+          address: { '@type': 'PostalAddress', addressLocality: opp.location || opp.region }
+        }
+      }))
+    };
+  }, [pageItems]);
+  useJsonLd('opportunities-jobs', jobPostingSchema);
 
   // Reset to page 1 whenever the result set could have changed shape —
   // search, filters, or sort — but not on first mount, so a shared/reloaded

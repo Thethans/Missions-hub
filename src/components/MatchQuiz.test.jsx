@@ -17,11 +17,12 @@ function renderQuiz() {
 }
 
 // The quiz is a one-question-per-step wizard — jumps directly to a given
-// step via its numbered dot (role="tab") rather than clicking "Next"
-// N times, since every question is independently optional and a real user
-// can jump around the same way.
+// step via its numbered dot (a plain button with aria-current="step" when
+// active, not role="tab" — these are wizard stops, not independent tabbed
+// panels) rather than clicking "Next" N times, since every question is
+// independently optional and a real user can jump around the same way.
 async function jumpToStep(user, stepNumber) {
-  await user.click(screen.getByRole('tab', { name: new RegExp(`^Question ${stepNumber}\\b`) }));
+  await user.click(screen.getByRole('button', { name: new RegExp(`^Question ${stepNumber}\\b`) }));
 }
 
 async function submitQuiz(user) {
@@ -131,7 +132,7 @@ describe('MatchQuiz step navigation', () => {
     renderQuiz();
 
     await user.click(screen.getByLabelText(/church planting/i, { selector: 'input[name="focus"]' }));
-    expect(screen.getByRole('tab', { name: /^Question 1 \(answered\)/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Question 1 \(answered\)/ })).toBeInTheDocument();
 
     await jumpToStep(user, 3);
     await jumpToStep(user, 1);

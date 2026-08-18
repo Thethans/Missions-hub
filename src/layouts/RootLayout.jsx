@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { LazyMotion, domAnimation } from 'framer-motion';
 import TopNav from '../components/TopNav.jsx';
 import RouteLoadingBar from '../components/RouteLoadingBar.jsx';
@@ -105,6 +106,7 @@ export default function RootLayout() {
         </footer>
         <p className="visually-hidden" role="status" aria-live="polite">{announcement}</p>
         <Analytics />
+        <SpeedInsights />
       </div>
     </LazyMotion>
   );
