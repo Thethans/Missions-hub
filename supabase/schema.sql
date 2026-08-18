@@ -464,6 +464,10 @@ create table if not exists missionary_profiles (
   support_raised_pct numeric check (support_raised_pct >= 0 and support_raised_pct <= 100),
   family_size int,
   bio text,
+  -- Plain URL, rendered on the profile as a normal <a href> hyperlink —
+  -- never embedded as an <img>/iframe or injected as raw HTML, so a
+  -- submission can point to a site without hotlinking its content.
+  website text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -482,6 +486,9 @@ create table if not exists church_profiles (
   state text,
   denomination text,
   giving_capacity_tier text,
+  -- Same convention as missionary_profiles.website — plain URL, rendered as
+  -- a hyperlink, never embedded.
+  website text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -491,6 +498,12 @@ create table if not exists church_doctrinal_tags (
   tag_id text not null references doctrinal_tags(id),
   primary key (church_id, tag_id)
 );
+
+-- One-time ALTERs for the `website` column on both profile tables — the
+-- `create table if not exists` blocks above are no-ops against an already-
+-- deployed database, so the column has to be added explicitly here too.
+alter table missionary_profiles add column if not exists website text;
+alter table church_profiles add column if not exists website text;
 
 create table if not exists intro_requests (
   id uuid primary key default gen_random_uuid(),

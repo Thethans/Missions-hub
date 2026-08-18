@@ -14,8 +14,19 @@ const INITIAL_FORM = {
   city: '',
   state: '',
   denomination: '',
-  giving_capacity_tier: ''
+  giving_capacity_tier: '',
+  website: ''
 };
+
+// Stored and rendered as a plain URL — never as raw HTML or an embedded
+// <img>/iframe — so a submission links out rather than hotlinking content.
+// A bare domain (no scheme) is treated as https, matching what most people
+// actually type into a "website" field.
+function normalizeWebsite(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
 
 // Mirrors MissionaryOnboardingForm.jsx's structure (see that file for the
 // reasoning behind the getUser()-at-submit-time pattern and the graceful
@@ -90,7 +101,8 @@ export default function ChurchOnboardingForm() {
       city: form.city || null,
       state: form.state || null,
       denomination: form.denomination || null,
-      giving_capacity_tier: form.giving_capacity_tier || null
+      giving_capacity_tier: form.giving_capacity_tier || null,
+      website: normalizeWebsite(form.website)
     });
 
     if (insertError) {
@@ -186,6 +198,18 @@ export default function ChurchOnboardingForm() {
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+      </label>
+
+      <label>
+        Website
+        <input
+          type="text"
+          inputMode="url"
+          placeholder="yourchurch.org"
+          value={form.website}
+          onChange={(e) => updateField('website', e.target.value)}
+        />
+        <span className="onboarding-form-hint">Shown as a link — never embedded.</span>
       </label>
 
       {tagsError && (

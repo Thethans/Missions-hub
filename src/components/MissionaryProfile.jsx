@@ -262,6 +262,17 @@ export default function MissionaryProfile({ missionaryId }) {
         </section>
       )}
 
+      {missionary.website && (
+        <section className="profile-detail-section">
+          <h2>Website</h2>
+          <p>
+            <a href={missionary.website} target="_blank" rel="noopener noreferrer nofollow">
+              {missionary.website.replace(/^https?:\/\//i, '')}
+            </a>
+          </p>
+        </section>
+      )}
+
       {(missionary.support_target_monthly || missionary.family_size) && (
         <section className="profile-detail-section">
           <h2>Support</h2>

@@ -19,11 +19,22 @@ const INITIAL_FORM = {
   support_target_monthly: '',
   support_raised_pct: '',
   family_size: '',
-  bio: ''
+  bio: '',
+  website: ''
 };
 
 function numOrNull(value) {
   return value === '' ? null : Number(value);
+}
+
+// Stored and rendered as a plain URL — never as raw HTML or an embedded
+// <img>/iframe — so a submission links out rather than hotlinking content.
+// A bare domain (no scheme) is treated as https, matching what most people
+// actually type into a "website" field.
+function normalizeWebsite(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 function toFormState(profile) {
@@ -37,7 +48,8 @@ function toFormState(profile) {
     support_target_monthly: profile.support_target_monthly ?? '',
     support_raised_pct: profile.support_raised_pct ?? '',
     family_size: profile.family_size ?? '',
-    bio: profile.bio || ''
+    bio: profile.bio || '',
+    website: profile.website || ''
   };
 }
 
@@ -126,7 +138,8 @@ export default function MissionaryOnboardingForm({ initial, onSaved, onCancel })
       support_target_monthly: numOrNull(form.support_target_monthly),
       support_raised_pct: numOrNull(form.support_raised_pct),
       family_size: numOrNull(form.family_size),
-      bio: form.bio || null
+      bio: form.bio || null,
+      website: normalizeWebsite(form.website)
     };
 
     const { error: saveError } = isEdit
@@ -296,6 +309,18 @@ export default function MissionaryOnboardingForm({ initial, onSaved, onCancel })
           value={form.bio}
           onChange={(e) => updateField('bio', e.target.value)}
         />
+      </label>
+
+      <label>
+        Website
+        <input
+          type="text"
+          inputMode="url"
+          placeholder="yourministry.org"
+          value={form.website}
+          onChange={(e) => updateField('website', e.target.value)}
+        />
+        <span className="onboarding-form-hint">Shown on your profile as a link — never embedded.</span>
       </label>
 
       {tagsError && (

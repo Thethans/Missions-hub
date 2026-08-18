@@ -2425,6 +2425,13 @@ html:not([data-app-booted]) [data-reveal] {
   gap: var(--space-4);
 }
 
+.onboarding-form-hint {
+  color: var(--muted-text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
 .onboarding-form-row label { flex: 1; }
 
 .onboarding-form input,

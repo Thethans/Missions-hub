@@ -10,14 +10,16 @@ const MISSIONARY_FIELDS = [
   ['support_target_monthly', 'Monthly support target'],
   ['support_raised_pct', 'Support raised (%)'],
   ['family_size', 'Family size'],
-  ['bio', 'Bio']
+  ['bio', 'Bio'],
+  ['website', 'Website']
 ];
 
 const CHURCH_FIELDS = [
   ['city', 'City'],
   ['state', 'State'],
   ['denomination', 'Denomination'],
-  ['giving_capacity_tier', 'Giving capacity']
+  ['giving_capacity_tier', 'Giving capacity'],
+  ['website', 'Website']
 ];
 
 function tagLabels(joinRows, tagKey) {
@@ -35,7 +37,17 @@ function ProfileCard({ title, fields, row, tags, onApprove, onReject, actioning 
           row[key] !== null && row[key] !== undefined && row[key] !== '' ? (
             <React.Fragment key={key}>
               <dt>{label}</dt>
-              <dd>{String(row[key])}</dd>
+              <dd>
+                {key === 'website' ? (
+                  // A plain hyperlink to review, never rendered/embedded as
+                  // HTML from the submission itself.
+                  <a href={row[key]} target="_blank" rel="noopener noreferrer nofollow">
+                    {row[key]}
+                  </a>
+                ) : (
+                  String(row[key])
+                )}
+              </dd>
             </React.Fragment>
           ) : null
         ))}
