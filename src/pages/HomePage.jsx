@@ -129,7 +129,7 @@ export default function HomePage() {
             </m.p>
             <m.div data-reveal variants={heroRise}>
               <m.span ref={ctaMagnetic.ref} style={ctaMagnetic.style} className="magnetic-wrap">
-                <Link to="/quiz" className="cta-button">Take the quiz</Link>
+                <Link to="/quiz" className="cta-button cta-button--go">Take the quiz</Link>
               </m.span>
             </m.div>
           </m.div>

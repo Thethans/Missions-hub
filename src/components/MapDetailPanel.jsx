@@ -68,8 +68,8 @@ function renderContent({ selected, featured, onExploreFeatured }) {
                   <dd>{featured.pctEvangelical}%</dd>
                 </div>
               </dl>
-              <button type="button" className="cta-button" onClick={() => onExploreFeatured?.(featured)}>
-                Explore on the map &rarr;
+              <button type="button" className="cta-button cta-button--go" onClick={() => onExploreFeatured?.(featured)}>
+                Explore on the map
               </button>
             </div>
           </>

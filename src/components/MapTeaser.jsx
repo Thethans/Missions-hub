@@ -39,7 +39,7 @@ export default function MapTeaser() {
         <h2>See where the need is</h2>
         <p>Explore an interactive map of unreached and under-resourced people groups worldwide.</p>
         <m.span ref={ctaMagnetic.ref} style={ctaMagnetic.style} className="magnetic-wrap">
-          <Link to="/map" className="cta-button">Explore the full map</Link>
+          <Link to="/map" className="cta-button cta-button--go">Explore the full map</Link>
         </m.span>
       </m.div>
     </section>

@@ -674,26 +674,45 @@ html:not([data-app-booted]) [data-reveal] {
    inline-block so it doesn't disturb the button's own layout/centering. */
 .magnetic-wrap { display: inline-block; }
 
+/* Deliberately flat: a solid fill, the site's own --radius (not a pill),
+   and no diagonal gradient/lift-on-hover/glow-shadow — that combination is
+   the single most common "generic SaaS button" recipe, and it was reading
+   as such on every primary CTA site-wide (this class also backs Close/
+   Clear-filters/Reload actions, where an arrow wouldn't make sense — see
+   .cta-button--go below for the subset that actually goes somewhere). */
 .cta-button {
-  display: inline-block;
-  background: linear-gradient(135deg, var(--voyage-teal) 0%, #3a9ca5 100%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--voyage-teal);
   color: white;
   text-decoration: none;
-  padding: var(--space-3) var(--space-8);
-  border-radius: 999px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius);
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 1.05rem;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, background 0.3s ease;
-  box-shadow: 0 4px 16px rgba(43, 110, 118, 0.35);
+  border: none;
+  transition: background 0.25s ease;
 }
 
 .cta-button:hover {
-  background: linear-gradient(135deg, #245e65 0%, #2b8a92 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(43, 110, 118, 0.45);
+  background: #1f545b;
+}
+
+/* Navigational CTAs only (goes to another page/view) — the arrow glyph
+   slides right on hover, matching the "See where those groups are on the
+   map →" text-link convention already used elsewhere on the site. */
+.cta-button--go::after {
+  content: '→';
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cta-button--go:hover::after {
+  transform: translateX(3px);
 }
 
 /* ==== HOME: STATS STRIP ==== */
