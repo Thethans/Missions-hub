@@ -548,7 +548,17 @@ create policy "missionary_profiles_owner_update"
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
--- Church profiles: same pattern (no public "browse churches" needed in Phase 1, but keep symmetry)
+-- Church profiles: same pattern as missionary_profiles above. Originally
+-- owner-only ("no public 'browse churches' needed in Phase 1, but keep
+-- symmetry") — /for-missionaries now needs the same public-read-when-
+-- approved policy missionary_profiles already had, for churches to be
+-- browsable by missionaries the same way missionaries are browsable by
+-- churches on /for-churches.
+drop policy if exists "church_profiles_public_read_approved" on church_profiles;
+create policy "church_profiles_public_read_approved"
+  on church_profiles for select
+  using (status = 'approved');
+
 drop policy if exists "church_profiles_owner_read" on church_profiles;
 create policy "church_profiles_owner_read"
   on church_profiles for select
@@ -585,7 +595,12 @@ create policy "missionary_tags_write"
 drop policy if exists "church_tags_read" on church_doctrinal_tags;
 create policy "church_tags_read"
   on church_doctrinal_tags for select
-  using (auth.uid() = church_id);
+  using (
+    exists (
+      select 1 from church_profiles c
+      where c.id = church_id and (c.status = 'approved' or c.id = auth.uid())
+    )
+  );
 
 drop policy if exists "church_tags_write" on church_doctrinal_tags;
 create policy "church_tags_write"

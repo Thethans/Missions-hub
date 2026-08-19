@@ -19,7 +19,8 @@ const LINKS = [
   { to: '/opportunities', label: 'Opportunities', tag: '04' },
   { to: '/checklist', label: 'Checklist', tag: '05' },
   { to: '/for-churches', label: 'For Churches', tag: '06' },
-  { to: '/about', label: 'About', tag: '07' }
+  { to: '/for-missionaries', label: 'For Missionaries', tag: '07' },
+  { to: '/about', label: 'About', tag: '08' }
 ];
 
 export default function TopNav() {

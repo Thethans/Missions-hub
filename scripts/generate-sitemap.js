@@ -27,6 +27,7 @@ const ROUTES = [
   { path: '/checklist', changefreq: 'monthly', priority: '0.7' },
   { path: '/prayer-map', changefreq: 'weekly', priority: '0.6' },
   { path: '/for-churches', changefreq: 'weekly', priority: '0.6' },
+  { path: '/for-missionaries', changefreq: 'weekly', priority: '0.6' },
   { path: '/about', changefreq: 'monthly', priority: '0.5' },
   { path: '/terms', changefreq: 'yearly', priority: '0.2' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.2' }

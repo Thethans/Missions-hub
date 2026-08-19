@@ -35,6 +35,7 @@ const ROUTES = [
   '/missionary-support/onboarding',
   '/for-churches',
   '/for-churches/onboarding',
+  '/for-missionaries',
   '/admin/review-queue',
   '/about',
   '/terms',

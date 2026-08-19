@@ -20,6 +20,7 @@
     "backfill-sanitize:dry": "node scripts/backfill-sanitize.js --dryRun",
     "generate-component": "node scripts/generate-component.js",
     "generate-sitemap": "node scripts/generate-sitemap.js",
+    "seed-examples": "node scripts/seed-example-profiles.js",
     "og:image": "node scripts/assets/render-og.mjs",
     "icons": "node scripts/assets/render-icons.mjs"
   },

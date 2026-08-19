@@ -2801,6 +2801,23 @@ html:not([data-app-booted]) [data-reveal] {
   border-radius: var(--radius);
 }
 
+/* ChurchDirectory's plain-URL website link (see the "rendered as a normal
+   hyperlink, never embedded" convention noted on church_profiles.website
+   in schema.sql) — its own class rather than reusing .directory-card-desc
+   so the multi-line clamp there doesn't apply to what's always one line. */
+.directory-card-website {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 var(--space-3);
+  font-size: 0.85rem;
+  color: var(--voyage-teal);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.directory-card-website:hover { text-decoration: underline; }
+
 .directory-progress {
   margin-bottom: var(--space-3);
 }
