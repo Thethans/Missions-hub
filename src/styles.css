@@ -99,6 +99,27 @@ html:not([data-app-booted]) [data-reveal] {
   animation: reveal-safety-net 0.01s linear 4s forwards;
 }
 
+/* prefers-reduced-motion visitors get the same un-animated final state, but
+   instantly rather than after the 4s safety-net delay above — and
+   critically, independent of html:data-app-booted, so it also covers the
+   window before hydration runs. Framer Motion's own prefersReduced check
+   (usePrefersReducedMotion.js) already skips the animation once React is
+   mounted, but scripts/prerender.js's static snapshot is one fixed HTML
+   payload shared by every visitor — it can't vary its baked-in inline
+   opacity:0 by a given visitor's OS setting, so without this rule a
+   reduced-motion visitor still briefly (or, with JS blocked, permanently)
+   sees the pre-reveal state despite never wanting the animation at all.
+   !important is required: this is a plain rule, not a CSS animation, so it
+   needs it to outrank Framer's plain (non-!important) inline styles. */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    letter-spacing: normal !important;
+  }
+}
+
 /* ==== LAYOUT SHELL ==== */
 
 .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
