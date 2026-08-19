@@ -19,7 +19,14 @@ const CHURCH_FIELDS = [
   ['state', 'State'],
   ['denomination', 'Denomination'],
   ['giving_capacity_tier', 'Giving capacity'],
-  ['website', 'Website']
+  ['website', 'Website'],
+  ['bio', 'About'],
+  ['missions_focus', 'Missions focus'],
+  ['contact_name', 'Contact name'],
+  ['contact_role', 'Contact role'],
+  ['hosts_short_term_trips', 'Hosts short-term trips'],
+  ['sends_teams', 'Sends teams'],
+  ['hosts_furloughs', 'Hosts furloughs']
 ];
 
 function tagLabels(joinRows, tagKey) {
@@ -34,7 +41,7 @@ function ProfileCard({ title, fields, row, tags, onApprove, onReject, actioning 
       <h3>{title}</h3>
       <dl className="review-card-fields">
         {fields.map(([key, label]) => (
-          row[key] !== null && row[key] !== undefined && row[key] !== '' ? (
+          row[key] !== null && row[key] !== undefined && row[key] !== '' && row[key] !== false ? (
             <React.Fragment key={key}>
               <dt>{label}</dt>
               <dd>

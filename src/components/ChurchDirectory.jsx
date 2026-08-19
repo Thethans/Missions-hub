@@ -1,17 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Globe } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import { CATEGORY_LABELS, groupTagsByCategory } from '../data/doctrinalTagCategories.js';
-import { churchLocationText, churchTagIds, churchTags } from '../data/churchDisplay.js';
+import { churchLocationText, churchTagIds, churchTags, givingCapacityLabel } from '../data/churchDisplay.js';
 
 // Mirrors MissionaryDirectory.jsx's card, trimmed to what church_profiles
 // actually has: no verification level and no support-raised progress bar
-// (both missionary-only fields), and no link to an individual profile page
-// — there's no church-detail route (the symmetric /for-churches/:id one
-// exists for missionaries; nothing plays that role for churches yet), so
-// the card is informational rather than a link target.
+// (both missionary-only fields).
 function ChurchCard({ church }) {
   const tags = churchTags(church).map((t) => t.label);
+  const capacityLabel = givingCapacityLabel(church);
   return (
     <article className="directory-card">
       <div className="directory-card-header">
@@ -20,10 +19,15 @@ function ChurchCard({ church }) {
         )}
       </div>
 
-      <h2 className="directory-card-title">{church.church_name}</h2>
+      <h2 className="directory-card-title">
+        <Link to={`/for-missionaries/${church.id}`}>{church.church_name}</Link>
+      </h2>
+
+      {church.bio && <p className="directory-card-desc">{church.bio}</p>}
 
       <div className="directory-card-meta">
         <span className="directory-card-tag">{churchLocationText(church)}</span>
+        {capacityLabel && <span className="directory-card-tag">{capacityLabel}</span>}
       </div>
 
       {church.website && (

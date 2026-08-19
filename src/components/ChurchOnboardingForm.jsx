@@ -15,7 +15,14 @@ const INITIAL_FORM = {
   state: '',
   denomination: '',
   giving_capacity_tier: '',
-  website: ''
+  website: '',
+  bio: '',
+  missions_focus: '',
+  contact_name: '',
+  contact_role: '',
+  hosts_short_term_trips: false,
+  sends_teams: false,
+  hosts_furloughs: false
 };
 
 // Stored and rendered as a plain URL — never as raw HTML or an embedded
@@ -102,7 +109,14 @@ export default function ChurchOnboardingForm() {
       state: form.state || null,
       denomination: form.denomination || null,
       giving_capacity_tier: form.giving_capacity_tier || null,
-      website: normalizeWebsite(form.website)
+      website: normalizeWebsite(form.website),
+      bio: form.bio || null,
+      missions_focus: form.missions_focus || null,
+      contact_name: form.contact_name || null,
+      contact_role: form.contact_role || null,
+      hosts_short_term_trips: form.hosts_short_term_trips,
+      sends_teams: form.sends_teams,
+      hosts_furloughs: form.hosts_furloughs
     });
 
     if (insertError) {
@@ -211,6 +225,75 @@ export default function ChurchOnboardingForm() {
         />
         <span className="onboarding-form-hint">Shown as a link — never embedded.</span>
       </label>
+
+      <label>
+        About your church
+        <textarea
+          rows={4}
+          value={form.bio}
+          onChange={(e) => updateField('bio', e.target.value)}
+          placeholder="Who you are and your heart for missions…"
+        />
+      </label>
+
+      <label>
+        Current missions focus
+        <textarea
+          rows={3}
+          value={form.missions_focus}
+          onChange={(e) => updateField('missions_focus', e.target.value)}
+          placeholder="Regions or types of work you're already invested in…"
+        />
+      </label>
+
+      <div className="onboarding-form-row">
+        <label>
+          Point of contact
+          <input
+            type="text"
+            value={form.contact_name}
+            onChange={(e) => updateField('contact_name', e.target.value)}
+            placeholder="Name"
+          />
+        </label>
+        <label>
+          Their role
+          <input
+            type="text"
+            value={form.contact_role}
+            onChange={(e) => updateField('contact_role', e.target.value)}
+            placeholder="e.g. Missions Pastor"
+          />
+        </label>
+      </div>
+
+      <fieldset className="onboarding-tag-group">
+        <legend>How your church engages</legend>
+        <label className="onboarding-tag-option">
+          <input
+            type="checkbox"
+            checked={form.hosts_short_term_trips}
+            onChange={(e) => updateField('hosts_short_term_trips', e.target.checked)}
+          />
+          {' '}Hosts short-term trips
+        </label>
+        <label className="onboarding-tag-option">
+          <input
+            type="checkbox"
+            checked={form.sends_teams}
+            onChange={(e) => updateField('sends_teams', e.target.checked)}
+          />
+          {' '}Sends teams
+        </label>
+        <label className="onboarding-tag-option">
+          <input
+            type="checkbox"
+            checked={form.hosts_furloughs}
+            onChange={(e) => updateField('hosts_furloughs', e.target.checked)}
+          />
+          {' '}Hosts furloughs
+        </label>
+      </fieldset>
 
       {tagsError && (
         <p className="onboarding-error" role="alert">

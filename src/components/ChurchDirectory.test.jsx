@@ -80,6 +80,10 @@ describe('ChurchDirectory', () => {
     const link = screen.getByRole('link', { name: /gracecommunity\.example\.com/i });
     expect(link).toHaveAttribute('href', 'https://gracecommunity.example.com');
     expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: 'Grace Community Church' })).toHaveAttribute(
+      'href',
+      '/for-missionaries/c-1'
+    );
   });
 
   it('falls back to state alone and omits the website link when a church has neither city nor a site', async () => {
@@ -89,7 +93,9 @@ describe('ChurchDirectory', () => {
     expect(
       within(card).getByText((_, el) => el?.tagName === 'SPAN' && el.textContent.trim() === 'OK')
     ).toBeInTheDocument();
-    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    const links = within(card).getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/for-missionaries/c-2');
   });
 
   it('excludes states with no churches from the state filter, includes ones that have one', async () => {

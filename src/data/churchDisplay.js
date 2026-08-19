@@ -21,3 +21,21 @@ export function churchTags(church) {
     .map((r) => r.doctrinal_tags)
     .filter(Boolean);
 }
+
+const GIVING_CAPACITY_LABELS = {
+  small: 'Small giving capacity',
+  medium: 'Medium giving capacity',
+  large: 'Large giving capacity'
+};
+
+export function givingCapacityLabel(church) {
+  return GIVING_CAPACITY_LABELS[church.giving_capacity_tier] || null;
+}
+
+export function engagementLabels(church) {
+  const labels = [];
+  if (church.hosts_short_term_trips) labels.push('Hosts short-term trips');
+  if (church.sends_teams) labels.push('Sends teams');
+  if (church.hosts_furloughs) labels.push('Hosts furloughs');
+  return labels;
+}

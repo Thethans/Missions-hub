@@ -91,7 +91,14 @@ const CHURCHES = [
       state: 'MO',
       denomination: 'Presbyterian (PCA)',
       giving_capacity_tier: 'large',
-      website: 'https://example.com/firstpres-springfield'
+      website: 'https://example.com/firstpres-springfield',
+      bio: 'A congregation of about 600 with a dedicated missions committee that has supported field workers for over 30 years.',
+      missions_focus: 'Church planting and theological education in East Africa and Southeast Asia.',
+      contact_name: 'Robert Hail',
+      contact_role: 'Missions Pastor',
+      hosts_short_term_trips: true,
+      sends_teams: true,
+      hosts_furloughs: true
     },
     tagIds: ['paedobaptist', 'complementarian', 'reformed_soteriology', 'elder_led_polity']
   },
@@ -103,7 +110,14 @@ const CHURCHES = [
       state: 'TX',
       denomination: 'Non-denominational',
       giving_capacity_tier: 'medium',
-      website: 'https://example.com/grace-community-dallas'
+      website: 'https://example.com/grace-community-dallas',
+      bio: 'A growing multi-site church seeking to build long-term partnerships with a small number of missionary families.',
+      missions_focus: 'Unreached people groups, with a particular interest in creative-access countries.',
+      contact_name: 'Priya Nair',
+      contact_role: 'Global Outreach Director',
+      hosts_short_term_trips: true,
+      sends_teams: false,
+      hosts_furloughs: true
     },
     tagIds: ['credobaptist', 'egalitarian', 'continuationist']
   },
@@ -115,7 +129,14 @@ const CHURCHES = [
       state: 'BC',
       denomination: 'Baptist',
       giving_capacity_tier: 'small',
-      website: null
+      website: null,
+      bio: 'A small congregation that prioritizes prayer support and personal relationships with the missionaries it partners with.',
+      missions_focus: null,
+      contact_name: 'Sam Okonkwo',
+      contact_role: 'Elder',
+      hosts_short_term_trips: false,
+      sends_teams: false,
+      hosts_furloughs: false
     },
     tagIds: ['credobaptist', 'congregational_polity']
   }

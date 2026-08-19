@@ -489,6 +489,13 @@ create table if not exists church_profiles (
   -- Same convention as missionary_profiles.website — plain URL, rendered as
   -- a hyperlink, never embedded.
   website text,
+  bio text,
+  missions_focus text,
+  contact_name text,
+  contact_role text,
+  hosts_short_term_trips boolean not null default false,
+  sends_teams boolean not null default false,
+  hosts_furloughs boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -499,11 +506,18 @@ create table if not exists church_doctrinal_tags (
   primary key (church_id, tag_id)
 );
 
--- One-time ALTERs for the `website` column on both profile tables — the
+-- One-time ALTERs for columns added after the tables' first deploy — the
 -- `create table if not exists` blocks above are no-ops against an already-
--- deployed database, so the column has to be added explicitly here too.
+-- deployed database, so each new column has to be added explicitly here too.
 alter table missionary_profiles add column if not exists website text;
 alter table church_profiles add column if not exists website text;
+alter table church_profiles add column if not exists bio text;
+alter table church_profiles add column if not exists missions_focus text;
+alter table church_profiles add column if not exists contact_name text;
+alter table church_profiles add column if not exists contact_role text;
+alter table church_profiles add column if not exists hosts_short_term_trips boolean not null default false;
+alter table church_profiles add column if not exists sends_teams boolean not null default false;
+alter table church_profiles add column if not exists hosts_furloughs boolean not null default false;
 
 create table if not exists intro_requests (
   id uuid primary key default gen_random_uuid(),

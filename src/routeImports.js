@@ -12,6 +12,7 @@ export const routeImports = {
   '/missionary-support/onboarding': () => import('./pages/MissionaryOnboardingPage.jsx'),
   '/for-churches': () => import('./pages/ForChurchesPage.jsx'),
   '/for-missionaries': () => import('./pages/ForMissionariesPage.jsx'),
+  '/for-missionaries/:churchId': () => import('./pages/ChurchProfilePage.jsx'),
   '/for-churches/:missionaryId': () => import('./pages/MissionaryProfilePage.jsx'),
   '/for-churches/onboarding': () => import('./pages/ChurchOnboardingPage.jsx'),
   '/admin/review-queue': () => import('./pages/AdminReviewQueuePage.jsx'),

@@ -87,6 +87,32 @@ describe('ChurchOnboardingForm', () => {
     expect(screen.getByText(/request introductions yet/i)).toBeInTheDocument();
   });
 
+  it('submits bio, missions focus, contact info, and engagement checkboxes', async () => {
+    const user = userEvent.setup();
+    render(<ChurchOnboardingForm />);
+    await waitFor(() => screen.getByText('Baptism'));
+
+    await fillRequiredFields(user);
+    await user.type(screen.getByLabelText(/about your church/i), 'A congregation that loves missions.');
+    await user.type(screen.getByLabelText(/current missions focus/i), 'East Asia church planting.');
+    await user.type(screen.getByLabelText(/point of contact/i), 'Jamie Lee');
+    await user.type(screen.getByLabelText(/their role/i), 'Missions Pastor');
+    await user.click(screen.getByLabelText(/hosts short-term trips/i));
+    await user.click(screen.getByLabelText(/sends teams/i));
+    await user.click(screen.getByRole('button', { name: /submit for review/i }));
+
+    await waitFor(() => expect(insertProfile).toHaveBeenCalled());
+    expect(insertProfile.mock.calls[0][0]).toMatchObject({
+      bio: 'A congregation that loves missions.',
+      missions_focus: 'East Asia church planting.',
+      contact_name: 'Jamie Lee',
+      contact_role: 'Missions Pastor',
+      hosts_short_term_trips: true,
+      sends_teams: true,
+      hosts_furloughs: false
+    });
+  });
+
   it('shows an error and does not confirm if the profile insert fails', async () => {
     profileInsertError = { message: 'duplicate key value violates unique constraint' };
     const user = userEvent.setup();
