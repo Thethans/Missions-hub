@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manifest — Post-Graduation Packing List</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --paper:#111411;
+    --paper-2:#171b17;
+    --line:#2b322b;
+    --ink:#e9ecdf;
+    --ink-dim:#93a08c;
+    --brass:#c8a24d;
+    --brass-dim:#8a7038;
+    --ok:#7fae6f;
+    --bad:#c07a5c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'JetBrains Mono',monospace;
+    padding:0 0 130px;
+  }
+  header{
+    padding:38px 24px 22px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  header::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:repeating-linear-gradient(90deg, transparent, transparent 39px, var(--line) 40px);
+    opacity:.35;
+    pointer-events:none;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,5vw,42px);
+    margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+
+  .stats{
+    display:flex; gap:0; margin-top:22px; border:1px solid var(--line); border-radius:2px; overflow:hidden;
+    max-width:700px; flex-wrap:wrap;
+  }
+  .stat{flex:1; min-width:120px; padding:12px 16px; border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .k{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em;}
+  .stat .v{font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; color:var(--brass); margin-top:2px;}
+  .stat .v.delta-pos{color:var(--bad);}
+  .stat .v.delta-neg{color:var(--ok);}
+  .stat .v.delta-zero{color:var(--ink-dim);}
+
+  main{max-width:880px; margin:0 auto; padding:8px 24px;}
+
+  .cat{margin-top:34px;}
+  .cat-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--brass-dim); padding-bottom:8px; margin-bottom:4px;
+  }
+  .cat-head h2{
+    font-family:'Space Grotesk',sans-serif; font-size:15px; text-transform:uppercase; letter-spacing:.08em;
+    margin:0; color:var(--ink);
+  }
+  .cat-head .meta{font-size:11px; color:var(--ink-dim);}
+
+  .item{
+    display:grid;
+    grid-template-columns:22px 1fr 56px auto auto;
+    gap:14px;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px dashed var(--line);
+    transition:opacity .15s ease;
+  }
+  .item.alt{opacity:.55;}
+  .item.alt .name::after{content:" (optional)"; color:var(--ink-dim); font-size:11px;}
+  .item.grouped-off{opacity:.28;}
+  .item.grouped-off .name::after{content:" (swapped out)"; color:var(--ink-dim); font-size:11px;}
+
+  .chk{
+    appearance:none; width:16px; height:16px; border:1px solid var(--ink-dim); border-radius:2px;
+    cursor:pointer; position:relative; background:transparent;
+  }
+  .chk:checked{background:var(--ok); border-color:var(--ok);}
+  .chk:checked::after{
+    content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:var(--paper); font-weight:700;
+  }
+  .chk:disabled{cursor:not-allowed; opacity:.3;}
+
+  .name-wrap{min-width:0;}
+  .name a{
+    color:var(--ink); text-decoration:none; font-size:13.5px; font-weight:500;
+    border-bottom:1px solid var(--brass-dim);
+  }
+  .name a:hover{color:var(--brass); border-color:var(--brass);}
+  .item.checked .name a{ color:var(--ink-dim); text-decoration:line-through; border-color:transparent;}
+
+  .qty{
+    display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-dim);
+  }
+  .qty input{
+    width:34px; background:var(--paper-2); border:1px solid var(--line); color:var(--ink);
+    font-family:'JetBrains Mono',monospace; font-size:12px; text-align:center; border-radius:2px; padding:3px 2px;
+  }
+
+  .price{font-size:13px; color:var(--brass); text-align:right; white-space:nowrap;}
+  .weight{font-size:12px; color:var(--ink-dim); text-align:right; white-space:nowrap; min-width:64px;}
+
+  footer{
+    position:fixed; bottom:0; left:0; right:0;
+    background:var(--paper-2); border-top:1px solid var(--brass-dim);
+    padding:14px 24px;
+    display:flex; justify-content:center; gap:40px; flex-wrap:wrap;
+    backdrop-filter:blur(4px);
+  }
+  .f-stat{text-align:center;}
+  .f-stat .k{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em;}
+  .f-stat .v{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--brass);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Post-Graduation Packing List</h1>
+  <div class="stats">
+    <div class="stat"><div class="k">Total</div><div class="v" id="hdr-total">$0</div></div>
+    <div class="stat"><div class="k">± vs Baseline</div><div class="v" id="hdr-delta">$0</div></div>
+    <div class="stat"><div class="k">Weight</div><div class="v" id="hdr-weight">0 kg</div></div>
+    <div class="stat"><div class="k">Items</div><div class="v" id="hdr-count">0/0</div></div>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<footer>
+  <div class="f-stat"><div class="k">Purchased</div><div class="v" id="f-total">$0</div></div>
+  <div class="f-stat"><div class="k">Remaining</div><div class="v" id="f-remaining">$0</div></div>
+  <div class="f-stat"><div class="k">Pack Weight</div><div class="v" id="f-weight">0.0 kg</div></div>
+</footer>
+
+<script>
+const DATA = [
+  { cat: "Bag", items: [
+    { name:"Aer Travel Pack 4 (35L)", url:"https://aersf.com/products/travel-pack-4-35l", price:259, weight:1.5, qty:1 },
+    { name:"Able Carry Max EDC (Ripstop, Black)", url:"https://ablecarry.com/products/max-edc-ripstop-black?variant=51046720569656", price:165, weight:0.9, qty:1 },
+  ]},
+  { cat: "Electronics & Charging", items: [
+    { name:"Anker Prime 20,000mAh 100W Power Bank", url:"https://www.anker.com/products/a1336", price:150, weight:0.48, qty:1 },
+    { name:"Anker Prime 67W GaN Wall Charger", url:"https://www.anker.com/products/a2669", price:60, weight:0.13, qty:1 },
+    { name:"Anker 100W USB-C Braided Cable (6ft)", url:"https://www.anker.com/collections/usb-c-cables", price:20, weight:0.06, qty:2 },
+    { name:"Small dual USB-C/USB-A thumb drive", url:"https://www.amazon.com/s?k=dual+usb-c+usb-a+flash+drive", price:15, weight:0.02, qty:1 },
+    { name:"Samsung T7 Shield 1TB Portable SSD", url:"https://www.samsung.com/us/computing/memory-storage/portable-solid-state-drives/", price:130, weight:0.10, qty:1 },
+    { name:"Kindle Paperwhite", url:"https://www.amazon.com/kindle-paperwhite/", price:160, weight:0.21, qty:1, alt:true },
+  ]},
+  { cat: "Packing Organization", items: [
+    { name:"Peak Design Packable Tote", url:"https://www.peakdesign.com/products/packable-tote", price:40, weight:0.15, qty:1, alt:true },
+    { name:"Peak Design Small Packing Cube", url:"https://www.peakdesign.com/products/packing-cube", price:35, weight:0.09, qty:2 },
+    { name:"Osprey Ultralight Roll Organizer", url:"https://www.osprey.com/ultralight-roll-organizer-ulrollorgs23-550", price:35, weight:0.13, qty:1 },
+    { name:"Packing cube, clean/dirty split", url:"https://www.amazon.com/s?k=packing+cube+clean+dirty+side", price:20, weight:0.12, qty:1 },
+    { name:"Shoe pouch (dirty shoes)", url:"https://www.amazon.com/s?k=travel+shoe+pouch+bag", price:12, weight:0.05, qty:1 },
+    { name:"Toiletry bag", url:"https://www.amazon.com/s?k=hanging+toiletry+bag", price:25, weight:0.20, qty:1 },
+    { name:"Clothesline", url:"https://www.amazon.com/s?k=travel+clothesline", price:8, weight:0.03, qty:1, alt:true },
+    { name:"Matador Pocket Blanket 4.0", url:"https://www.matadorequipment.com/products/pocket-blanket-black", price:35, weight:0.11, qty:1, alt:true },
+  ]},
+  { cat: "Security & Utility", items: [
+    { name:"Apple AirTag", url:"https://www.apple.com/airtag/", price:29, weight:0.011, qty:1, group:"tracker", isDefault:true },
+    { name:"Epicka Wallet Card Tracker", url:"https://www.amazon.com/s?k=epicka+wallet+card+tracker+find+my", price:20, weight:0.01, qty:1, alt:true, group:"tracker", isDefault:false },
+    { name:"iPhone case, port protection", url:"https://www.amazon.com/s?k=iphone+case+port+dust+plug+protection", price:20, weight:0.03, qty:1 },
+    { name:"Magnetic/TSA-friendly belt", url:"https://www.amazon.com/s?k=magnetic+buckle+no+metal+belt+travel", price:30, weight:0.15, qty:1 },
+    { name:"HeroClip Carabiner Clip", url:"https://www.gearaid.com/products/heroclip", price:15, weight:0.06, qty:1, alt:true },
+    { name:"Loop Earplugs", url:"https://loopearplugs.com/", price:25, weight:0.01, qty:1, alt:true },
+    { name:"Frisbee (soft travel)", url:"https://www.amazon.com/s?k=travel+frisbee+soft", price:10, weight:0.10, qty:1, alt:true },
+  ]},
+  { cat: "Water Bottle", items: [
+    { name:"Owala FreeSip 24oz", url:"https://owalalife.com/products/freesip", price:40, weight:0.40, qty:1, group:"bottle", isDefault:true },
+    { name:"Vapur Eclipse (collapsible)", url:"https://vapur.us/collections/all", price:15, weight:0.07, qty:1, alt:true, group:"bottle", isDefault:false },
+  ]},
+  { cat: "Footwear", items: [
+    { name:"Salomon XT-6", url:"https://www.salomon.com/en-us/c/collection/xt-6", price:185, weight:0.85, qty:1 },
+    { name:"adidas Terrex Freehiker 3 Ultra GORE-TEX", url:"https://www.adidas.com/us/terrex-freehiker-3-ultra-gore-tex-hiking-shoes/KI8263.html", price:200, weight:0.90, qty:1 },
+    { name:'"Zero Z Trail EV" (competitor TBD)', url:"https://www.amazon.com/s?k=zero+drop+trail+shoe", price:130, weight:0.60, qty:1, alt:true },
+  ]},
+  { cat: "Tops", items: [
+    { name:"Outlier Dreamweight Merino Cut Zero Tee", url:"https://outlier.nyc/products/dreamweight-merino-cut-zero-t-shirt", price:106, weight:0.15, qty:2 },
+    { name:"Proof 72-Hour Merino Button-Up", url:"https://huckberry.com/store/proof/category/p/56524-72-hour-merino-tee", price:88, weight:0.25, qty:2 },
+    { name:"Unbound Merino Compact Travel Hoodie", url:"https://unboundmerino.com/products/compact-travel-hoodie", price:198, weight:0.45, qty:1 },
+  ]},
+  { cat: "Bottoms", items: [
+    { name:"Outlier New Duckgreens (travel pant)", url:"https://outlier.nyc/collections/pants", price:158, weight:0.40, qty:2 },
+    { name:"Lightweight athletic shorts", url:"https://www.amazon.com/s?k=lightweight+athletic+travel+shorts", price:35, weight:0.15, qty:1 },
+    { name:"Hybrid shorts", url:"https://www.amazon.com/s?k=hybrid+swim+travel+shorts", price:45, weight:0.20, qty:1, alt:true },
+  ]},
+  { cat: "Base Layers", items: [
+    { name:"Merino boxers ×3 pack (Unbound)", url:"https://unboundmerino.com/collections/frontpage", price:135, weight:0.30, qty:1 },
+  ]},
+];
+
+const main = document.getElementById('main');
+let flatItems = [];
+
+DATA.forEach((group, gi) => {
+  const section = document.createElement('div');
+  section.className = 'cat';
+  section.innerHTML = `
+    <div class="cat-head">
+      <h2>${group.cat}</h2>
+      <div class="meta" id="cat-meta-${gi}"></div>
+    </div>
+  `;
+  group.items.forEach((item, ii) => {
+    const id = `i-${gi}-${ii}`;
+    const full = {...item, id};
+    flatItems.push(full);
+    const row = document.createElement('div');
+    row.className = 'item' + (item.alt ? ' alt' : '');
+    row.id = 'row-' + id;
+    row.innerHTML = `
+      <input type="checkbox" class="chk" id="${id}" data-price="${item.price}" data-weight="${item.weight}" ${item.group ? `data-group="${item.group}"` : ''}>
+      <div class="name-wrap"><span class="name"><a href="${item.url}" target="_blank" rel="noopener">${item.name}</a></span></div>
+      <div class="qty">×<input type="number" min="0" value="${item.qty}" id="qty-${id}" data-id="${id}"></div>
+      <div class="price" id="price-${id}">$${(item.price*item.qty).toLocaleString()}</div>
+      <div class="weight" id="weight-${id}">${(item.weight*item.qty).toFixed(2)} kg</div>
+    `;
+    section.appendChild(row);
+  });
+  main.appendChild(section);
+});
+
+const allBoxes = () => Array.from(document.querySelectorAll('.chk'));
+const allQtys = () => Array.from(document.querySelectorAll('.qty input'));
+
+function getQty(id){
+  const el = document.getElementById('qty-'+id);
+  return el ? Math.max(parseInt(el.value)||0, 0) : 1;
+}
+
+function getGroupChosenId(groupName){
+  const item = flatItems.find(i => i.group === groupName && document.getElementById(i.id).checked);
+  return item ? item.id : null;
+}
+
+function recalc(){
+  // Resolve group exclusivity: disable + dim the non-chosen sibling(s)
+  const groupNames = [...new Set(flatItems.filter(i=>i.group).map(i=>i.group))];
+  const chosenByGroup = {};
+  groupNames.forEach(g => chosenByGroup[g] = getGroupChosenId(g));
+
+  flatItems.forEach(item=>{
+    const box = document.getElementById(item.id);
+    const row = document.getElementById('row-'+item.id);
+    if(item.group){
+      const chosen = chosenByGroup[item.group];
+      if(chosen && chosen !== item.id){
+        box.disabled = true;
+        if(box.checked) box.checked = false;
+        row.classList.add('grouped-off');
+      } else {
+        box.disabled = false;
+        row.classList.remove('grouped-off');
+      }
+    }
+  });
+
+  let coreBaseline = 0, currentTotal = 0, currentWeight = 0;
+  let purchasedCost = 0, purchasedWeight = 0, checkedCount = 0;
+
+  flatItems.forEach(item=>{
+    const qty = getQty(item.id);
+    document.getElementById('price-'+item.id).textContent = '$' + (item.price*qty).toLocaleString();
+    document.getElementById('weight-'+item.id).textContent = (item.weight*qty).toFixed(2) + ' kg';
+
+    // baseline: default item in group, or non-alt ungrouped item
+    const isBaselineItem = item.group ? item.isDefault : !item.alt;
+    if(isBaselineItem) coreBaseline += item.price*qty;
+
+    // resolved inclusion in "current" totals
+    let included;
+    if(item.group){
+      const chosen = chosenByGroup[item.group];
+      included = chosen ? (chosen === item.id) : item.isDefault;
+    } else {
+      included = !item.alt || document.getElementById(item.id).checked;
+    }
+    if(included){ currentTotal += item.price*qty; currentWeight += item.weight*qty; }
+
+    const box = document.getElementById(item.id);
+    if(box.checked){
+      document.getElementById('row-'+item.id).classList.add('checked');
+      purchasedCost += item.price*qty;
+      purchasedWeight += item.weight*qty;
+      checkedCount++;
+    } else {
+      document.getElementById('row-'+item.id).classList.remove('checked');
+    }
+  });
+
+  const delta = currentTotal - coreBaseline;
+  const deltaEl = document.getElementById('hdr-delta');
+  deltaEl.textContent = (delta > 0 ? '+$' : delta < 0 ? '-$' : '$') + Math.abs(delta).toLocaleString();
+  deltaEl.className = 'v ' + (delta > 0 ? 'delta-pos' : delta < 0 ? 'delta-neg' : 'delta-zero');
+
+  document.getElementById('hdr-total').textContent = '$' + currentTotal.toLocaleString();
+  document.getElementById('hdr-weight').textContent = currentWeight.toFixed(1) + ' kg';
+  document.getElementById('hdr-count').textContent = checkedCount + '/' + flatItems.length;
+
+  document.getElementById('f-total').textContent = '$' + purchasedCost.toLocaleString();
+  document.getElementById('f-remaining').textContent = '$' + Math.max(currentTotal-purchasedCost,0).toLocaleString();
+  document.getElementById('f-weight').textContent = purchasedWeight.toFixed(1) + ' kg';
+}
+
+allBoxes().forEach(b => b.addEventListener('change', recalc));
+allQtys().forEach(q => q.addEventListener('input', recalc));
+recalc();
+</script>
+
+</body>
+</html>
