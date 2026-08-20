@@ -2855,6 +2855,84 @@ html:not([data-app-booted]) [data-reveal] {
   border-radius: 999px;
 }
 
+/* ==== DIRECTORY PAGE EXTRAS (stat kicker, how it works, CTA) — shared by
+   ForChurchesPage and ForMissionariesPage ==== */
+
+.page-hero-stat {
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warm-clay);
+}
+
+.how-it-works {
+  margin-top: var(--space-16);
+}
+
+.how-it-works h2 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-6);
+}
+
+.how-it-works-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.how-it-works-step > div {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.how-it-works-number {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.how-it-works-step h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-1);
+}
+
+.how-it-works-step p {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+.directory-cta {
+  margin-top: var(--space-16);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  border-radius: var(--radius);
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  box-shadow: var(--glass-light-sheen);
+}
+
+.directory-cta h2 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-2);
+}
+
+.directory-cta p {
+  margin: 0 0 var(--space-4);
+  color: var(--muted-text);
+}
+
 /* ==== MISSIONARY PROFILE (/for-churches/:missionaryId) ==== */
 
 .profile-detail-page-body {
