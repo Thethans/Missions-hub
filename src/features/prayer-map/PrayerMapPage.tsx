@@ -4,6 +4,7 @@ import PrayerWorldMap from './components/PrayerWorldMap';
 import MissionaryCard from './components/MissionaryCard';
 import MemberStatusBadge from './components/MemberStatusBadge';
 import PrototypeBadge from './components/PrototypeBadge';
+import HowToPray from './components/HowToPray';
 import IdleToast from './components/IdleToast';
 import MemberLoginSheet from './components/sheets/MemberLoginSheet';
 import PaySheet from './components/sheets/PaySheet';
@@ -70,6 +71,8 @@ export default function PrayerMapPage() {
         </p>
         <PrototypeBadge />
       </section>
+
+      <HowToPray />
 
       <div className="page-map">
         {/* PrayerWorldMap builds its markers exactly once on mount (SPEC §6),

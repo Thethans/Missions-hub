@@ -1321,6 +1321,91 @@ html:not([data-app-booted]) [data-reveal] {
   .map-teaser-content { padding: var(--space-8) var(--space-6); }
 }
 
+/* ==== HOME: AGENCY MARQUEE ==== */
+
+.agency-marquee {
+  padding: var(--space-12) 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+.agency-marquee-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-6);
+}
+
+.agency-marquee-track {
+  /* Fades the scrolling list into the page background at both edges
+     instead of a hard clip, so names visibly enter/exit rather than
+     popping in and out. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.agency-marquee-list {
+  display: flex;
+  width: max-content;
+  gap: var(--space-8);
+  animation: agency-marquee-scroll 40s linear infinite;
+}
+
+.agency-marquee-item {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--ink-navy);
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+@keyframes agency-marquee-scroll {
+  from { transform: translateX(0); }
+  /* Exactly half the track's width — LOOP duplicates the name list once,
+     so this lands the second copy where the first one started, making the
+     loop seamless instead of jumping. */
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agency-marquee-list { animation: none; }
+  .agency-marquee-track { overflow-x: auto; }
+}
+
+/* ==== HOME: PARTNER QUOTE PLACEHOLDER ==== */
+
+.partner-quote-placeholder {
+  max-width: 560px;
+  margin: 0 auto var(--space-12);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted-text);
+}
+
+.partner-quote-placeholder svg {
+  color: var(--warm-clay);
+  margin-bottom: var(--space-3);
+}
+
+.partner-quote-placeholder-label {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-navy);
+  margin: 0 0 var(--space-2);
+}
+
+.partner-quote-placeholder-note {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* ==== HOME: FAQ ==== */
 
 /* A SectionDivider precedes this section (top edge more compact, --space-12)

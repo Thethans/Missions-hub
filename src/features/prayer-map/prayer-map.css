@@ -28,6 +28,58 @@
   font-weight: 600;
 }
 
+.pm-how-it-works {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.pm-how-it-works h2 {
+  font-family: var(--font-display);
+  margin: 0 0 var(--space-6);
+}
+
+.pm-how-it-works-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.pm-how-it-works-step > div {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.pm-how-it-works-number {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.pm-how-it-works-step h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-1);
+}
+
+.pm-how-it-works-step p {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+@media (max-width: 640px) {
+  .pm-how-it-works { padding: var(--space-6) var(--space-4); }
+}
+
 .pm-map-wrap {
   position: relative;
   flex: 1;

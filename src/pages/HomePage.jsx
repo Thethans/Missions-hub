@@ -5,6 +5,8 @@ import StatsStrip from '../components/StatsStrip.jsx';
 import JourneySection from '../components/JourneySection.jsx';
 import Capabilities from '../components/Capabilities.jsx';
 import MapTeaser from '../components/MapTeaser.jsx';
+import AgencyMarquee from '../components/AgencyMarquee.jsx';
+import PartnerQuotePlaceholder from '../components/PartnerQuotePlaceholder.jsx';
 import Faq from '../components/Faq.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
@@ -146,6 +148,8 @@ export default function HomePage() {
       <Capabilities />
       <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
       <MapTeaser />
+      <AgencyMarquee />
+      <PartnerQuotePlaceholder />
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
       <Faq />
       <Footer />
