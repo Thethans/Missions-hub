@@ -127,10 +127,15 @@ export default function HomePage() {
             <m.p data-reveal variants={heroRise}>
               Find the people still waiting to hear, the agencies who can send you, and everything in between.
             </m.p>
-            <m.div data-reveal variants={heroRise}>
+            <m.div className="hero-cta-row" data-reveal variants={heroRise}>
               <m.span ref={ctaMagnetic.ref} style={ctaMagnetic.style} className="magnetic-wrap">
                 <Link to="/quiz" className="cta-button cta-button--go">Take the quiz</Link>
               </m.span>
+              {/* Not everyone who lands here is ready to answer 8 questions
+                  yet — a lighter, no-commitment path into the same data the
+                  quiz eventually points back to (the eyebrow above already
+                  promises "live map"), so the hero isn't quiz-or-nothing. */}
+              <Link to="/map" className="hero-secondary-link">or see the map</Link>
             </m.div>
           </m.div>
         </m.div>
