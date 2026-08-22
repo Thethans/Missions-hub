@@ -1834,6 +1834,34 @@ html:not([data-app-booted]) [data-reveal] {
   background: radial-gradient(ellipse at center, transparent 55%, rgba(16, 26, 44, 0.28) 100%);
 }
 
+/* Mouse-only quick-preview label that follows the cursor while hovering a
+   point — position:fixed paired with the raw clientX/clientY WorldMap.jsx
+   already reads means no scroll-offset math is needed. Dark enough to read
+   over both light land tiles and dark ocean (same reasoning as
+   .map-popup-card's own opacity choice), offset up-right so the label
+   doesn't sit directly on top of the cursor/point it's naming.
+   pointer-events:none is required, not incidental: without it the label
+   would intercept the mousemove events that position it, which is exactly
+   the kind of feedback loop that causes flicker. */
+.map-hover-preview {
+  position: fixed;
+  z-index: 20;
+  transform: translate(14px, -100%);
+  background: rgba(22, 35, 59, 0.9);
+  color: var(--atlas-paper);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ==== MAP: DETAIL PANEL ==== */
 
 .map-detail {

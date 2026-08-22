@@ -115,6 +115,13 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // needed (not just id) because setFeatureState/clearing it must target
   // the specific per-bucket source that feature actually lives in.
   const hoveredRef = useRef(null);
+  // { name, x, y } for the lightweight hover-preview label (mouse-only, by
+  // nature — a canvas point has no equivalent "focus" event, so this is a
+  // supplement to MapAccessibleSearch, not a replacement for it: that's
+  // still the real keyboard/screen-reader path to a group's name). x/y are
+  // viewport-relative (native MouseEvent clientX/clientY), paired with a
+  // position:fixed label so no scroll-offset math is needed.
+  const [hoverPreview, setHoverPreview] = useState(null);
   const selectedRef = useRef(null);
   const activeRef = useRef(null);
   const religionActiveRef = useRef(null);
@@ -410,11 +417,16 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       map.on('mousemove', pointsLayerIds, (e) => {
         if (!e.features.length) return;
         const next = e.features[0];
-        if (hoveredRef.current) {
+        if (hoveredRef.current && hoveredRef.current.id !== next.id) {
           map.setFeatureState({ source: hoveredRef.current.source, id: hoveredRef.current.id }, { hover: false });
         }
         hoveredRef.current = { id: next.id, source: next.source };
         map.setFeatureState({ source: next.source, id: next.id }, { hover: true });
+        setHoverPreview({
+          name: next.properties.name,
+          x: e.originalEvent.clientX,
+          y: e.originalEvent.clientY
+        });
       });
       map.on('mouseenter', pointsLayerIds, () => (map.getCanvas().style.cursor = 'pointer'));
       map.on('mouseleave', pointsLayerIds, () => {
@@ -423,6 +435,7 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
           map.setFeatureState({ source: hoveredRef.current.source, id: hoveredRef.current.id }, { hover: false });
         }
         hoveredRef.current = null;
+        setHoverPreview(null);
       });
     });
 
@@ -584,6 +597,18 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         </>
       )}
       {selected && <MapPopupCard properties={selected} onClose={() => onSelect(null)} />}
+      {/* Mouse-only quick preview — aria-hidden since it's purely
+          decorative next to the cursor; MapAccessibleSearch remains the
+          real accessible way to find a group's name without a mouse. */}
+      {hoverPreview && (
+        <div
+          className="map-hover-preview"
+          aria-hidden="true"
+          style={{ left: hoverPreview.x, top: hoverPreview.y }}
+        >
+          {hoverPreview.name}
+        </div>
+      )}
     </div>
   );
 }
