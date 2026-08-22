@@ -2653,6 +2653,17 @@ html:not([data-app-booted]) [data-reveal] {
 
 /* ==== MISSIONARY DIRECTORY (/for-churches) ==== */
 
+/* Shared by ForChurchesPage and ForMissionariesPage — .directory itself
+   (and the how-it-works/CTA sections beside it) carried no padding or
+   max-width of their own, unlike .opp-explorer's equivalent wrapper, so
+   content sat flush against the hero and viewport edges. This gives all
+   three sections one consistent frame instead of each fending for itself. */
+.directory-page-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-16);
+}
+
 .directory {
   display: flex;
   flex-direction: column;

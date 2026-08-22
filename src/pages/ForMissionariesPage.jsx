@@ -41,14 +41,16 @@ export default function ForMissionariesPage() {
         <DirectoryStatKicker table="church_profiles" label="approved churches" />
       </section>
       <div className="page-body">
-        <ChurchDirectory />
-        <HowItWorks steps={STEPS} />
-        <DirectoryCTA
-          heading="Are you a missionary?"
-          body="Create your missionary profile so churches can find and support you."
-          linkTo="/missionary-support/onboarding"
-          linkLabel="Create your missionary profile"
-        />
+        <div className="directory-page-content">
+          <ChurchDirectory />
+          <HowItWorks steps={STEPS} />
+          <DirectoryCTA
+            heading="Are you a missionary?"
+            body="Create your missionary profile so churches can find and support you."
+            linkTo="/missionary-support/onboarding"
+            linkLabel="Create your missionary profile"
+          />
+        </div>
       </div>
       <Footer />
     </>
