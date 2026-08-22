@@ -188,54 +188,71 @@ html:not([data-app-booted]) [data-reveal] {
   text-decoration: none;
 }
 
-/* Brand lockup — the "F" monogram and the "Fielded" wordmark, from the
-   Atlas brand toolkit ("Fielded Logo Variations"). One ember accent (see
-   --brand-ember) does double duty: a plain circle diacritic on the bare F,
-   and the wordmark "i"'s own tittle recolored in place (see
-   .brand-lockup-i-dot below for why it's a clipped duplicate glyph rather
-   than a positioned circle). */
+/* Brand lockup — a constant icon mark (see .brand-mark below) plus the
+   "Fielded" wordmark, which collapses away on scroll leaving just the mark
+   (TopNav's scroll-collapsed state). Replaces the old bare "F" monogram +
+   positioned ember dot from the original Atlas brand toolkit. */
 .brand-lockup {
   position: relative;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: var(--space-2);
   font-family: var(--font-display);
   font-weight: 600;
 }
 
-.brand-lockup-f { position: relative; }
+.brand-lockup-word { white-space: nowrap; }
 
-.brand-lockup-suffix { position: relative; white-space: nowrap; }
+/* The mark itself: a route arcing from a small hollow "sending" ring to a
+   solid, pulsing "field" dot — the hero's own Living Atlas grammar (see
+   HeroBackground.jsx: dot-matrix map, routes, status pulses) at logo scale.
+   One accent color (--brand-ember) carries the destination, same "one fixed
+   accent" restraint as the mark it replaced; the route/origin are paper-
+   toned rather than --voyage-teal, which drops below 3:1 on the nav's navy
+   background (2.69:1 measured) — same reasoning as --status-unreached-on-navy
+   existing alongside --status-unreached in tokens.css. */
+.brand-mark { flex-shrink: 0; overflow: visible; }
 
-.brand-lockup-i-wrap { position: relative; display: inline-block; }
-
-/* The real "i", recolored orange in place: a second copy of the same
-   character, same font/size, stacked exactly on top (top:0/left:0 over an
-   inline-block wrapper sized to the glyph) and clipped to roughly the top
-   third where the tittle sits. Same glyph, same position — nothing to
-   measure, so it can't drift out of alignment the way a manually-placed
-   circle would. */
-.brand-lockup-i-dot {
-  position: absolute;
-  top: 0;
-  left: 0;
-  color: var(--brand-ember);
-  clip-path: inset(0 0 64% 0);
-  pointer-events: none;
+.brand-mark-route {
+  stroke: var(--atlas-paper);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0.55;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: brand-mark-draw 900ms ease-out 150ms forwards;
 }
 
-.brand-dot {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--brand-ember);
-  pointer-events: none;
+.brand-mark-origin {
+  fill: none;
+  stroke: var(--atlas-paper);
+  stroke-width: 1.4;
+  opacity: 0.85;
 }
 
-/* Sits like a diacritic on the F's top-right stroke. */
-.brand-dot--monogram {
-  width: 0.19em;
-  height: 0.19em;
-  top: 0.02em;
-  left: 0.58em;
+.brand-mark-dest { fill: var(--brand-ember); }
+
+.brand-mark-dest-pulse {
+  fill: none;
+  stroke: var(--brand-ember);
+  stroke-width: 1.4;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: brand-mark-pulse 3.2s ease-in-out 1050ms infinite;
+}
+
+@keyframes brand-mark-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes brand-mark-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.9); }
+  50% { opacity: 0; transform: scale(2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark-route { animation: none; stroke-dashoffset: 0; }
+  .brand-mark-dest-pulse { animation: none; opacity: 0; }
 }
 
 .site-nav-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
