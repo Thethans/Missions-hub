@@ -130,7 +130,7 @@ export default function AboutPage() {
       <div className="page-about">
         <h1>About Fielded</h1>
         {SECTIONS.map((section, i) => (
-          <RevealOnScroll key={section.title} index={i} className="about-section">
+          <RevealOnScroll key={section.title} index={i} className="about-section" variant="fade">
             <h2>{section.title}</h2>
             {section.body}
           </RevealOnScroll>

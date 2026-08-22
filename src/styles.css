@@ -664,9 +664,6 @@ html:not([data-app-booted]) [data-reveal] {
   border-radius: 999px;
   padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-6);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-dark-sheen);
 }
 
 .hero-wordmark {
@@ -736,6 +733,32 @@ html:not([data-app-booted]) [data-reveal] {
   transform: translateX(3px);
 }
 
+.hero-cta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Subordinate to .cta-button on purpose: no button chrome, quieter color —
+   a way into the same live map the eyebrow above already promises, for
+   anyone not ready to commit to 8 quiz questions on a first visit. */
+.hero-secondary-link {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(250, 247, 240, 0.7);
+  text-decoration: underline;
+  text-decoration-color: rgba(250, 247, 240, 0.35);
+  text-underline-offset: 3px;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.hero-secondary-link:hover {
+  color: var(--atlas-paper);
+  text-decoration-color: var(--atlas-paper);
+}
+
 /* ==== HOME: STATS STRIP ==== */
 
 .stats-strip {
@@ -781,15 +804,15 @@ html:not([data-app-booted]) [data-reveal] {
   position: relative;
   max-width: 1040px;
   margin: 0 auto;
-  /* Liquid-glass panel holding the three figures — the navy gradient and
-     teal glow behind it refract through the frosted surface. */
+  /* Flat tinted panel holding the three figures — no blur/frost: glass is
+     reserved for the map's own floating chrome (legend, search, popups),
+     where a real busy background actually needs to show through. Here it's
+     just a subtle surface against the section's own gradient. */
   padding: var(--space-12) var(--space-6);
   background: var(--glass-dark-bg);
   border: 1px solid var(--glass-dark-border);
   border-radius: 24px;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-dark-sheen), var(--glass-shadow);
+  box-shadow: var(--shadow);
 }
 
 .stat {
@@ -1055,9 +1078,7 @@ html:not([data-app-booted]) [data-reveal] {
   border-radius: 20px;
   background: var(--glass-light-bg);
   border: 1px solid var(--glass-light-border);
-  box-shadow: var(--glass-light-sheen), var(--glass-shadow);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow);
   overflow: hidden;
   isolation: isolate;
 }
@@ -1349,9 +1370,7 @@ html:not([data-app-booted]) [data-reveal] {
   border: 1px solid var(--glass-dark-border);
   border-radius: 14px;
   background: var(--glass-dark-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-dark-sheen);
+  box-shadow: var(--shadow);
   overflow: hidden;
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
@@ -2931,7 +2950,7 @@ html:not([data-app-booted]) [data-reveal] {
   border-radius: var(--radius);
   background: var(--glass-light-bg);
   border: 1px solid var(--glass-light-border);
-  box-shadow: var(--glass-light-sheen);
+  box-shadow: var(--shadow);
 }
 
 .directory-cta h2 {
