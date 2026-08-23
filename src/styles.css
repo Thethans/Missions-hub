@@ -479,6 +479,13 @@ html:not([data-app-booted]) [data-reveal] {
   inset: 0;
   z-index: 0;
   contain: layout style paint;
+  /* Fades the living atlas to nothing near the hero's bottom edge instead
+     of it just stopping — .cold-open-particles right after picks up with a
+     matching small-dot texture that fades IN from its own top, so the two
+     read as one dot field dissolving into empty space across the seam
+     rather than two unrelated background textures stacked with a hard cut. */
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
 }
 
 /* "The Living Atlas" — dot-matrix world map, pulse layer (real unreached
@@ -1453,15 +1460,18 @@ html:not([data-app-booted]) [data-reveal] {
   overflow: hidden;
   text-align: center;
 }
+/* A small regular dot grid — same scale/color family as HeroBackground's
+   .hero-atlas-dots (the living atlas above it), not the previous loose
+   scattered "sparkle" gradients, which read as a completely different
+   decoration once the atlas above had faded out. Fades in from this
+   section's own top edge to continue where the atlas leaves off. */
 .cold-open-particles {
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 20% 30%, rgba(250, 247, 240, 0.25), transparent),
-    radial-gradient(1px 1px at 70% 60%, rgba(250, 247, 240, 0.18), transparent),
-    radial-gradient(1px 1px at 40% 80%, rgba(217, 164, 65, 0.2), transparent);
-  background-size: 240px 240px, 300px 300px, 200px 200px;
-  opacity: 0.6;
+  background-image: radial-gradient(circle, rgba(250, 247, 240, 0.32) 1px, transparent 1.6px);
+  background-size: 26px 26px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 35%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 35%, black 100%);
 }
 .cold-open-content { position: relative; max-width: 560px; }
 /* font-family comes from VariableBloom's own inline style (--font-story-
