@@ -29,7 +29,13 @@ const VIEW_H = 400;
 // stable across runs given the same source data. Sorting by longitude before
 // striding spreads the sample across the whole map instead of clustering
 // wherever the source array happens to list features first.
-const TARGET_DOTS = 450;
+//
+// Denser than the original 450 — at that count, spread across MapTeaser's
+// full-bleed container with no coastline/border reference at all, the dots
+// read as a sparse random scatter rather than a recognizable map. Roughly
+// matching heroAtlas.json's own density (850 dots) gets close enough to a
+// legible pattern without shipping the full 16k-feature dataset.
+const TARGET_DOTS = 1400;
 
 export function sample(features, targetCount = TARGET_DOTS) {
   const sorted = [...features].sort(

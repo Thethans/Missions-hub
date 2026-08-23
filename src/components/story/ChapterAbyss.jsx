@@ -1,8 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from 'framer-motion';
 import statsData from '../../data/stats.json';
-import { WHISPER_NAMES } from '../../data/whisperNames.js';
+import ChapterTitle from './ChapterTitle.jsx';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
+
+// Dynamic import, not a static one: unreachedNames.js is ~270KB of real
+// group names (see scripts/generate-unreached-names.js), and HomePage isn't
+// code-split from the app's shared entry (see App.jsx's own "everything but
+// the landing page" comment) — a static import here would land in the one
+// JS chunk every route pays for, not just the homepage. Fetched as its own
+// chunk instead, only once this component actually mounts.
+function useNameWallText() {
+  const [text, setText] = useState('');
+  useEffect(() => {
+    let cancelled = false;
+    import('../../data/unreachedNames.js').then(({ UNREACHED_NAMES }) => {
+      // One string, not 9,045 React-managed elements — the whole point of
+      // the wall is real density, and a single text node is cheap to
+      // render and cheap to drift via one transform regardless of how
+      // much text is inside it.
+      if (!cancelled) setText(UNREACHED_NAMES.join('   ·   '));
+    });
+    return () => { cancelled = true; };
+  }, []);
+  return text;
+}
 
 // See spec_2.md's "Chapter II, the Abyss" section for the full design
 // rationale — this is a direct port of that structure, not a
@@ -125,33 +147,49 @@ function AbyssCanvas({ active }) {
   return <canvas ref={canvasRef} className="abyss-field" aria-hidden="true" />;
 }
 
-function WhisperLabels({ active }) {
-  const [labels, setLabels] = useState([]);
+// Replaces the old "5 names at a time, ephemeral" whisper effect with the
+// real, full list — dense small-type columns that drift slowly upward as
+// the reader scrolls through the void, same scroll-fraction mechanic
+// AbyssCanvas already uses for its dot layers (one shared "falling past
+// real names" read, not two unrelated effects sharing a section). Not
+// individually readable at a glance by design — the point, per the closing
+// line below ("every name that whispered past... was real"), is that
+// there's too much real density here to take in at once, which a curated
+// handful of legible names never communicated.
+function NameWall({ active }) {
+  const wallRef = useRef(null);
+  const rafRef = useRef(null);
+  const sectionElRef = useRef(null);
   const prefersReduced = usePrefersReducedMotion();
+  const nameWallText = useNameWallText();
 
   useEffect(() => {
-    if (!active || prefersReduced) return;
-    let id = 0;
-    const interval = setInterval(() => {
-      const name = WHISPER_NAMES[Math.floor(Math.random() * WHISPER_NAMES.length)];
-      const entry = { id: id++, name, x: 10 + Math.random() * 80, y: 15 + Math.random() * 70 };
-      setLabels((prev) => [...prev.slice(-4), entry]);
-      setTimeout(() => {
-        setLabels((prev) => prev.filter((l) => l.id !== entry.id));
-      }, 3800);
-    }, 1600);
-    return () => clearInterval(interval);
+    sectionElRef.current = wallRef.current?.closest('.chapter-abyss') || null;
+  }, []);
+
+  useEffect(() => {
+    const wall = wallRef.current;
+    if (!wall || !active || prefersReduced) return;
+
+    function tick() {
+      const el = sectionElRef.current;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const total = rect.height - window.innerHeight;
+        const fraction = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+        wall.style.transform = `translateY(${-fraction * 35}%)`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [active, prefersReduced]);
 
-  if (prefersReduced) return null;
-
   return (
-    <div className="abyss-whispers" aria-hidden="true">
-      {labels.map((l) => (
-        <span key={l.id} className="abyss-whisper" style={{ left: `${l.x}%`, top: `${l.y}%` }}>
-          {l.name}
-        </span>
-      ))}
+    <div className="abyss-namewall" aria-hidden="true">
+      <div ref={wallRef} className="abyss-namewall-text">{nameWallText}</div>
     </div>
   );
 }
@@ -169,10 +207,11 @@ export default function ChapterAbyss() {
       <div className="abyss-pin">
         <AbyssCanvas active={inView && !prefersReduced} />
         <div className="abyss-vignette" aria-hidden="true" />
-        <WhisperLabels active={inView} />
+        <NameWall active={inView} />
       </div>
       <div className="abyss-scroll">
         <div className="abyss-open">
+          <ChapterTitle number="II" title="The Abyss" />
           <p>You are about to scroll through a very long silence.</p>
           <p>It is meant to feel long. This is what 4.3 billion people looks like from here.</p>
         </div>

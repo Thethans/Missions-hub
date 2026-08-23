@@ -1,5 +1,6 @@
 import React from 'react';
 import { m } from 'framer-motion';
+import ChapterTitle from './ChapterTitle.jsx';
 import { SCRIPTURE } from '../../data/scripture.js';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
 
@@ -11,7 +12,7 @@ export default function ChapterPattern() {
 
   return (
     <section className="chapter chapter-pattern">
-      <div className="chapter-kicker">Chapter III — The Pattern</div>
+      <ChapterTitle number="III" title="The Pattern" />
       <m.blockquote
         className="pattern-scripture"
         initial={prefersReduced ? false : { opacity: 0, y: 20 }}
@@ -32,32 +33,38 @@ export default function ChapterPattern() {
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
       >
-        <p>
-          Notice who did the sending. Not Barnabas and Saul, deciding on their own that the moment
-          felt right. Not an agency, identifying talent and issuing a commission. A gathered,
-          worshiping, fasting local church — the ordinary kind, meeting in one place — laid hands on
-          two of its own and sent them out.
+        <p className="pattern-lede">
+          Notice who did the sending — not an individual deciding alone, not an agency issuing a
+          commission, but a gathered, worshiping local church.
         </p>
-        <p>
-          That's a different shape than the one most people default to. The common picture of
-          missions is an individual with a calling: someone senses a burden, researches a country,
-          finds an agency, raises support, and goes — largely alone, with a church cheering from a
-          distance and writing checks. It isn't wrong to have a calling. It's incomplete to carry it
-          by yourself.
-        </p>
-        <p>
-          The pattern in Acts runs the other direction. The church is the sender, not the sponsor. It
-          doesn't outsource the work of discernment to an agency and the work of support to a
-          newsletter; it lays its own hands on its own people and sends them, staying attached the
-          whole way — spiritually, relationally, financially — the way a body stays attached to a
-          limb it has sent forward.
-        </p>
-        <p>
-          Agencies still matter. Most churches don't have the on-the-ground infrastructure, language
-          training, or field experience to place and support someone alone, and a good agency brings
-          exactly that. But the agency should be the vehicle a sending church chooses, not a
-          replacement for having one. Fielded exists to make that first step — a church and a
-          candidate actually finding each other — less scattered than it currently is.
+
+        <div className="pattern-compare">
+          <div className="pattern-compare-col">
+            <p className="pattern-compare-label">The common picture</p>
+            <ol>
+              <li>Someone senses a calling</li>
+              <li>Researches, finds an agency</li>
+              <li>Raises support, goes — alone</li>
+              <li>Church cheers from a distance</li>
+            </ol>
+          </div>
+          <div className="pattern-compare-div" aria-hidden="true">
+            <span>→</span>
+          </div>
+          <div className="pattern-compare-col pattern-compare-col--acts">
+            <p className="pattern-compare-label">The pattern in Acts</p>
+            <ol>
+              <li>A gathered, worshiping church discerns</li>
+              <li>It lays hands on its own, sends them</li>
+              <li>An agency is the vehicle it chooses</li>
+              <li>The church stays attached — the whole way</li>
+            </ol>
+          </div>
+        </div>
+
+        <p className="pattern-close">
+          Agencies still matter. Fielded exists to make that first connection — a church and a
+          candidate finding each other — less scattered than it is today.
         </p>
       </m.div>
     </section>

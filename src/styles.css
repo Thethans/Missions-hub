@@ -452,7 +452,12 @@ html:not([data-app-booted]) [data-reveal] {
   text-align: center;
   background: var(--ink-navy);
   color: var(--atlas-paper);
-  padding: var(--space-16) var(--space-6);
+  /* Less bottom padding than top — top clears the sticky nav, bottom used
+     to match it exactly, which (combined with ColdOpen's own top padding
+     right after, same ink-navy background, no divider) stacked into a
+     long stretch of nothing between "Take the quiz" and the next real
+     content. */
+  padding: var(--space-16) var(--space-6) var(--space-8);
   overflow: hidden;
 }
 
@@ -1220,39 +1225,40 @@ html:not([data-app-booted]) [data-reveal] {
   text-align: left;
 }
 
-/* A bounded, left-hung column of rows rather than a symmetric card grid —
-   four parallel things (not a sequence, so no numbering) read down the
-   page like a spec sheet instead of four repeated boxes. Narrower than the
-   1000px heading above it on purpose: the ragged right edge next to all
-   that open navy is the asymmetry a centered/justified grid never has. */
-.capabilities-list {
-  display: flex;
-  flex-direction: column;
-  max-width: 700px;
+/* Fills the same 1000px width as the heading above (not a narrow left-hung
+   column leaving the right half of the section empty) — four parallel
+   things (not a sequence, so no numbering) as a real 2x2 grid instead of a
+   single file of rows. */
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-10) var(--space-12);
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-.capability-row {
-  display: grid;
-  grid-template-columns: 3rem 1fr;
-  gap: var(--space-6);
-  align-items: start;
-  padding: var(--space-6) 0;
+.capability-item {
+  padding-top: var(--space-6);
   border-top: 1px solid rgba(250, 247, 240, 0.14);
 }
 
-.capability-row:last-child {
-  border-bottom: 1px solid rgba(250, 247, 240, 0.14);
+.capability-item h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  font-size: 1.15rem;
+  color: var(--atlas-paper);
 }
 
-/* The icon's own small glass disc — its own recipe (round, half the
-   capability-card's old radius, no drop shadow) rather than reusing the
-   card treatment now that there's no card. */
+/* Inline with the title, not a separate left-hand column — one compact
+   mark per item rather than a repeated icon-beside-text layout. */
 .capability-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: 999px;
   background: var(--glass-dark-bg);
   border: 1px solid var(--glass-dark-border);
@@ -1260,18 +1266,11 @@ html:not([data-app-booted]) [data-reveal] {
   flex-shrink: 0;
 }
 
-.capability-copy h3 {
-  margin: 0 0 var(--space-2);
-  font-size: 1.15rem;
-  color: var(--atlas-paper);
-}
-
-.capability-copy p { margin: 0; color: rgba(250, 247, 240, 0.7); line-height: 1.6; max-width: 54ch; }
+.capability-item p { margin: 0; color: rgba(250, 247, 240, 0.7); line-height: 1.6; max-width: 40ch; }
 
 @media (max-width: 640px) {
   .capabilities h2 { text-align: center; }
-  .capability-row { grid-template-columns: 2.5rem 1fr; gap: var(--space-4); }
-  .capability-glyph { width: 2.5rem; height: 2.5rem; }
+  .capabilities-grid { grid-template-columns: 1fr; gap: var(--space-8); }
 }
 
 /* ==== HOME: MAP TEASER ==== */
@@ -1296,6 +1295,8 @@ html:not([data-app-booted]) [data-reveal] {
 }
 
 .map-preview-graphic { width: 100%; height: 100%; display: block; }
+
+.map-preview-graticule line { stroke: rgba(250, 247, 240, 0.08); stroke-width: 1; }
 
 /* Same solid/faded/ring status encoding as the live map (WorldMap.jsx) —
    SVG circles need fill/stroke rather than the background/border used for
@@ -1408,27 +1409,43 @@ html:not([data-app-booted]) [data-reveal] {
 
 /* ==== HOME: STORY (spec_2.md — cold open through finale) ==== */
 
-.chapter-kicker {
+/* Two tiers, not one small undifferentiated line — the roman numeral gets
+   a quiet mono label, the actual title gets real display-type weight so it
+   reads as the headline it is instead of matching the "01/02/03" caption
+   register elsewhere on the page. */
+.chapter-title { text-align: center; margin: 0 0 var(--space-8); }
+.chapter-title-number {
+  display: block;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  text-align: center;
-  margin: 0 0 var(--space-8);
+  letter-spacing: 0.14em;
+  color: var(--warm-clay);
+  margin: 0 0 var(--space-2);
+}
+.chapter-title-name {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  margin: 0;
+  line-height: 1.1;
 }
 
 .chapter { padding: var(--space-16) var(--space-6); max-width: 900px; margin: 0 auto; }
 
 /* -- Cold open -- */
+/* Was 70vh with vertically-centered content and the hero directly above it
+   (no divider — same ink-navy on both sides) — the empty margin that left
+   above the "4.3B" line read as a dead gap right after "Take the quiz"
+   rather than a deliberate beat. Shorter section + less top padding keeps
+   a real pause without it feeling like nothing is happening. */
 .cold-open {
   position: relative;
-  min-height: 70vh;
+  min-height: 48vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--ink-navy);
   color: var(--atlas-paper);
-  padding: var(--space-16) var(--space-6);
+  padding: var(--space-8) var(--space-6) var(--space-16);
   overflow: hidden;
   text-align: center;
 }
@@ -1473,10 +1490,30 @@ html:not([data-app-booted]) [data-reveal] {
 .command-scripture blockquote p { margin: 0 0 var(--space-3); }
 .command-scripture cite { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-text); font-style: normal; }
 
-.command-staircase { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); }
-.staircase-line { margin: 0; color: var(--muted-text); font-size: 1.05rem; }
+/* A shared rail down the left edge, not four lines floating at
+   independently-offset positions — each line's own tick (::before)
+   connects it back to that rail at its actual indent, so the escalating
+   margin still reads as one staircase rather than scattered text. */
+.command-staircase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) 0 var(--space-4) var(--space-3);
+  border-left: 2px solid var(--line);
+}
+.staircase-line { position: relative; margin: 0; color: var(--muted-text); font-size: 1.05rem; line-height: 1.4; }
+.staircase-line::before {
+  content: '';
+  position: absolute;
+  top: 0.65em;
+  left: -1.05rem;
+  width: 0.7rem;
+  height: 1px;
+  background: var(--line);
+}
 .staircase-line--sent { color: var(--ink-navy); font-weight: 700; font-family: var(--font-display); font-size: 1.3rem; }
-.staircase-source { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-text); margin: var(--space-2) 0 0; }
+.staircase-line--sent::before { background: var(--voyage-teal); height: 2px; }
+.staircase-source { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-text); margin: var(--space-3) 0 0; }
 
 @media (max-width: 768px) {
   .command-grid { grid-template-columns: 1fr; gap: var(--space-8); }
@@ -1505,23 +1542,27 @@ html:not([data-app-booted]) [data-reveal] {
   inset: 0;
   background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 14, 26, 0.85) 100%);
 }
-.abyss-whispers { position: absolute; inset: 0; pointer-events: none; }
-.abyss-whisper {
+/* Dense, real "wall of names" (see ChapterAbyss.jsx's NameWall) — every
+   actual unreached group, not a curated handful, in small multi-column
+   type. pointer-events:none since it's atmospheric texture behind the
+   vignette, not meant to be individually read/clicked (the world map is
+   the real place to browse these one at a time). */
+.abyss-namewall {
   position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.abyss-namewall-text {
+  height: 160%;
+  columns: 220px;
+  column-gap: var(--space-8);
+  padding: var(--space-8) var(--space-8) 0;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: rgba(250, 247, 240, 0.55);
-  white-space: nowrap;
-  animation: abyss-whisper-fade 3.8s ease-in-out;
-}
-@keyframes abyss-whisper-fade {
-  0% { opacity: 0; }
-  15% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .abyss-whisper { animation: none; }
+  font-size: 0.7rem;
+  line-height: 2;
+  color: rgba(250, 247, 240, 0.4);
+  will-change: transform;
 }
 
 .abyss-scroll {
@@ -1585,8 +1626,94 @@ html:not([data-app-booted]) [data-reveal] {
 }
 .pattern-scripture p { margin: 0 0 var(--space-2); }
 .pattern-scripture cite { display: block; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-text); font-style: normal; margin-top: var(--space-2); }
-.pattern-body p { color: var(--muted-text); line-height: 1.7; margin: 0 0 var(--space-4); font-size: 1.02rem; }
-.pattern-body p:last-child { margin-bottom: 0; }
+.pattern-lede {
+  color: var(--ink-navy);
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  line-height: 1.5;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto var(--space-10);
+}
+
+/* The four paragraphs this replaced made one argument (individual-and-
+   alone vs. church-as-sender) at prose length — a side-by-side reads it in
+   one glance instead, which is the actual point being made anyway (the
+   two are a contrast, not a list). */
+.pattern-compare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-6);
+  align-items: center;
+  max-width: 780px;
+  margin: 0 auto var(--space-8);
+}
+.pattern-compare-col {
+  background: rgba(22, 35, 59, 0.03);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-6);
+}
+.pattern-compare-col--acts {
+  background: rgba(43, 110, 118, 0.06);
+  border-color: rgba(43, 110, 118, 0.3);
+}
+.pattern-compare-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-4);
+}
+.pattern-compare-col--acts .pattern-compare-label { color: var(--voyage-teal); }
+.pattern-compare-col ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pattern-compare-col li {
+  color: var(--ink-navy);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  padding-left: var(--space-4);
+  position: relative;
+}
+.pattern-compare-col li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted-text);
+}
+.pattern-compare-col--acts li::before { background: var(--voyage-teal); }
+.pattern-compare-div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--warm-clay);
+}
+.pattern-close {
+  color: var(--muted-text);
+  line-height: 1.7;
+  font-size: 1.02rem;
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .pattern-compare { grid-template-columns: 1fr; }
+  .pattern-compare-div { transform: rotate(90deg); padding: var(--space-2) 0; }
+}
 
 /* -- Photo placeholder system (spec_2.md's 4 variants) -- */
 .photo {
@@ -1633,6 +1760,14 @@ html:not([data-app-booted]) [data-reveal] {
 .ending-scripture { text-align: center; font-family: var(--font-display); font-size: clamp(1.2rem, 2.4vw, 1.5rem); max-width: 640px; margin: 0 auto var(--space-10); line-height: 1.6; }
 .ending-scripture cite { display: block; font-family: var(--font-mono); font-size: 0.8rem; color: rgba(250, 247, 240, 0.6); font-style: normal; margin-top: var(--space-2); }
 .ending-map { max-width: 480px; margin: 0 auto; text-align: center; }
+.ending-map-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--warm-clay);
+  margin: 0 0 var(--space-4);
+}
 .ending-map svg { width: 100%; height: auto; }
 .ending-dot { fill: rgba(148, 168, 196, 0.3); }
 .ending-dot--lit { fill: var(--warm-clay); }

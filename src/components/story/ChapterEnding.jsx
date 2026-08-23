@@ -1,5 +1,6 @@
 import React from 'react';
 import { m } from 'framer-motion';
+import ChapterTitle from './ChapterTitle.jsx';
 import { SCRIPTURE } from '../../data/scripture.js';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
 
@@ -24,7 +25,7 @@ export default function ChapterEnding() {
 
   return (
     <section className="chapter chapter-ending">
-      <div className="chapter-kicker">Chapter V — The Ending</div>
+      <ChapterTitle number="V" title="The Ending" />
       <m.blockquote
         className="ending-scripture"
         initial={prefersReduced ? false : { opacity: 0, y: 20 }}
@@ -45,7 +46,13 @@ export default function ChapterEnding() {
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 1.1, ease: EASE }}
       >
-        <svg viewBox={`0 0 ${COLS} ${ROWS}`} role="img" aria-label="A symbolic grid, mostly lit, representing the vision of every nation reached">
+        {/* A label before the graphic, not just a trailing caption after it
+            — an abstract dot grid with no on-image legend read as
+            unexplained on first look; naming it up front (and tying it
+            explicitly to Chapter II's own field, same dot colors reused on
+            purpose) does the explaining before the reader has to wonder. */}
+        <p className="ending-map-label">Chapter II's darkness, answered</p>
+        <svg viewBox={`0 0 ${COLS} ${ROWS}`} role="img" aria-label="A symbolic grid, mostly lit in warm gold, representing Revelation's vision of every nation reached — not real map data">
           {DOTS.map((d) => (
             <circle
               key={d.i}
@@ -57,8 +64,8 @@ export default function ChapterEnding() {
           ))}
         </svg>
         <p className="ending-map-caption">
-          Not a measurement — a picture of the promise. This is what Chapter II's darkness is answered
-          by, not a statistic about where things stand today.
+          Not a measurement of where things stand today — a picture of the promise Revelation makes:
+          every tribe, language, people, and nation, reached.
         </p>
       </m.div>
     </section>

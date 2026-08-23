@@ -1,6 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import Photo from '../Photo.jsx';
+import ChapterTitle from './ChapterTitle.jsx';
 import { SCRIPTURE } from '../../data/scripture.js';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
 
@@ -21,10 +22,15 @@ export default function ChapterCost() {
 
   return (
     <section className="chapter chapter-cost">
-      <div className="chapter-kicker">Chapter IV — The Cost</div>
+      <ChapterTitle number="IV" title="The Cost" />
+      {/* No "real photo pending" label — Photo.jsx's own placeholder system
+          is built to read as an intentional design choice, not a broken
+          image, and a caption that announces itself as a TODO undercuts
+          exactly that. This describes the scene the eventual photo would
+          show — specific and sensory, not a stand-in note to the reader. */}
       <Photo
         variant="v-night"
-        caption="A missionary family at a departure gate, or a commissioning service — real photo pending"
+        caption="5am at a departure gate. One bag over the weight limit, a stack of unread goodbye cards, and a boarding announcement in a language that isn't home yet."
       />
       <div className="cost-punch">
         {PUNCH_LINES.map((line, i) => (

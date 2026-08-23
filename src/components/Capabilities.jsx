@@ -42,32 +42,34 @@ const ITEMS = [
 
 const EASE = [0.16, 1, 0.3, 1];
 
-// A row, not a card: these four things (map, matcher, opportunities,
-// checklist) are parallel, not a sequence, so there's no honest "01/02/03"
-// to give them — see CLAUDE.md-adjacent guidance against numbering content
-// that isn't actually ordered. useTilt still gives each row's icon a subtle
-// pointer-follow tilt, just without the boxed card that used to hold it.
-function CapabilityRow({ item, index }) {
+// A 2x2 grid, not a single narrow column: four parallel things (not a
+// sequence, so no numbering — see CLAUDE.md-adjacent guidance against
+// numbering content that isn't actually ordered) filling the same width as
+// the heading above instead of a left-hung column leaving the right half
+// of the section empty. The icon sits inline with its title, not in its
+// own left-hand column — one compact visual mark per item, not a repeated
+// "icon | text" layout down the page.
+function CapabilityItem({ item, index }) {
   const tilt = useTilt();
   const prefersReduced = usePrefersReducedMotion();
   return (
     <m.div
-      className="capability-row"
+      className="capability-item"
       data-reveal
       // initial={false} under reduced motion — see RevealOnScroll.jsx for
       // why this beats an opacity:0 that depends on whileInView firing.
-      initial={prefersReduced ? false : { opacity: 0, x: -16 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={prefersReduced ? false : { opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.4 }}
       transition={{ duration: 0.55, delay: index * 0.07, ease: EASE }}
     >
-      <m.span ref={tilt.ref} style={tilt.style} className="capability-glyph">
-        <item.icon size={20} weight="bold" />
-      </m.span>
-      <div className="capability-copy">
-        <h3>{item.title}</h3>
-        <p>{item.desc}</p>
-      </div>
+      <h3>
+        <m.span ref={tilt.ref} style={tilt.style} className="capability-glyph">
+          <item.icon size={16} weight="bold" />
+        </m.span>
+        {item.title}
+      </h3>
+      <p>{item.desc}</p>
     </m.div>
   );
 }
@@ -86,9 +88,9 @@ export default function Capabilities() {
       >
         What&rsquo;s actually in here
       </m.h2>
-      <div className="capabilities-list">
+      <div className="capabilities-grid">
         {ITEMS.map((item, i) => (
-          <CapabilityRow key={item.title} item={item} index={i} />
+          <CapabilityItem key={item.title} item={item} index={i} />
         ))}
       </div>
     </section>

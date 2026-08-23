@@ -1,5 +1,6 @@
 import React from 'react';
 import { m } from 'framer-motion';
+import ChapterTitle from './ChapterTitle.jsx';
 import { SCRIPTURE } from '../../data/scripture.js';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
 
@@ -11,7 +12,7 @@ export default function ChapterCommand() {
 
   return (
     <section className="chapter chapter-command">
-      <div className="chapter-kicker">Chapter I — The Command</div>
+      <ChapterTitle number="I" title="The Command" />
       <div className="command-grid">
         <div className="command-scripture">
           <blockquote>
@@ -26,7 +27,7 @@ export default function ChapterCommand() {
             <m.p
               key={line}
               className={`staircase-line${i === staircase.lines.length - 1 ? ' staircase-line--sent' : ''}`}
-              style={{ marginLeft: `${i * 1.5}rem` }}
+              style={{ marginLeft: `${i * 0.85}rem` }}
               initial={prefersReduced ? false : { opacity: 0, x: -16 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.6 }}
