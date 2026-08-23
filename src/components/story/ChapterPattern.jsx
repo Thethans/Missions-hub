@@ -34,7 +34,7 @@ export default function ChapterPattern() {
         transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
       >
         <p className="pattern-lede">
-          Notice who did the sending — not an individual deciding alone, not an agency issuing a
+          Notice who did the sending: not an individual deciding alone, not an agency issuing a
           commission, but a gathered, worshiping local church.
         </p>
 
@@ -44,7 +44,7 @@ export default function ChapterPattern() {
             <ol>
               <li>Someone senses a calling</li>
               <li>Researches, finds an agency</li>
-              <li>Raises support, goes — alone</li>
+              <li>Raises support, goes alone</li>
               <li>Church cheers from a distance</li>
             </ol>
           </div>
@@ -57,14 +57,14 @@ export default function ChapterPattern() {
               <li>A gathered, worshiping church discerns</li>
               <li>It lays hands on its own, sends them</li>
               <li>An agency is the vehicle it chooses</li>
-              <li>The church stays attached — the whole way</li>
+              <li>The church stays attached the whole way</li>
             </ol>
           </div>
         </div>
 
         <p className="pattern-close">
-          Agencies still matter. Fielded exists to make that first connection — a church and a
-          candidate finding each other — less scattered than it is today.
+          Agencies still matter. Fielded exists to make that first connection, a church and a
+          candidate finding each other, less scattered than it is today.
         </p>
       </m.div>
     </section>

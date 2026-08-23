@@ -13,7 +13,7 @@ const PUNCH_LINES = [
   'A support budget that depends on other people’s generosity, every month, indefinitely.',
   'Kids who grow up between cultures, belonging fully to neither.',
   'Seasons with no visible fruit at all.',
-  'And still — go.'
+  'And still, go.'
 ];
 
 export default function ChapterCost() {
@@ -23,15 +23,25 @@ export default function ChapterCost() {
   return (
     <section className="chapter chapter-cost">
       <ChapterTitle number="IV" title="The Cost" />
-      {/* No "real photo pending" label — Photo.jsx's own placeholder system
-          is built to read as an intentional design choice, not a broken
-          image, and a caption that announces itself as a TODO undercuts
-          exactly that. This describes the scene the eventual photo would
-          show — specific and sensory, not a stand-in note to the reader. */}
+      {/* A real, documented account, not an invented scene: on January 8,
+          1956, Jim Elliot and four other missionaries (Nate Saint, Ed
+          McCully, Roger Youderian, Pete Fleming) were killed by Waorani
+          tribesmen in Ecuador while attempting first peaceful contact
+          ("Operation Auca"). No real photo asset exists in this codebase
+          yet (no image pipeline) — Photo.jsx's placeholder system stays,
+          but the caption now names the actual person and event instead of
+          a generic stand-in scene. Swap for a real, rights-cleared photo
+          when one is sourced. */}
       <Photo
         variant="v-night"
-        caption="5am at a departure gate. One bag over the weight limit, a stack of unread goodbye cards, and a boarding announcement in a language that isn't home yet."
+        caption="Jim Elliot, one of five missionaries killed by Waorani tribesmen in Ecuador on January 8, 1956, while attempting first peaceful contact."
       />
+      <p className="cost-account">
+        Jim Elliot spent years building toward contact with the Waorani, an isolated people group in
+        the Ecuadorian rainforest with no history of peaceful contact with outsiders. On January 8,
+        1956, he and four other missionaries were speared to death on a riverbank shortly after that
+        contact finally happened. He was 28.
+      </p>
       <div className="cost-punch">
         {PUNCH_LINES.map((line, i) => (
           <m.p

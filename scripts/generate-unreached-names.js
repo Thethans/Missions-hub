@@ -24,7 +24,7 @@ const geojson = JSON.parse(fs.readFileSync(GEOJSON_PATH, 'utf8'));
 
 const names = geojson.features
   .filter((f) => f.properties.progressStatus === 'unreached')
-  .map((f) => `${f.properties.name} — ${f.properties.country}`)
+  .map((f) => `${f.properties.name}, ${f.properties.country}`)
   // Same name+country pair can appear more than once in the raw pull
   // (distinct language/dialect entries Joshua Project tracks separately
   // sometimes collapse to an identical display string here) — de-duplicated

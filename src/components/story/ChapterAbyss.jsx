@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from 'framer-motion';
 import statsData from '../../data/stats.json';
 import ChapterTitle from './ChapterTitle.jsx';
+import VariableBloom from './VariableBloom.jsx';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
 
 // Dynamic import, not a static one: unreachedNames.js is ~270KB of real
@@ -211,31 +212,36 @@ export default function ChapterAbyss() {
       </div>
       <div className="abyss-scroll">
         <div className="abyss-open">
-          <ChapterTitle number="II" title="The Abyss" />
-          <p>You are about to scroll through a very long silence.</p>
-          <p>It is meant to feel long. This is what 4.3 billion people looks like from here.</p>
+          <div className="abyss-text-panel">
+            <ChapterTitle number="II" title="The Abyss" />
+            <p>What follows is a long stretch of scrolling with very little on the screen.</p>
+            <p>It represents {population} billion people who currently have no access to the gospel in their own language and culture.</p>
+          </div>
         </div>
         <div className="abyss-void" aria-hidden="true" />
         <div className="abyss-landing">
-          <p className="abyss-landing-kicker">An unreached people group is</p>
-          <p className="abyss-landing-def">
-            An ethnic or sociological group with no indigenous community of believers with adequate
-            numbers and resources to evangelize this people group without outside assistance.
-          </p>
-          <div className="abyss-landing-stats">
-            <div>
-              <span className="abyss-landing-number">{groups}</span>
-              <span>unreached people groups</span>
+          <div className="abyss-text-panel">
+            <p className="abyss-landing-kicker">An unreached people group is</p>
+            <p className="abyss-landing-def">
+              An ethnic or sociological group with no indigenous community of believers with adequate
+              numbers and resources to evangelize this people group without outside assistance.
+            </p>
+            <div className="abyss-landing-stats">
+              <div>
+                <VariableBloom className="abyss-landing-number">{groups}</VariableBloom>
+                <span>unreached people groups</span>
+              </div>
+              <div>
+                <VariableBloom className="abyss-landing-number">{population}B</VariableBloom>
+                <span>people, waiting</span>
+              </div>
             </div>
-            <div>
-              <span className="abyss-landing-number">{population}B</span>
-              <span>people, waiting</span>
-            </div>
+            <p className="abyss-landing-close">
+              Every people group you scrolled past just now is real, drawn from an actual list of{' '}
+              {groups} unreached groups. The screen looked empty not because no people are there, but
+              because very few people have gone to them.
+            </p>
           </div>
-          <p className="abyss-landing-close">
-            Every dot you fell through on the way down was real. So is every name that whispered past.
-            The silence isn't empty because no one is there — it's empty because almost no one has gone.
-          </p>
         </div>
       </div>
     </section>
