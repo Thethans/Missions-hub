@@ -1378,7 +1378,7 @@ html:not([data-app-booted]) [data-reveal] {
 
 .partner-quote-placeholder {
   max-width: 560px;
-  margin: 0 auto var(--space-12);
+  margin: 0 auto;
   padding: var(--space-8) var(--space-6);
   text-align: center;
   border: 1px dashed var(--line);

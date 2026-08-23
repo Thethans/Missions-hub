@@ -15,8 +15,7 @@ export default function PartnerQuotePlaceholder() {
       <Quotes size={28} weight="fill" aria-hidden="true" />
       <p className="partner-quote-placeholder-label">Reserved for a partner testimonial</p>
       <p className="partner-quote-placeholder-note">
-        A named quote from an agency partner or sending church goes here once one exists —
-        not a placeholder written to sound like one.
+        A named quote from an agency partner or sending church goes here once one exists.
       </p>
     </RevealOnScroll>
   );
