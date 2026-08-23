@@ -924,18 +924,52 @@ html:not([data-app-booted]) [data-reveal] {
    scrollytelling thread is more than a narrow viewport needs. */
 .journey-layout {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 520px;
   gap: var(--space-16);
-  align-items: start;
+  /* stretch (grid's default — was align-items:start), so the globe column
+     spans the same height as the steps column beside it. With :start it
+     only took its own content's ~420px, well short of the full step list —
+     the "sticky" globe would actually detach partway through step 2, long
+     before the scroll range needed to keep it pinned/centered through 03
+     and 04 as well. */
+  align-items: stretch;
 }
 
-.journey-globe-col { position: relative; }
+/* min-height, not just align-items:stretch's natural match to
+   .journey-steps' height — the sticky globe needs enough scroll room to
+   hold its viewport-centered position through the 02/03 boundary
+   specifically, and a row sized to exactly match the steps column releases
+   the stick a beat too early (verified by sampling the globe's rendered
+   center across the full scroll range: it drifted off-center before
+   reaching that boundary). Widening the row (this grows .journey-steps too,
+   via stretch, which just adds a little trailing whitespace there) gives
+   the sticky element the extra room it needs to stay centered for longer. */
+.journey-globe-col { position: relative; min-height: 1260px; }
 
+/* Centered on the viewport (not pinned near the top at a fixed 18vh) so
+   the globe sits at the vertical midpoint of the 4-step list as you scroll
+   through it — with 4 steps, that midpoint falls between 02 and 03, not
+   anchored to either one specifically. translateY(-50%) centers the globe's
+   own box on that point regardless of how big .journey-globe-scale below
+   makes it, rather than a fixed top offset that would need retuning any
+   time the globe's size changes. */
 .journey-globe-sticky {
   position: sticky;
-  top: 18vh;
+  /* 50vh, not 50% — a sticky element's percentage `top` resolves against
+     its *containing block*, not the viewport, so `top:50%` doesn't
+     actually mean "viewport center" the way it would for position:fixed.
+     vh is viewport-relative regardless of the container's own height. */
+  top: 50vh;
+  transform: translateY(-50%);
   display: flex;
   justify-content: center;
+}
+
+/* Scoped override, not a change to the shared .globe-stage rule — that
+   class also sizes the globe in ChurchDirectory.jsx, which isn't part of
+   this ask. */
+.journey-globe-sticky .globe-stage {
+  width: min(64vh, 520px);
 }
 
 @media (max-width: 960px) {
