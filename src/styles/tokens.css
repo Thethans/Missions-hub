@@ -34,6 +34,12 @@
   --font-display: 'Fraunces Variable', Georgia, serif;
   --font-body: 'Karla Variable', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  /* A deliberately different typeface from --font-display, reserved for
+     the story chapters' big standalone numbers (ColdOpen's "4.3B", the
+     Abyss landing stats) — Recursive Variable's MONO/CASL/wght axes give a
+     genuinely distinct "settling into place" animation instead of just
+     reusing Fraunces's own bloom again everywhere. */
+  --font-story-number: 'Recursive Variable', 'IBM Plex Mono', monospace;
 
   /* spacing (4px base unit) */
   --space-1: 4px;

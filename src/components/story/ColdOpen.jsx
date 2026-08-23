@@ -20,7 +20,7 @@ export default function ColdOpen() {
         viewport={{ once: true, amount: 0.6 }}
         transition={{ duration: 1, ease: EASE }}
       >
-        <VariableBloom className="cold-open-number">{population}B</VariableBloom>
+        <VariableBloom className="cold-open-number" variant="numeral">{population}B</VariableBloom>
         <p>People alive right now who have no path to hear the gospel in their own language and culture.</p>
         <p>This is where they are, and who is meant to go.</p>
       </m.div>

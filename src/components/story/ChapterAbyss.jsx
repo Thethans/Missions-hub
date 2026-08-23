@@ -228,11 +228,11 @@ export default function ChapterAbyss() {
             </p>
             <div className="abyss-landing-stats">
               <div>
-                <VariableBloom className="abyss-landing-number">{groups}</VariableBloom>
+                <VariableBloom className="abyss-landing-number" variant="numeral">{groups}</VariableBloom>
                 <span>unreached people groups</span>
               </div>
               <div>
-                <VariableBloom className="abyss-landing-number">{population}B</VariableBloom>
+                <VariableBloom className="abyss-landing-number" variant="numeral">{population}B</VariableBloom>
                 <span>people, waiting</span>
               </div>
             </div>

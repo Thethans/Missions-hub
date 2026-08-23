@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import '@fontsource-variable/fraunces/full.css';
 import '@fontsource-variable/karla';
+import '@fontsource-variable/recursive/full.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import App from './App.jsx';

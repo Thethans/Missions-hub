@@ -1235,7 +1235,7 @@ html:not([data-app-booted]) [data-reveal] {
 .capabilities-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-10) var(--space-12);
+  gap: var(--space-12) var(--space-12);
   max-width: 1000px;
   margin: 0 auto;
 }
@@ -1464,9 +1464,11 @@ html:not([data-app-booted]) [data-reveal] {
   opacity: 0.6;
 }
 .cold-open-content { position: relative; max-width: 560px; }
+/* font-family comes from VariableBloom's own inline style (--font-story-
+   number, variant="numeral") — deliberately not --font-display here, so
+   this doesn't just look like a bigger version of every other heading. */
 .cold-open-number {
   display: block;
-  font-family: var(--font-display);
   font-size: clamp(3.5rem, 10vw, 6rem);
   color: var(--warm-clay);
   margin-bottom: var(--space-4);
@@ -1629,7 +1631,7 @@ html:not([data-app-booted]) [data-reveal] {
 .abyss-landing-def { font-size: 1.1rem; line-height: 1.7; margin: 0 0 var(--space-8); color: rgba(250, 247, 240, 0.9); }
 .abyss-landing-stats { display: flex; justify-content: center; gap: var(--space-12); margin-bottom: var(--space-8); }
 .abyss-landing-stats > div { display: flex; flex-direction: column; }
-.abyss-landing-number { font-family: var(--font-display); font-size: 2.2rem; color: var(--warm-clay); }
+.abyss-landing-number { font-size: 2.2rem; color: var(--warm-clay); }
 .abyss-landing-close { color: rgba(250, 247, 240, 0.75); line-height: 1.7; }
 
 @media (max-width: 640px) {
@@ -1640,7 +1642,7 @@ html:not([data-app-booted]) [data-reveal] {
 /* -- Chapter III: Pattern -- */
 .chapter-pattern { background: var(--atlas-paper); }
 .pattern-scripture {
-  margin: 0 0 var(--space-10);
+  margin: 0 0 var(--space-12);
   text-align: center;
   font-family: var(--font-display);
   font-style: italic;
@@ -1657,7 +1659,7 @@ html:not([data-app-booted]) [data-reveal] {
   line-height: 1.5;
   text-align: center;
   max-width: 640px;
-  margin: 0 auto var(--space-10);
+  margin: 0 auto var(--space-12);
 }
 
 /* The four paragraphs this replaced made one argument (individual-and-
@@ -1775,15 +1777,15 @@ html:not([data-app-booted]) [data-reveal] {
 .chapter-cost { background: var(--atlas-paper); }
 .cost-account {
   max-width: 560px;
-  margin: 0 auto var(--space-10);
+  margin: 0 auto var(--space-12);
   text-align: center;
   color: var(--muted-text);
   line-height: 1.7;
   font-size: 1.02rem;
 }
-.cost-punch { max-width: 560px; margin: 0 auto var(--space-10); text-align: center; }
+.cost-punch { max-width: 560px; margin: 0 auto var(--space-12); text-align: center; }
 .cost-punch p { font-size: 1.15rem; color: var(--muted-text); margin: 0 0 var(--space-3); }
-.cost-punch-turn { color: var(--ink-navy) !important; font-family: var(--font-display); font-size: 1.5rem !important; font-weight: 700; margin-top: var(--space-5) !important; }
+.cost-punch-turn { color: var(--ink-navy) !important; font-family: var(--font-display); font-size: 1.5rem !important; font-weight: 700; margin-top: var(--space-6) !important; }
 .cost-scripture { text-align: center; font-family: var(--font-display); font-style: italic; font-size: 1.2rem; color: var(--ink-navy); max-width: 560px; margin: 0 auto; }
 .cost-scripture cite { display: block; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-text); font-style: normal; margin-top: var(--space-2); }
 
