@@ -771,9 +771,12 @@ html:not([data-app-booted]) [data-reveal] {
   padding: calc(var(--space-16) + var(--space-8)) var(--space-6) calc(var(--space-16) + var(--space-16));
   position: relative;
   overflow: hidden;
-  /* A visible seam against the hero above it — otherwise both sections are
-     close enough in tone to read as one undifferentiated navy slab. */
-  border-top: 1px solid rgba(43, 110, 118, 0.35);
+  /* No border-top seam here anymore — that was written back when the hero
+     sat directly above this section (same navy tone, needing a thin line
+     just to keep them from reading as one slab). Chapter III's paper
+     background is directly above it now, and HomePage.jsx puts a real
+     SectionDivider at that boundary — a hairline here today would just be
+     a stray mark sitting right under an already-real curved transition. */
   box-shadow: inset 0 1px 48px rgba(43, 110, 118, 0.1);
 }
 
@@ -1432,20 +1435,21 @@ html:not([data-app-booted]) [data-reveal] {
 .chapter { padding: var(--space-16) var(--space-6); max-width: 900px; margin: 0 auto; }
 
 /* -- Cold open -- */
-/* Was 70vh with vertically-centered content and the hero directly above it
-   (no divider — same ink-navy on both sides) — the empty margin that left
-   above the "4.3B" line read as a dead gap right after "Take the quiz"
-   rather than a deliberate beat. Shorter section + less top padding keeps
-   a real pause without it feeling like nothing is happening. */
+/* Was min-height:70vh (then 48vh) with vertically-centered content — a
+   viewport-relative height scales with the *screen*, not the content, so
+   on a tall/large monitor the empty margin above "4.3B" grew right along
+   with it regardless of how tight it looked on a smaller dev display. Fixed
+   padding instead: the section's height now comes from its own content,
+   the same way every other section on the page already sizes itself, so
+   the gap after "Take the quiz" stays the same real size everywhere. */
 .cold-open {
   position: relative;
-  min-height: 48vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--ink-navy);
   color: var(--atlas-paper);
-  padding: var(--space-8) var(--space-6) var(--space-16);
+  padding: var(--space-12) var(--space-6);
   overflow: hidden;
   text-align: center;
 }

@@ -13,7 +13,6 @@ import ChapterCommand from '../components/story/ChapterCommand.jsx';
 import ChapterAbyss from '../components/story/ChapterAbyss.jsx';
 import ChapterPattern from '../components/story/ChapterPattern.jsx';
 import ChapterCost from '../components/story/ChapterCost.jsx';
-import ChapterEnding from '../components/story/ChapterEnding.jsx';
 import StoryFinale from '../components/story/StoryFinale.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
@@ -156,17 +155,21 @@ export default function HomePage() {
       <ChapterAbyss />
       <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
       <ChapterPattern />
+      {/* AgencyMarquee moved up here (was after ChapterCost/Ending) — same
+          atlas-paper background as ChapterPattern right above it, so no
+          divider needed, and it lands earlier in the read as requested. */}
+      <AgencyMarquee />
+      <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
       <StatsStrip />
       <JourneySection />
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
       <Capabilities />
-      <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
+      {/* No divider here on purpose: MapTeaser's own visual (its full-bleed
+          map preview) is the same ink-navy as Capabilities right above it
+          — a paper-colored curve between two navy sections would promise a
+          color change that never actually arrives. */}
       <MapTeaser />
       <ChapterCost />
-      <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
-      <ChapterEnding />
-      <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
-      <AgencyMarquee />
       <PartnerQuotePlaceholder />
       <StoryFinale />
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
