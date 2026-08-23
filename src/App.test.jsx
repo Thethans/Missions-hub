@@ -28,6 +28,8 @@ describe('App', () => {
     // visually-hidden route announcement also contains that phrase.)
     expect(screen.getByRole('link', { name: 'Fielded — Home' })).toBeInTheDocument();
     expect(screen.getByText(/find the people still waiting to hear/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /take the quiz/i })).toBeInTheDocument();
+    // Two now — the hero CTA and StoryFinale's closing CTA (spec_2.md's
+    // story chapters) both link to /quiz with the same accessible name.
+    expect(screen.getAllByRole('link', { name: /take the quiz/i }).length).toBeGreaterThanOrEqual(1);
   });
 });

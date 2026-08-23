@@ -8,6 +8,13 @@ import MapTeaser from '../components/MapTeaser.jsx';
 import AgencyMarquee from '../components/AgencyMarquee.jsx';
 import PartnerQuotePlaceholder from '../components/PartnerQuotePlaceholder.jsx';
 import Faq from '../components/Faq.jsx';
+import ColdOpen from '../components/story/ColdOpen.jsx';
+import ChapterCommand from '../components/story/ChapterCommand.jsx';
+import ChapterAbyss from '../components/story/ChapterAbyss.jsx';
+import ChapterPattern from '../components/story/ChapterPattern.jsx';
+import ChapterCost from '../components/story/ChapterCost.jsx';
+import ChapterEnding from '../components/story/ChapterEnding.jsx';
+import StoryFinale from '../components/story/StoryFinale.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
 import SectionDivider from '../components/SectionDivider.jsx';
@@ -142,14 +149,26 @@ export default function HomePage() {
           </m.div>
         </m.div>
       </section>
+      <ColdOpen />
+      <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
+      <ChapterCommand />
+      <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
+      <ChapterAbyss />
+      <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
+      <ChapterPattern />
       <StatsStrip />
       <JourneySection />
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
       <Capabilities />
       <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
       <MapTeaser />
+      <ChapterCost />
+      <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
+      <ChapterEnding />
+      <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
       <AgencyMarquee />
       <PartnerQuotePlaceholder />
+      <StoryFinale />
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
       <Faq />
       <Footer />
