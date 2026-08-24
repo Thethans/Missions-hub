@@ -22,14 +22,17 @@ create table if not exists prayer_requests (
 -- Row Level Security: users can only read/write their own profile
 alter table profiles enable row level security;
 
+drop policy if exists "Users can view own profile" on profiles;
 create policy "Users can view own profile"
   on profiles for select
   using (auth.uid() = id);
 
+drop policy if exists "Users can update own profile" on profiles;
 create policy "Users can update own profile"
   on profiles for update
   using (auth.uid() = id);
 
+drop policy if exists "Users can insert own profile" on profiles;
 create policy "Users can insert own profile"
   on profiles for insert
   with check (auth.uid() = id);
@@ -37,10 +40,12 @@ create policy "Users can insert own profile"
 -- Prayer requests are public to read, but only the author can write/delete
 alter table prayer_requests enable row level security;
 
+drop policy if exists "Anyone can read prayer requests" on prayer_requests;
 create policy "Anyone can read prayer requests"
   on prayer_requests for select
   using (true);
 
+drop policy if exists "Users can insert own prayer requests" on prayer_requests;
 create policy "Users can insert own prayer requests"
   on prayer_requests for insert
   with check (auth.uid() = user_id);
@@ -77,6 +82,7 @@ create table if not exists user_checklist_progress (
 -- editable via the Supabase SQL editor for v1.
 alter table checklist_items enable row level security;
 
+drop policy if exists "Anyone can read checklist items" on checklist_items;
 create policy "Anyone can read checklist items"
   on checklist_items for select
   using (true);
@@ -84,28 +90,34 @@ create policy "Anyone can read checklist items"
 -- Users can only see/manage their own checklist profile and progress.
 alter table user_checklist_profile enable row level security;
 
+drop policy if exists "Users can view own checklist profile" on user_checklist_profile;
 create policy "Users can view own checklist profile"
   on user_checklist_profile for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own checklist profile" on user_checklist_profile;
 create policy "Users can insert own checklist profile"
   on user_checklist_profile for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own checklist profile" on user_checklist_profile;
 create policy "Users can update own checklist profile"
   on user_checklist_profile for update
   using (auth.uid() = user_id);
 
 alter table user_checklist_progress enable row level security;
 
+drop policy if exists "Users can view own checklist progress" on user_checklist_progress;
 create policy "Users can view own checklist progress"
   on user_checklist_progress for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own checklist progress" on user_checklist_progress;
 create policy "Users can insert own checklist progress"
   on user_checklist_progress for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own checklist progress" on user_checklist_progress;
 create policy "Users can delete own checklist progress"
   on user_checklist_progress for delete
   using (auth.uid() = user_id);
@@ -377,14 +389,17 @@ create table if not exists saved_opportunities (
 
 alter table saved_opportunities enable row level security;
 
+drop policy if exists "Users can view own saved opportunities" on saved_opportunities;
 create policy "Users can view own saved opportunities"
   on saved_opportunities for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can save own opportunities" on saved_opportunities;
 create policy "Users can save own opportunities"
   on saved_opportunities for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can unsave own opportunities" on saved_opportunities;
 create policy "Users can unsave own opportunities"
   on saved_opportunities for delete
   using (auth.uid() = user_id);
