@@ -14,6 +14,7 @@
     "fetch-jp": "node scripts/fetch-joshua-project.mjs",
     "generate-hero-dots": "node scripts/generate-hero-dots.js",
     "generate-map-preview": "node scripts/generate-map-preview.js",
+    "generate-map-outlines": "node scripts/generate-map-outlines.js",
     "generate-unreached-names": "node scripts/generate-unreached-names.js",
     "sync-opportunities": "node scripts/sync-opportunities.js",
     "sync-opportunities:dry": "node scripts/sync-opportunities.js --all --dryRun",
@@ -64,10 +65,12 @@
     "puppeteer": "^25.3.0",
     "puppeteer-core": "^25.3.0",
     "rollup-plugin-visualizer": "^7.0.1",
+    "topojson-client": "^3.1.0",
     "typescript": "^5.9.3",
     "vite": "^5.4.0",
     "vitest": "^4.1.10",
     "winston": "^3.17.0",
+    "world-atlas": "^2.0.2",
     "yargs": "^17.7.2"
   }
 }
