@@ -1834,20 +1834,49 @@ html:not([data-app-booted]) [data-reveal] {
 .photo.v-night .photo-img { background: radial-gradient(circle at 65% 40%, rgba(217, 164, 65, 0.65) 0%, rgba(22, 35, 59, 0.9) 35%, #060a12 100%); }
 
 /* -- Chapter IV: Cost -- */
+/* .chapter caps at 900px (see the base rule above) — too narrow for a real
+   left photo / right text split to read as substantial rather than cramped,
+   so Chapter IV gets its own wider ceiling. .chapter.chapter-cost (two
+   classes) outweighs the base .chapter rule's specificity. */
+.chapter.chapter-cost { max-width: 1200px; }
 .chapter-cost { background: var(--atlas-paper); }
+.cost-split {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: var(--space-10);
+  align-items: stretch;
+}
+/* The .photo base rule fixes aspect-ratio:16/10, which reads as short and
+   squat next to a text column this tall (an account paragraph, six punch
+   lines, and a scripture block). Dropping the aspect ratio and stretching
+   to the grid row's height instead lets the photo fill exactly as much
+   vertical space as the copy beside it does. */
+.cost-split-photo.photo {
+  aspect-ratio: unset;
+  min-height: 100%;
+  margin-bottom: 0;
+}
+.cost-split-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .cost-account {
-  max-width: 560px;
-  margin: 0 auto var(--space-12);
-  text-align: center;
   color: var(--muted-text);
   line-height: 1.7;
-  font-size: 1.02rem;
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-8);
 }
-.cost-punch { max-width: 560px; margin: 0 auto var(--space-12); text-align: center; }
+.cost-punch { margin: 0 0 var(--space-8); }
 .cost-punch p { font-size: 1.15rem; color: var(--muted-text); margin: 0 0 var(--space-3); }
 .cost-punch-turn { color: var(--ink-navy) !important; font-family: var(--font-display); font-size: 1.5rem !important; font-weight: 700; margin-top: var(--space-6) !important; }
-.cost-scripture { text-align: center; font-family: var(--font-display); font-style: italic; font-size: 1.2rem; color: var(--ink-navy); max-width: 560px; margin: 0 auto; }
+.cost-scripture { font-family: var(--font-display); font-style: italic; font-size: 1.2rem; color: var(--ink-navy); margin: 0; }
 .cost-scripture cite { display: block; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-text); font-style: normal; margin-top: var(--space-2); }
+
+@media (max-width: 720px) {
+  .cost-split { grid-template-columns: 1fr; }
+  .cost-split-photo.photo { aspect-ratio: 16 / 10; min-height: 0; }
+}
 
 /* -- Finale -- */
 .story-finale { background: var(--atlas-paper); text-align: center; padding: var(--space-16) var(--space-6); }
