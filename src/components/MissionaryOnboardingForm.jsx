@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CheckCircle } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import { CATEGORY_LABELS, groupTagsByCategory } from '../data/doctrinalTagCategories.js';
+import MissionaryHeadshotUpload from './MissionaryHeadshotUpload.jsx';
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'Public — show my exact region' },
@@ -11,6 +12,7 @@ const VISIBILITY_OPTIONS = [
 
 const INITIAL_FORM = {
   display_name: '',
+  headshot_url: '',
   agency_name: '',
   field_region: '',
   field_visibility: 'region_only',
@@ -40,6 +42,7 @@ function normalizeWebsite(value) {
 function toFormState(profile) {
   return {
     display_name: profile.display_name || '',
+    headshot_url: profile.headshot_url || '',
     agency_name: profile.agency_name || '',
     field_region: profile.field_region || '',
     field_visibility: profile.field_visibility || 'region_only',
@@ -130,6 +133,7 @@ export default function MissionaryOnboardingForm({ initial, onSaved, onCancel })
     // re-review or re-verify a profile.
     const payload = {
       display_name: form.display_name,
+      headshot_url: form.headshot_url || null,
       agency_name: form.agency_name || null,
       field_region: form.field_region || null,
       field_visibility: form.field_visibility,
@@ -220,6 +224,14 @@ export default function MissionaryOnboardingForm({ initial, onSaved, onCancel })
           onChange={(e) => updateField('display_name', e.target.value)}
         />
       </label>
+
+      <div className="onboarding-form-field">
+        <span>Headshot photo (optional)</span>
+        <MissionaryHeadshotUpload
+          value={form.headshot_url}
+          onChange={(url) => updateField('headshot_url', url)}
+        />
+      </div>
 
       <label>
         Agency name

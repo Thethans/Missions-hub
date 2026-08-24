@@ -359,6 +359,38 @@ create policy "Active admins can delete missionary photos"
   on storage.objects for delete
   using (bucket_id = 'missionary-photos' and is_active_verified_admin(auth.uid()));
 
+-- Storage bucket for missionary_profiles.headshot_url — self-serve, unlike
+-- missionary-photos above (admin-only). A missionary uploads their own
+-- headshot from MissionaryOnboardingForm, so write access is scoped to the
+-- uploader's own folder instead of requiring admin status: every object
+-- path must be prefixed `${auth.uid()}/...`, checked via
+-- storage.foldername(name), the same per-user-folder convention Supabase's
+-- own docs use for self-serve buckets. Public bucket — headshots are shown
+-- on the public directory/profile pages once a profile is approved.
+insert into storage.buckets (id, name, public)
+values ('missionary-headshots', 'missionary-headshots', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Public can view missionary headshots" on storage.objects;
+create policy "Public can view missionary headshots"
+  on storage.objects for select
+  using (bucket_id = 'missionary-headshots');
+
+drop policy if exists "Missionaries can upload their own headshot" on storage.objects;
+create policy "Missionaries can upload their own headshot"
+  on storage.objects for insert
+  with check (bucket_id = 'missionary-headshots' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Missionaries can replace their own headshot" on storage.objects;
+create policy "Missionaries can replace their own headshot"
+  on storage.objects for update
+  using (bucket_id = 'missionary-headshots' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Missionaries can delete their own headshot" on storage.objects;
+create policy "Missionaries can delete their own headshot"
+  on storage.objects for delete
+  using (bucket_id = 'missionary-headshots' and (storage.foldername(name))[1] = auth.uid()::text);
+
 -- Opportunities: auth-linked favorites -----------------------------------
 -- Favorites used to live only in localStorage (fielded_saved_opps), so they
 -- were device-owned — sign in on a second device and the list was empty.
@@ -468,6 +500,10 @@ create table if not exists missionary_profiles (
   -- never embedded as an <img>/iframe or injected as raw HTML, so a
   -- submission can point to a site without hotlinking its content.
   website text,
+  -- Public URL into the missionary-headshots Storage bucket (see above) —
+  -- set via MissionaryHeadshotUpload, never a hand-typed/arbitrary URL, so
+  -- it always points at that bucket's own public object URLs.
+  headshot_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -510,6 +546,7 @@ create table if not exists church_doctrinal_tags (
 -- `create table if not exists` blocks above are no-ops against an already-
 -- deployed database, so each new column has to be added explicitly here too.
 alter table missionary_profiles add column if not exists website text;
+alter table missionary_profiles add column if not exists headshot_url text;
 alter table church_profiles add column if not exists website text;
 alter table church_profiles add column if not exists bio text;
 alter table church_profiles add column if not exists missions_focus text;

@@ -97,6 +97,20 @@ describe('MissionaryProfile', () => {
     expect(screen.getByText('Agency-verified')).toBeInTheDocument();
   });
 
+  it('shows initials instead of a photo when the missionary has no headshot_url', async () => {
+    renderProfile();
+    await waitFor(() => screen.getByText('Jane Doe'));
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(document.querySelector('.profile-detail-avatar--initials')).toHaveTextContent('JD');
+  });
+
+  it('renders the headshot photo when headshot_url is set', async () => {
+    missionaryRow = { ...MISSIONARY, headshot_url: 'https://cdn.example.com/jane.jpg' };
+    renderProfile();
+    await waitFor(() => screen.getByText('Jane Doe'));
+    expect(document.querySelector('img.profile-detail-avatar')).toHaveAttribute('src', 'https://cdn.example.com/jane.jpg');
+  });
+
   it('respects field_visibility private the same way as the directory', async () => {
     missionaryRow = { ...MISSIONARY, field_visibility: 'private' };
     renderProfile();

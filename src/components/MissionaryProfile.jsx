@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient.js';
 import useSupabaseSession from '../hooks/useSupabaseSession.js';
 import { CATEGORY_LABELS, groupTagsByCategory } from '../data/doctrinalTagCategories.js';
 import { locationText, missionaryTags, VERIFICATION_LABEL } from '../data/missionaryDisplay.js';
+import MissionaryAvatar from './MissionaryAvatar.jsx';
 
 function RequestIntroForm({ missionaryId, onSent }) {
   const [message, setMessage] = useState('');
@@ -228,7 +229,10 @@ export default function MissionaryProfile({ missionaryId }) {
         </span>
       </div>
 
-      <h1 className="profile-detail-title">{missionary.display_name}</h1>
+      <div className="profile-detail-identity">
+        <MissionaryAvatar missionary={missionary} className="profile-detail-avatar" />
+        <h1 className="profile-detail-title">{missionary.display_name}</h1>
+      </div>
 
       <div className="directory-card-meta">
         <span className="directory-card-tag">

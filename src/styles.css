@@ -3104,7 +3104,16 @@ html:not([data-app-booted]) [data-reveal] {
   margin: 0;
 }
 
-.onboarding-form label {
+.onboarding-form label,
+/* Same treatment as a <label>, for the headshot field below — it wraps
+   MissionaryHeadshotUpload rather than a native control directly, and that
+   component's own <input> already carries its own accessible name
+   (aria-label="Upload headshot photo"), so an outer <label> here would
+   either go unused (aria-label wins ARIA-naming precedence over an
+   associated label) or fail eslint's label-has-associated-control (it
+   can't see through the child component to the real input). A plain
+   .onboarding-form-field with a caption span avoids both. */
+.onboarding-form .onboarding-form-field {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -3121,6 +3130,29 @@ html:not([data-app-booted]) [data-reveal] {
   font-size: 0.82rem;
   line-height: 1.45;
   font-weight: 400;
+}
+
+/* Headshot upload control (MissionaryHeadshotUpload) — same layout as
+   prayer-map's .pm-admin-photo-upload, but a circular preview to match the
+   avatar convention used on the directory/profile pages (see
+   .directory-card-avatar / .profile-detail-avatar below). */
+.onboarding-headshot-upload {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.onboarding-headshot-preview {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+.onboarding-headshot-status {
+  font-size: 0.8rem;
+  color: var(--muted-text);
 }
 
 .onboarding-form-row label { flex: 1; }
@@ -3428,11 +3460,41 @@ html:not([data-app-booted]) [data-reveal] {
   color: var(--status-reached);
 }
 
+.directory-card-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
 .directory-card-title {
   font-family: var(--font-display);
   font-size: 1.1rem;
-  margin: 0 0 var(--space-2);
+  margin: 0;
   line-height: 1.3;
+}
+
+/* Shared avatar convention (MissionaryAvatar) — a real headshot_url renders
+   as this exact circle; missing one falls back to the --initials modifier
+   below rather than a generic person-silhouette icon, so an unphotographed
+   missionary reads as "no photo yet," never as a fabricated one. */
+.directory-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.directory-card-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .directory-card-desc {
@@ -3609,10 +3671,37 @@ html:not([data-app-booted]) [data-reveal] {
   margin-bottom: var(--space-6);
 }
 
+.profile-detail-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
 .profile-detail-title {
   font-family: var(--font-display);
   font-size: 1.8rem;
-  margin: 0 0 var(--space-3);
+  margin: 0;
+}
+
+/* Larger sibling of .directory-card-avatar — same shared convention. */
+.profile-detail-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-detail-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--voyage-teal);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 600;
 }
 
 .profile-detail-section {

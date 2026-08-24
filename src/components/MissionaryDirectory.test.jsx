@@ -86,6 +86,24 @@ describe('MissionaryDirectory', () => {
     expect(screen.getByText('62% of support raised')).toBeInTheDocument();
   });
 
+  it('shows initials instead of a photo when a missionary has no headshot_url', async () => {
+    renderDirectory();
+    await waitFor(() => screen.getByText('Jane Doe'));
+    const card = screen.getByText('Jane Doe').closest('.directory-card');
+    expect(card.querySelector('img')).not.toBeInTheDocument();
+    expect(card.querySelector('.directory-card-avatar--initials')).toHaveTextContent('JD');
+  });
+
+  it('renders the headshot photo when headshot_url is set', async () => {
+    missionaryRows = [{ ...PUBLIC_MISSIONARY, headshot_url: 'https://cdn.example.com/jane.jpg' }, PRIVATE_MISSIONARY];
+    mockSupabase = makeSupabaseMock();
+    renderDirectory();
+    await waitFor(() => screen.getByText('Jane Doe'));
+    const card = screen.getByText('Jane Doe').closest('.directory-card');
+    const img = card.querySelector('img.directory-card-avatar');
+    expect(img).toHaveAttribute('src', 'https://cdn.example.com/jane.jpg');
+  });
+
   it('shows "Location available on request" instead of the region for a private-visibility profile', async () => {
     renderDirectory();
     await waitFor(() => screen.getByText('John Smith'));

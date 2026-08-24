@@ -24,3 +24,18 @@ export const VERIFICATION_LABEL = {
   self_reported: 'Self-reported',
   agency_verified: 'Agency-verified'
 };
+
+// Fallback avatar content for a missionary with no headshot_url — first
+// letter of up to the first two words of display_name, e.g. "Grace Marrow"
+// → "GM", "Mei-Lin" → "M". An honest placeholder (initials, never a generic
+// person silhouette pretending to be a real photo) rather than treating the
+// photo as required.
+export function initials(displayName) {
+  return (displayName || '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+}

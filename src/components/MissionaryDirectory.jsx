@@ -4,6 +4,7 @@ import { MapPin, CheckCircle } from '@phosphor-icons/react';
 import { supabase } from '../supabaseClient.js';
 import { CATEGORY_LABELS, groupTagsByCategory } from '../data/doctrinalTagCategories.js';
 import { locationText, missionaryTagIds, missionaryTags, VERIFICATION_LABEL } from '../data/missionaryDisplay.js';
+import MissionaryAvatar from './MissionaryAvatar.jsx';
 
 function MissionaryCard({ missionary }) {
   const tags = missionaryTags(missionary).map((t) => t.label);
@@ -21,9 +22,12 @@ function MissionaryCard({ missionary }) {
         </span>
       </div>
 
-      <h2 className="directory-card-title">
-        <Link to={`/for-churches/${missionary.id}`}>{missionary.display_name}</Link>
-      </h2>
+      <div className="directory-card-identity">
+        <MissionaryAvatar missionary={missionary} className="directory-card-avatar" />
+        <h2 className="directory-card-title">
+          <Link to={`/for-churches/${missionary.id}`}>{missionary.display_name}</Link>
+        </h2>
+      </div>
 
       {missionary.bio && <p className="directory-card-desc">{missionary.bio}</p>}
 

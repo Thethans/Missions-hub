@@ -42,7 +42,17 @@ function makeSupabaseMock() {
         return { insert: insertTags, delete: deleteTags };
       }
       throw new Error(`Unexpected table: ${table}`);
-    })
+    }),
+    // Backs MissionaryHeadshotUpload, embedded in this form — see its own
+    // test file for upload-failure/session-expiry coverage; this mock only
+    // needs the happy path to prove headshot_url round-trips into the
+    // profile payload below.
+    storage: {
+      from: (bucket) => ({
+        upload: () => Promise.resolve({ error: null }),
+        getPublicUrl: (path) => ({ data: { publicUrl: `https://cdn.example.com/${bucket}/${path}` } })
+      })
+    }
   };
 }
 
@@ -93,6 +103,24 @@ describe('MissionaryOnboardingForm', () => {
 
     await waitFor(() => screen.getByText(/under review/i));
     expect(screen.getByText(/won't show up in the church directory yet/i)).toBeInTheDocument();
+  });
+
+  it('uploads a headshot and includes its URL in the submit payload', async () => {
+    const user = userEvent.setup();
+    render(<MissionaryOnboardingForm />);
+    await waitFor(() => screen.getByText('Baptism'));
+
+    await fillRequiredFields(user);
+    const file = new File(['fake image bytes'], 'headshot.jpg', { type: 'image/jpeg' });
+    await user.upload(screen.getByLabelText(/upload headshot photo/i), file);
+    await waitFor(() => screen.getByAltText(''));
+
+    await user.click(screen.getByRole('button', { name: /submit for review/i }));
+
+    await waitFor(() => expect(insertProfile).toHaveBeenCalled());
+    expect(insertProfile.mock.calls[0][0]).toMatchObject({
+      headshot_url: expect.stringMatching(/^https:\/\/cdn\.example\.com\/missionary-headshots\/user-1\/\d+-headshot\.jpg$/)
+    });
   });
 
   it('shows an error and does not confirm if the profile insert fails', async () => {
