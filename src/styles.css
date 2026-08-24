@@ -1853,7 +1853,12 @@ html:not([data-app-booted]) [data-reveal] {
 .cost-split {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
-  gap: var(--space-10);
+  /* --space-10 doesn't exist in tokens.css (the scale jumps 8→ 12) —
+     that undefined var() was silently resolving to no gap at all, leaving
+     the photo and text columns touching. --space-12 is the nearest real
+     token and reads as the generous editorial gutter this split was going
+     for. */
+  gap: var(--space-12);
   align-items: stretch;
 }
 /* The .photo base rule fixes aspect-ratio:16/10, which reads as short and
