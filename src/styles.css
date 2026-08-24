@@ -1794,6 +1794,7 @@ html:not([data-app-booted]) [data-reveal] {
   aspect-ratio: 16 / 10;
 }
 .photo-img { position: absolute; inset: 0; }
+.photo-real-img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .photo::after {
   content: '';
   position: absolute;

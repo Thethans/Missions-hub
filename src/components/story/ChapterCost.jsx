@@ -27,14 +27,12 @@ export default function ChapterCost() {
           1956, Jim Elliot and four other missionaries (Nate Saint, Ed
           McCully, Roger Youderian, Pete Fleming) were killed by Waorani
           tribesmen in Ecuador while attempting first peaceful contact
-          ("Operation Auca"). No real photo asset exists in this codebase
-          yet (no image pipeline) — Photo.jsx's placeholder system stays,
-          but the caption now names the actual person and event instead of
-          a generic stand-in scene. Swap for a real, rights-cleared photo
-          when one is sourced. */}
+          ("Operation Auca"). */}
       <Photo
         variant="v-night"
-        caption="Jim Elliot, one of five missionaries killed by Waorani tribesmen in Ecuador on January 8, 1956, while attempting first peaceful contact."
+        src="/images/operation-auca-five.png"
+        alt="The five missionaries of Operation Auca: Jim Elliot, Nate Saint, Ed McCully, Roger Youderian, and Pete Fleming."
+        caption="The five missionaries killed by Waorani tribesmen in Ecuador on January 8, 1956, while attempting first peaceful contact: Jim Elliot, Nate Saint, Ed McCully, Roger Youderian, and Pete Fleming."
       />
       <p className="cost-account">
         Jim Elliot spent years building toward contact with the Waorani, an isolated people group in
