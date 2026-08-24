@@ -8,6 +8,29 @@ import type { MissionaryUpdate, PrayerRequest } from '../data/types';
 // just enough to assign one without an `any`/`as unknown` escape hatch.
 type PhotoAspectStyle = CSSProperties & { '--pm-photo-aspect': string };
 
+// .pm-update__photo fixes the thumbnail's height and lets width follow the
+// photo's real aspect ratio — but width is also clamped between 48px and
+// 112px so one extreme-ratio photo can't swallow the whole update row (see
+// the CSS comment on .pm-update__photo). That pixel clamp used to run
+// independently of the aspect-ratio the browser was told to honor, so for
+// any photo ratio outside what a 64px-tall/48–112px-wide box actually
+// allows, the two disagreed and object-fit:cover cropped harder than
+// intended. Clamping the ratio itself here first — to exactly the range
+// that 64px-tall box can represent at 48–112px wide — means the declared
+// aspect-ratio and the rendered box always agree, so the CSS clamp below
+// becomes a no-op safety net instead of silently fighting this value.
+const THUMB_HEIGHT = 64;
+const THUMB_MIN_WIDTH = 48;
+const THUMB_MAX_WIDTH = 112;
+const MIN_RATIO = THUMB_MIN_WIDTH / THUMB_HEIGHT;
+const MAX_RATIO = THUMB_MAX_WIDTH / THUMB_HEIGHT;
+
+function clampedPhotoAspect(width: number, height: number): string {
+  if (!width || !height) return '4 / 3';
+  const ratio = Math.min(MAX_RATIO, Math.max(MIN_RATIO, width / height));
+  return `${ratio}`;
+}
+
 interface UpdatesFeedProps {
   updates: MissionaryUpdate[];
   prayerRequests: PrayerRequest[];
@@ -69,7 +92,9 @@ export default function UpdatesFeed({ updates, prayerRequests, missionaryName }:
             // a portrait update stays narrow-and-tall, a landscape one
             // wide-and-short, instead of every photo getting cropped to
             // fit one fixed landscape box regardless of its real shape.
-            style={{ '--pm-photo-aspect': `${u.photoWidth} / ${u.photoHeight}` } as PhotoAspectStyle}
+            // Ratio is pre-clamped (see clampedPhotoAspect above) so it
+            // never disagrees with the CSS min/max-width safety net.
+            style={{ '--pm-photo-aspect': clampedPhotoAspect(u.photoWidth, u.photoHeight) } as PhotoAspectStyle}
           />
           <div className="pm-update__content">
             <div className="pm-update__head">

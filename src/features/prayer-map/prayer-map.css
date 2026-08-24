@@ -632,15 +632,16 @@
 }
 /* Height is fixed so the feed keeps a steady row rhythm; width follows the
    photo's own aspect ratio (--pm-photo-aspect, set per-image in
-   UpdatesFeed.tsx from its real intrinsic photoWidth/photoHeight) instead
-   of forcing every photo into one fixed landscape box — a portrait update
+   UpdatesFeed.tsx from its real intrinsic photoWidth/photoHeight, and
+   pre-clamped there to exactly the 48–112px range below) instead of
+   forcing every photo into one fixed landscape box — a portrait update
    renders narrow-and-tall, a landscape one wide-and-short, matching how
-   the photo actually looks rather than an unnaturally cropped/stretched
-   crop of it. The min/max width caps keep an extreme aspect ratio (a
-   near-square or a very wide/tall photo) from collapsing to nothing or
-   swallowing the row; object-fit:cover is just a safety net for that
-   clamped case, not the normal path (aspect-ratio already matches the
-   photo almost exactly otherwise). */
+   the photo actually looks. min/max-width here must stay in sync with
+   UpdatesFeed.tsx's THUMB_MIN_WIDTH/THUMB_MAX_WIDTH — they're a pure
+   safety net (never actually triggered, since the ratio is pre-clamped to
+   match) rather than a second, independent clamp that could disagree with
+   the declared aspect-ratio and force object-fit:cover into cropping
+   harder than the photo's real shape calls for. */
 .pm-update__photo {
   height: 64px;
   width: auto;
