@@ -26,8 +26,8 @@ const SUPPORT_MAP_PREVIEW = {
 // For Churches, with tag '06', to restore it.
 const LINKS = [
   { to: '/', label: 'Home', end: true, tag: '01' },
-  { to: '/map', label: 'Map', tag: '02' },
-  { to: '/quiz', label: 'Agency Match', tag: '03' },
+  { to: '/quiz', label: 'Agency Match', tag: '02' },
+  { to: '/map', label: 'Map', tag: '03' },
   { to: '/opportunities', label: 'Opportunities', tag: '04' },
   { to: '/prayer-map', label: 'Support Map', tag: '05', preview: SUPPORT_MAP_PREVIEW },
   { to: '/for-churches', label: 'For Churches', tag: '06' },
