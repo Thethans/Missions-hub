@@ -12,15 +12,17 @@ import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 // BrandLockup's shared layoutId rather than swapping instantly.
 const COLLAPSE_THRESHOLD = 80;
 
+// Checklist temporarily pulled from nav (page and route still live at
+// /checklist — just not linked as a tab). Re-add between Opportunities and
+// For Churches, with tag '05', to restore it.
 const LINKS = [
   { to: '/', label: 'Home', end: true, tag: '01' },
   { to: '/map', label: 'Map', tag: '02' },
   { to: '/quiz', label: 'Agency Match', tag: '03' },
   { to: '/opportunities', label: 'Opportunities', tag: '04' },
-  { to: '/checklist', label: 'Checklist', tag: '05' },
-  { to: '/for-churches', label: 'For Churches', tag: '06' },
-  { to: '/for-missionaries', label: 'For Missionaries', tag: '07' },
-  { to: '/about', label: 'About', tag: '08' }
+  { to: '/for-churches', label: 'For Churches', tag: '05' },
+  { to: '/for-missionaries', label: 'For Missionaries', tag: '06' },
+  { to: '/about', label: 'About', tag: '07' }
 ];
 
 export default function TopNav() {
