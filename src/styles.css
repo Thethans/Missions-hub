@@ -1852,7 +1852,32 @@ html:not([data-app-booted]) [data-reveal] {
 /* -- Finale -- */
 .story-finale { background: var(--atlas-paper); text-align: center; padding: var(--space-16) var(--space-6); }
 .story-finale-ctas { display: flex; align-items: center; justify-content: center; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-8); }
-.story-finale-link { font-weight: 600; color: var(--voyage-teal); text-decoration: underline; text-underline-offset: 3px; }
+/* Outline variant of .cta-button, not a bare text link — three CTAs sitting
+   in one row (a filled primary plus two secondary actions) need a shared
+   "this is a button" affordance; a plain underlined link next to a solid
+   button reads as one real action and two afterthoughts, even though
+   "Bring this to your church" is exactly as real an action as "Take the
+   quiz". Same padding/radius/font-weight as .cta-button, transparent fill
+   instead of solid, so the primary still leads on visual weight. */
+.story-finale-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  color: var(--voyage-teal);
+  text-decoration: none;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius);
+  border: 1px solid var(--voyage-teal);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.story-finale-link:hover {
+  background: var(--voyage-teal);
+  color: white;
+}
 .story-finale-line { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--ink-navy); margin: 0 0 var(--space-8); }
 .story-finale-attribution { max-width: 640px; margin: 0 auto; font-size: 0.72rem; color: var(--muted-text); line-height: 1.5; }
 
