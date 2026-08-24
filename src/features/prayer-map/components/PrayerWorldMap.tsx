@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import type { StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -26,6 +26,14 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
   // so markers are created exactly once (SPEC §6: build markers once).
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  // The basemap depends on an external tile/glyph source (see basemapStyle.js)
+  // that's known to fail intermittently (WorldMap.jsx, the other MapLibre map
+  // in this app, hit the same thing — see its own tileError/loadTimedOut
+  // states). Pins are DOM overlays added independent of the basemap load (see
+  // the loop below), so without this, a flaky tile fetch left pins floating
+  // over a blank canvas with nothing telling the visitor anything went wrong
+  // — exactly the "nodes load but the map itself doesn't" bug this fixes.
+  const [mapFailed, setMapFailed] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -38,6 +46,22 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
       attributionControl: { compact: true }
     });
     mapRef.current = map;
+
+    // Backstop for when MapLibre never fires 'load' *or* 'error' at all (seen
+    // in practice under WebGL resource pressure) — without this the canvas
+    // just sits blank forever with no signal that anything's wrong.
+    const loadTimeout = window.setTimeout(() => {
+      console.error('PrayerWorldMap: MapLibre never fired load or error within 20s');
+      setMapFailed(true);
+    }, 20000);
+
+    // MapLibre fires 'error' for tile/style/glyph fetch failures — none of
+    // which reject a promise or throw anywhere React would see them.
+    map.on('error', (e) => {
+      window.clearTimeout(loadTimeout);
+      console.error('PrayerWorldMap: MapLibre error:', e.error);
+      setMapFailed(true);
+    });
 
     // Markers are DOM overlays positioned by lng/lat — they don't depend on the
     // basemap style or tiles having loaded, so add them right away rather than
@@ -72,9 +96,13 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
     const onWindowResize = () => map.resize();
     window.addEventListener('resize', onWindowResize);
 
-    map.on('load', () => map.resize());
+    map.on('load', () => {
+      window.clearTimeout(loadTimeout);
+      map.resize();
+    });
 
     return () => {
+      window.clearTimeout(loadTimeout);
       window.removeEventListener('resize', onWindowResize);
       map.remove();
       mapRef.current = null;
@@ -106,6 +134,14 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
     <div className="pm-map-wrap">
       <div className="pm-map" ref={containerRef} />
       <div className="pm-vignette" aria-hidden="true" />
+      {/* Reuses WorldMap.jsx's exact class and copy for the same failure —
+          both maps depend on the same external tile source, so a visitor
+          should see one consistent message regardless of which map hit it. */}
+      {mapFailed && (
+        <p className="map-data-error" role="alert">
+          Couldn't load the map right now — try refreshing the page.
+        </p>
+      )}
     </div>
   );
 }
