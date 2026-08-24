@@ -385,6 +385,66 @@ html:not([data-app-booted]) [data-reveal] {
   .site-nav-hamburger { display: flex; }
 }
 
+.nav-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 35, 59, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: var(--space-6);
+}
+
+.nav-preview-card {
+  position: relative;
+  background: var(--atlas-paper);
+  color: var(--ink-navy);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(22, 35, 59, 0.25);
+  padding: var(--space-8);
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.nav-preview-card h3 { margin: 0 0 var(--space-3); font-family: var(--font-display); }
+.nav-preview-card p { margin: 0 0 var(--space-6); color: var(--muted-text); }
+
+.nav-preview-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted-text);
+  padding: var(--space-1);
+}
+
+.nav-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.nav-preview-dismiss {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted-text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+.nav-preview-dismiss:hover,
+.nav-preview-dismiss:focus-visible { color: var(--ink-navy); }
+
+@media (max-width: 640px) {
+  .nav-preview-card { padding: var(--space-6); margin: var(--space-3); }
+}
+
 /* ==== FOOTER ==== */
 
 .site-footer {
@@ -1352,6 +1412,13 @@ html:not([data-app-booted]) [data-reveal] {
 
 .map-preview-graticule line { stroke: rgba(250, 247, 240, 0.08); stroke-width: 1; }
 
+.map-preview-outline {
+  fill: none;
+  stroke: rgba(250, 247, 240, 0.22);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
 /* Same solid/faded/ring status encoding as the live map (WorldMap.jsx) —
    SVG circles need fill/stroke rather than the background/border used for
    the small status dots elsewhere, so these are their own rules rather than
@@ -1853,11 +1920,10 @@ html:not([data-app-booted]) [data-reveal] {
 .cost-split {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
-  /* --space-10 doesn't exist in tokens.css (the scale jumps 8→ 12) —
-     that undefined var() was silently resolving to no gap at all, leaving
-     the photo and text columns touching. --space-12 is the nearest real
-     token and reads as the generous editorial gutter this split was going
-     for. */
+  /* --space-10 doesn't exist in tokens.css (the scale jumps 8→12) — that
+     undefined var() was silently resolving to no gap at all, leaving the
+     photo and text columns touching. --space-12 is the nearest real token
+     and reads as the generous editorial gutter this split was going for. */
   gap: var(--space-12);
   align-items: stretch;
 }
