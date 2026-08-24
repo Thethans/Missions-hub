@@ -17,8 +17,8 @@ const SECTIONS = [
           side by side.
         </p>
         <p>
-          The map shows where the need is, the quiz points you toward agencies worth a
-          conversation, and the checklist keeps you honest about what's left before you leave.
+          The map shows where the need is, and the quiz points you toward agencies worth a
+          conversation.
         </p>
       </>
     )

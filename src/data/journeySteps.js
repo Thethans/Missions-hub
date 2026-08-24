@@ -1,5 +1,11 @@
-// The 4 stops in the site's core journey — reused by the scrollytelling
+// The stops in the site's core journey — reused by the scrollytelling
 // JourneySection (full copy) and anywhere else that needs the short list.
+// A "Prepare without dropping things" step (the pre-field checklist) is
+// temporarily removed — see TopNav.jsx's own comment: the checklist page
+// and route are still live, just pulled from the nav tabs for now, so
+// promoting it as a journey step would point somewhere the primary nav no
+// longer surfaces. Re-add between "Find agencies..." and "Get to the
+// field" (renumbering) once the nav link comes back.
 export const JOURNEY_STEPS = [
   {
     n: '01',
@@ -13,11 +19,6 @@ export const JOURNEY_STEPS = [
   },
   {
     n: '03',
-    title: 'Prepare without dropping things',
-    desc: 'Work through a pre-field checklist tailored to your role and destination, with your progress saved as you go.'
-  },
-  {
-    n: '04',
     title: 'Get to the field',
     desc: 'The goal was never the website. Talk to real people at the agencies that fit, and go.'
   }

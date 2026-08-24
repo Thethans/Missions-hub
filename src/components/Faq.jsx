@@ -20,10 +20,6 @@ const ITEMS = [
     a: 'The matcher never guesses. If an agency\'s public materials don\'t clearly state something — their support-raising model, for example — that shows up under "worth asking about" as an open question, not as a confirmed fact.'
   },
   {
-    q: 'Do I need an account to use the map or quiz?',
-    a: 'No — the map and quiz work without signing in. An account is only needed for the pre-field checklist, since that saves your progress and is tailored to your role and destination access-level.'
-  },
-  {
     q: 'Is this a replacement for talking to a real recruiter?',
     a: "No. It's a starting point — a way to walk into that first conversation with an agency already knowing what you have in common and what to ask about."
   }

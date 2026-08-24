@@ -21,7 +21,7 @@ const orgSchema = {
   name: 'Fielded',
   url: BASE_URL,
   logo: `${BASE_URL}/icon-512.png`,
-  description: 'A live map of unreached people groups, a transparent mission-agency matcher, and a pre-field checklist.'
+  description: 'A live map of unreached people groups and a transparent mission-agency matcher.'
 };
 
 const websiteSchema = {

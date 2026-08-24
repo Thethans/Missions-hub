@@ -1,6 +1,6 @@
 import React from 'react';
 import { m } from 'framer-motion';
-import { Globe, Compass, Briefcase, CheckSquare } from '@phosphor-icons/react';
+import { Globe, Compass, Briefcase } from '@phosphor-icons/react';
 import agencies from '../data/agencies.json';
 import { QUESTIONS } from '../data/quizQuestions.js';
 import opportunitiesMeta from '../data/opportunitiesMeta.json';
@@ -32,12 +32,13 @@ const ITEMS = [
     icon: Briefcase,
     title: 'An explorer stocked with real openings',
     desc: `${opportunitiesMeta.opportunityCount.toLocaleString()} live opportunities across ${opportunitiesMeta.agencyCount} agencies — filter by role, region, or term length instead of scrolling one long list.`
-  },
-  {
-    icon: CheckSquare,
-    title: 'A checklist that adapts to you',
-    desc: 'Sign in and get a pre-field checklist filtered by your role and destination access-level, with progress saved to your account.'
   }
+  // A 4th item ("A checklist that adapts to you", CheckSquare icon) is
+  // temporarily removed — see TopNav.jsx's own comment: the checklist
+  // page/route is still live, just pulled from the nav tabs for now, so
+  // promoting it here would point somewhere the primary nav no longer
+  // surfaces. Re-add (and re-import CheckSquare above) once the nav link
+  // comes back.
 ];
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -88,7 +89,7 @@ export default function Capabilities() {
       >
         What&rsquo;s actually in here
       </m.h2>
-      <div className="capabilities-grid">
+      <div className={`capabilities-grid${ITEMS.length === 3 ? ' capabilities-grid--three' : ''}`}>
         {ITEMS.map((item, i) => (
           <CapabilityItem key={item.title} item={item} index={i} />
         ))}

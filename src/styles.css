@@ -1281,6 +1281,15 @@ html:not([data-app-booted]) [data-reveal] {
   margin: 0 auto;
 }
 
+/* ITEMS is temporarily 3 long (the checklist item is pulled — see
+   Capabilities.jsx's own comment) — a fixed 2-column grid would leave the
+   3rd item alone in an empty-feeling second row, so Capabilities.jsx adds
+   this modifier class (based on ITEMS.length, not hardcoded) whenever it's
+   exactly 3, reverting to the plain 2x2 above once the 4th item returns. */
+.capabilities-grid--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .capability-item {
   padding-top: var(--space-6);
   border-top: 1px solid rgba(250, 247, 240, 0.14);
@@ -1314,7 +1323,8 @@ html:not([data-app-booted]) [data-reveal] {
 
 @media (max-width: 640px) {
   .capabilities h2 { text-align: center; }
-  .capabilities-grid { grid-template-columns: 1fr; gap: var(--space-8); }
+  .capabilities-grid,
+  .capabilities-grid--three { grid-template-columns: 1fr; gap: var(--space-8); }
 }
 
 /* ==== HOME: MAP TEASER ==== */

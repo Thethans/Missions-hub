@@ -36,7 +36,6 @@ export default function NotFoundPage() {
           <Link to="/">Home</Link>
           <Link to="/map">Map</Link>
           <Link to="/quiz">Agency Match</Link>
-          <Link to="/checklist">Checklist</Link>
           <Link to="/about">About</Link>
         </nav>
       </div>
