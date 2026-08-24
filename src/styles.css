@@ -1803,6 +1803,21 @@ html:not([data-app-booted]) [data-reveal] {
   opacity: 0.5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+/* The gradient placeholders are already dark toward their edges, so the
+   light caption text reads fine straight over them — but a real photo (see
+   Photo.jsx's src prop) is opaque and hides that gradient entirely, and its
+   own bottom edge isn't guaranteed to be dark. This scrim gives the caption
+   a guaranteed-dark backdrop regardless of what the photo looks like there. */
+.photo:has(.photo-real-img)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  background: linear-gradient(to top, rgba(6, 10, 18, 0.85) 0%, rgba(6, 10, 18, 0) 100%);
+  z-index: 1;
+}
 .photo figcaption {
   position: absolute;
   left: var(--space-4);
@@ -1811,7 +1826,7 @@ html:not([data-app-booted]) [data-reveal] {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: rgba(250, 247, 240, 0.85);
-  z-index: 1;
+  z-index: 2;
 }
 .photo.v-day .photo-img { background: linear-gradient(135deg, #f4e3c1 0%, #e8c98f 55%, #d9a441 100%); }
 .photo.v-portrait .photo-img { background: radial-gradient(circle at center, rgba(217, 164, 65, 0.55) 0%, rgba(43, 110, 118, 0.5) 45%, var(--ink-navy) 100%); }
