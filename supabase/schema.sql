@@ -533,6 +533,12 @@ alter table church_profiles add column if not exists contact_role text;
 alter table church_profiles add column if not exists hosts_short_term_trips boolean not null default false;
 alter table church_profiles add column if not exists sends_teams boolean not null default false;
 alter table church_profiles add column if not exists hosts_furloughs boolean not null default false;
+-- Profile photo (see PhotoUpload.tsx, uploaded via the missionary-photos
+-- Storage bucket below) — distinct from the per-update photos already
+-- carried inside the `updates` jsonb column.
+alter table missionaries add column if not exists photo text;
+alter table missionaries add column if not exists photo_width integer;
+alter table missionaries add column if not exists photo_height integer;
 
 create table if not exists intro_requests (
   id uuid primary key default gen_random_uuid(),

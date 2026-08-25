@@ -66,6 +66,18 @@ export interface Missionary {
    */
   nameNote?: string;
   location: string;
+  /**
+   * Profile photo shown on the card, admin-uploaded via PhotoUpload (see
+   * AdminMissionaries.tsx) — same photoWidth/photoHeight-reservation pattern
+   * as MissionaryUpdate's photo. Optional: none of the bundled fallback
+   * missionaries ship with one (their update photos are illustrative stock
+   * scenes, not portraits — see assets/updates/CREDITS.md — so none is a
+   * good fit for a profile picture specifically). MissionaryCard falls back
+   * to an initials avatar when this is unset.
+   */
+  photo?: string;
+  photoWidth?: number;
+  photoHeight?: number;
   /** real latitude for the MapLibre marker */
   lat: number;
   /** real longitude for the MapLibre marker */

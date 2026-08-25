@@ -8,6 +8,9 @@ interface MissionaryRow {
   name: string;
   name_note: string | null;
   location: string;
+  photo: string | null;
+  photo_width: number | null;
+  photo_height: number | null;
   lat: number;
   lng: number;
   role: string;
@@ -27,6 +30,9 @@ function fromRow(row: MissionaryRow): Missionary {
     name: row.name,
     nameNote: row.name_note ?? undefined,
     location: row.location,
+    photo: row.photo ?? undefined,
+    photoWidth: row.photo_width ?? undefined,
+    photoHeight: row.photo_height ?? undefined,
     lat: row.lat,
     lng: row.lng,
     role: row.role,

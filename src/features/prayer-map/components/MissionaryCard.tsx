@@ -1,6 +1,6 @@
 import type { MissionaryWithBudget } from '../data/types';
 import type { AuthState } from '../hooks/useMemberSession';
-import { formatMoney } from '../data/format';
+import { formatMoney, initials } from '../data/format';
 import SecurityNotice from './SecurityNotice';
 import MinistrySection from './MinistrySection';
 import PrayerRequests from './PrayerRequests';
@@ -48,6 +48,19 @@ export default function MissionaryCard({
         <button type="button" className="pm-card__close" onClick={onClose} aria-label="Close">
           ✕
         </button>
+        {missionary.photo ? (
+          <img
+            src={missionary.photo}
+            width={missionary.photoWidth}
+            height={missionary.photoHeight}
+            alt=""
+            className="pm-card__avatar pm-card__avatar--photo"
+          />
+        ) : (
+          <span className="pm-card__avatar pm-card__avatar--initials" aria-hidden="true">
+            {initials(missionary.name)}
+          </span>
+        )}
         <p className="pm-card__eyebrow">{missionary.role}</p>
         <h2 className="pm-card__name">{missionary.name}</h2>
         {missionary.nameNote && <p className="pm-card__name-note">{missionary.nameNote}</p>}

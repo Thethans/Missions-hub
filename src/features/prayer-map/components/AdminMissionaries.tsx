@@ -10,6 +10,9 @@ interface MissionaryRow {
   name: string;
   name_note: string | null;
   location: string;
+  photo: string | null;
+  photo_width: number | null;
+  photo_height: number | null;
   lat: number;
   lng: number;
   role: string;
@@ -28,6 +31,9 @@ interface FormState {
   name: string;
   name_note: string;
   location: string;
+  photo: string;
+  photo_width: number;
+  photo_height: number;
   lat: string;
   lng: string;
   role: string;
@@ -47,6 +53,9 @@ const EMPTY_FORM: FormState = {
   name: '',
   name_note: '',
   location: '',
+  photo: '',
+  photo_width: 0,
+  photo_height: 0,
   lat: '',
   lng: '',
   role: '',
@@ -66,6 +75,9 @@ function rowToForm(row: MissionaryRow): FormState {
     name: row.name,
     name_note: row.name_note ?? '',
     location: row.location,
+    photo: row.photo ?? '',
+    photo_width: row.photo_width ?? 0,
+    photo_height: row.photo_height ?? 0,
     lat: String(row.lat),
     lng: String(row.lng),
     role: row.role,
@@ -293,6 +305,9 @@ export default function AdminMissionaries() {
       name: form.name,
       name_note: form.name_note || null,
       location: form.location,
+      photo: form.photo || null,
+      photo_width: form.photo ? form.photo_width : null,
+      photo_height: form.photo ? form.photo_height : null,
       lat,
       lng,
       role: form.role,
@@ -370,6 +385,13 @@ export default function AdminMissionaries() {
           <label>
             Location
             <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
+          </label>
+          <label>
+            Profile photo (optional — shows an initials avatar until one's set)
+            <PhotoUpload
+              value={form.photo}
+              onChange={(photo, photo_width, photo_height) => setForm({ ...form, photo, photo_width, photo_height })}
+            />
           </label>
           <div className="pm-admin-form-row">
             <label>
