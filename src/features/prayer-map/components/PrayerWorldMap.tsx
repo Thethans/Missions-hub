@@ -34,6 +34,13 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
   // over a blank canvas with nothing telling the visitor anything went wrong
   // — exactly the "nodes load but the map itself doesn't" bug this fixes.
   const [mapFailed, setMapFailed] = useState(false);
+  // Distinct from mapFailed: the map is blank for as long as 20s before the
+  // load-timeout fallback below has a chance to fire, with nothing telling a
+  // visitor anything is happening at all in the meantime — a real "doesn't
+  // load well" report traced to exactly this silent gap, not the timeout
+  // logic itself (which was already firing correctly, just too invisibly to
+  // notice within the time most visitors actually wait).
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -99,6 +106,7 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
     map.on('load', () => {
       window.clearTimeout(loadTimeout);
       map.resize();
+      setMapLoaded(true);
     });
 
     return () => {
@@ -134,6 +142,13 @@ export default function PrayerWorldMap({ missionaries, onSelect, selectedId }: P
     <div className="pm-map-wrap">
       <div className="pm-map" ref={containerRef} />
       <div className="pm-vignette" aria-hidden="true" />
+      {/* Visible from the first frame until 'load' fires — otherwise the
+          canvas is just a blank box for as long as 20s before mapFailed
+          below has any chance to explain why. Reuses WorldMap.jsx's
+          .map-loading class for the same "something is happening" pill. */}
+      {!mapLoaded && !mapFailed && (
+        <p className="map-loading" role="status">Loading the map&hellip;</p>
+      )}
       {/* Reuses WorldMap.jsx's exact class and copy for the same failure —
           both maps depend on the same external tile source, so a visitor
           should see one consistent message regardless of which map hit it. */}
