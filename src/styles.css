@@ -4849,3 +4849,91 @@ html:not([data-app-booted]) [data-reveal] {
     width: 100%;
   }
 }
+
+/* ==== HOME: PRAYER MAP PREVIEW (PrayerMapPreview.jsx) ==== */
+
+/* Same full-bleed asymmetric split as .map-teaser (no bounding card, no
+   evenly-split grid) — a deliberate site convention for "map + copy"
+   sections, not a coincidence. Content column first in source order (unlike
+   map-teaser's visual-first) so the honesty note and CTA read before the
+   map, not after. */
+.pmp {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 460px;
+  background: var(--ink-navy);
+}
+
+.pmp-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-8);
+  color: var(--atlas-paper);
+}
+
+.pmp-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--voyage-teal);
+  margin: 0;
+}
+
+.pmp-content h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); }
+
+.pmp-body { color: rgba(250, 247, 240, 0.8); margin: 0; font-size: 1.05rem; line-height: 1.6; }
+
+.pmp-prototype-note {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: rgba(250, 247, 240, 0.55);
+  margin: 0 0 var(--space-2);
+}
+.pmp-prototype-note a { color: rgba(250, 247, 240, 0.75); }
+
+.pmp-content .cta-button { align-self: flex-start; }
+
+.pmp-visual { position: relative; overflow: hidden; background: var(--ink-navy); }
+.pmp-map { width: 100%; height: 100%; }
+
+/* Same edge-darkening as the other maps, so pins read against the basemap. */
+.pmp-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px 40px rgba(22, 35, 59, 0.45);
+}
+
+/* Plain CSS dot, not MissionaryPin.tsx's DOM-built button — this map has no
+   click handler for it to wire into, so a static marker is the honest
+   affordance (nothing here suggests it's tappable). */
+.pmp-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--voyage-teal);
+  border: 2px solid var(--atlas-paper);
+  box-shadow: 0 0 0 4px rgba(43, 110, 118, 0.35);
+}
+
+/* Creative-access missionaries: a soft, larger halo instead of a precise
+   dot — same "don't pinpoint this location" rule the real map enforces,
+   reimplemented here since this file doesn't import MissionaryPin.tsx. */
+.pmp-dot--area {
+  width: 26px;
+  height: 26px;
+  background: rgba(217, 142, 92, 0.35);
+  border: 1px solid rgba(217, 142, 92, 0.6);
+  box-shadow: 0 0 0 8px rgba(217, 142, 92, 0.12);
+}
+
+@media (max-width: 768px) {
+  .pmp { grid-template-columns: 1fr; }
+  .pmp-visual { min-height: 280px; }
+  .pmp-content { padding: var(--space-8) var(--space-6); }
+}
