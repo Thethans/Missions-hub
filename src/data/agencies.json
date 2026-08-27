@@ -901,5 +901,35 @@
       "supportRaising": "stated directly on individual job postings (e.g. Regional Leader | MENA, Regional Mobilizer) as support-raised positions"
     },
     "sourceUrl": "https://rtim.org/about/"
+  },
+  {
+    "name": "Orthodox Christian Mission Center (OCMC)",
+    "url": "https://ocmc.org/",
+    "tradition": "Eastern Orthodox",
+    "focus": [
+      "evangelism",
+      "church planting"
+    ],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": true,
+    "termLengths": [
+      "career/long-term"
+    ],
+    "regions": [
+      "Sub-Saharan Africa",
+      "Islands / Oceania",
+      "Latin America"
+    ],
+    "roles": [
+      "church planting",
+      "medical",
+      "education/TESOL",
+      "relief and development"
+    ],
+    "trainingRequired": "Must be a baptized/chrismated Orthodox Christian for 3+ years, in a US parish under the Assembly of Canonical Orthodox Bishops; New Candidate Orientation + 12-week Reading Program",
+    "sourceNotes": {
+      "regions": "derived from current open missionary postings (ocmc.org/missionary-opportunities/), not a stated regional strategy \u2014 the field list changes as postings open/close"
+    },
+    "sourceUrl": "https://ocmc.org/become-a-missionary/"
   }
 ]

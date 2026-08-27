@@ -28,6 +28,7 @@ import BaptistMidMissionsScraper from './bmm.js';
 import GFAScraper from './gfa.js';
 import TeamExpansionScraper from './teamexpansion.js';
 import ReachingAndTeachingScraper from './reachingandteaching.js';
+import OCMCScraper from './ocmc.js';
 
 export const SCRAPERS = {
   imb:            new IMBScraper(),
@@ -60,6 +61,7 @@ export const SCRAPERS = {
   gfa:            new GFAScraper(),
   teamexpansion:  new TeamExpansionScraper(),
   reachingandteaching: new ReachingAndTeachingScraper(),
+  ocmc:           new OCMCScraper(),
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);

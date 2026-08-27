@@ -171,6 +171,27 @@ describe('near-dupe title collapse', () => {
     ];
     expect(collapseNearDuplicates(input)).toHaveLength(2);
   });
+
+  // Real observed failure: OCMC posts the identical role title for several
+  // different countries (e.g. "Mission Priests for Parishes" in Fiji & Tonga,
+  // Kenya, and New Zealand are three distinct real openings) — collapsing
+  // by title alone silently dropped two of the three.
+  it('does not collapse the same title at different known locations', () => {
+    const input = [
+      { agency: 'OCMC', title: 'Mission Priests for Parishes', location: 'Fiji & Tonga', description: 'a' },
+      { agency: 'OCMC', title: 'Mission Priests for Parishes', location: 'Kenya', description: 'b' },
+      { agency: 'OCMC', title: 'Mission Priests for Parishes', location: 'New Zealand', description: 'c' }
+    ];
+    expect(collapseNearDuplicates(input)).toHaveLength(3);
+  });
+
+  it('still collapses same-title variants that share a location', () => {
+    const input = [
+      { agency: 'OCMC', title: 'Catechist Trainer', location: 'Kenya', description: 'a' },
+      { agency: 'OCMC', title: 'Catechist Trainers', location: 'Kenya', description: 'b' }
+    ];
+    expect(collapseNearDuplicates(input)).toHaveLength(1);
+  });
 });
 
 describe('validateCategory', () => {

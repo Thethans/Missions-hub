@@ -202,9 +202,23 @@ export function isNearDuplicateTitle(a, b) {
   return levenshtein(normA, normB) <= 3 || tokenSetRatio(a, b) >= 90;
 }
 
-// Collapses near-dupe titles within one agency to a single canonical
-// record (the first-encountered variant), recording the rest in
-// `merged_titles` rather than discarding them outright.
+// Two same-titled listings only count as the same real posting if they're
+// not each pinned to a different, known location — OCMC's "Mission Priests
+// for Parishes" (Fiji & Tonga / Kenya / New Zealand, all distinct real
+// openings) was silently collapsing to one before this, losing real
+// listings. Missing location on either side falls back to the old
+// title-only behavior (e.g. ABWE's "Church Planter"/"Church Planters"
+// variants below never carried a location at all) rather than risk
+// under-merging when there's no location to actually distinguish on.
+function sameLocationOrUnknown(a, b) {
+  if (!a || !b) return true;
+  return a === b;
+}
+
+// Collapses near-dupe titles within one agency (and, where known, the same
+// location) to a single canonical record (the first-encountered variant),
+// recording the rest in `merged_titles` rather than discarding them
+// outright.
 export function collapseNearDuplicates(opportunities) {
   const byAgency = new Map();
   for (const opp of opportunities) {
@@ -216,7 +230,9 @@ export function collapseNearDuplicates(opportunities) {
   for (const group of byAgency.values()) {
     const kept = [];
     for (const opp of group) {
-      const match = kept.find((k) => isNearDuplicateTitle(opp.title, k.title));
+      const match = kept.find(
+        (k) => isNearDuplicateTitle(opp.title, k.title) && sameLocationOrUnknown(opp.location, k.location)
+      );
       if (match) {
         match.merged_titles = [...(match.merged_titles || []), opp.title];
       } else {
