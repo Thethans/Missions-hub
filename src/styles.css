@@ -747,6 +747,13 @@ html:not([data-app-booted]) [data-reveal] {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* Matches HeroHeadline's initial useMotionValue state (wght 250, opsz 12)
+     so the very first paint — before JS mounts and framer-motion's inline
+     style takes over — already looks thin/condensed instead of the browser's
+     default full-weight instance. Without this, prerendered/pre-hydration
+     HTML flashes at full weight for a frame, then visibly snaps back to
+     thin before the 2.6s bloom animates it forward again. */
+  font-variation-settings: 'wght' 250, 'opsz' 12, 'WONK' 1;
 }
 
 .hero-tagline {
@@ -2530,6 +2537,283 @@ html:not([data-app-booted]) [data-reveal] {
   max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* View toggle (Map view / List view) — sits in the hero, same spot
+   MapAccessibleSearch occupies, so it reads as part of the page's search/
+   filter controls rather than a separate settings row. */
+.map-view-toggle {
+  display: inline-flex;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+
+.map-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: var(--space-1) var(--space-4);
+  border: none;
+  border-radius: calc(var(--radius) - 3px);
+  background: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--muted-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.map-view-toggle-btn:hover { color: var(--ink-navy); }
+
+.map-view-toggle-btn--active {
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+}
+
+.map-view-toggle-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* flex: 1 + width: 100% (not max-width + margin: auto here) because this is
+   itself a direct flex item of <main> (column-direction — see .app-shell >
+   main in the base layout rules) — an auto cross-axis margin on a flex item
+   absorbs free space instead of letting align-items: stretch apply, which
+   left this shrunk to its content's width instead of spanning the page (the
+   same trap .page-map avoids by using flex: 1 rather than centering itself
+   directly). The max-width + centering that would normally live here
+   instead lives one level down, on .pgl below, which sits in ordinary block
+   flow and has no such conflict. */
+.page-map-list { flex: 1; width: 100%; }
+
+/* ==== MAP: PEOPLE GROUPS LIST (PeopleGroupsList.jsx) ==== */
+
+.pgl, .pgl-loading {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-16);
+}
+
+.pgl-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.pgl-search-wrap { position: relative; }
+
+.pgl-search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-text);
+  pointer-events: none;
+}
+
+.pgl-search-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: var(--space-2) var(--space-3) var(--space-2) 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pgl-search-input:focus {
+  outline: none;
+  border-color: var(--voyage-teal);
+  box-shadow: 0 0 0 3px rgba(43, 110, 118, 0.15);
+}
+
+.pgl-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.pgl-filter-select {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--ink-navy);
+  min-height: 40px;
+}
+
+.pgl-filter-select:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.pgl-clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--voyage-teal);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pgl-results-count {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-3);
+}
+
+.pgl-error, .pgl-empty {
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  color: var(--muted-text);
+}
+
+.pgl-error { max-width: 480px; margin: 0 auto; }
+
+.pgl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.pgl-card-skeleton {
+  height: 130px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--atlas-paper) 30%, rgba(22, 35, 59, 0.06) 45%, var(--atlas-paper) 60%);
+  background-size: 200% 100%;
+  animation: opp-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pgl-card-skeleton { animation: none; }
+}
+
+.pgl-card {
+  height: 100%;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pgl-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
+}
+
+.pgl-card-select {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-4);
+  font: inherit;
+  color: inherit;
+}
+
+.pgl-card-select:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.pgl-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.pgl-card-status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pgl-card-status-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.pgl-card-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-1);
+  line-height: 1.3;
+}
+
+.pgl-card-meta {
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-1);
+}
+
+.pgl-card-population {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  margin: 0;
+}
+
+.pgl-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.pgl-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink-navy);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.pgl-page-btn:hover:not(:disabled) { border-color: var(--voyage-teal); }
+
+.pgl-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pgl-page-status {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .pgl-filter-row { flex-direction: column; align-items: stretch; }
+  .pgl-filter-select { width: 100%; }
+  .pgl-grid { grid-template-columns: 1fr; }
+  .map-view-toggle { width: 100%; }
+  .map-view-toggle-btn { flex: 1; justify-content: center; }
 }
 
 /* ==== MAP: DETAIL PANEL ==== */
