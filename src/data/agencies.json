@@ -931,5 +931,112 @@
       "regions": "derived from current open missionary postings (ocmc.org/missionary-opportunities/), not a stated regional strategy \u2014 the field list changes as postings open/close"
     },
     "sourceUrl": "https://ocmc.org/become-a-missionary/"
+  },
+  {
+    "name": "Christian and Missionary Alliance (C&MA)",
+    "url": "https://cmalliance.org/",
+    "tradition": "Christian and Missionary Alliance (evangelical; the \"Fourfold Gospel\" of Christ as Savior, Sanctifier, Healer, and Coming King)",
+    "focus": [
+      "church planting",
+      "evangelism"
+    ],
+    "supportRaising": "Great Commission Fund \u2014 most international workers are not required to personally raise their own support; some community-development roles raise partial support",
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "career/long-term"
+    ],
+    "regions": [
+      "Sub-Saharan Africa",
+      "Southeast Asia",
+      "Latin America",
+      "Europe",
+      "Middle East / North Africa",
+      "Central Asia"
+    ],
+    "roles": [
+      "church planting",
+      "medical",
+      "education/TESOL",
+      "relief and development",
+      "business as mission"
+    ],
+    "trainingRequired": null,
+    "sourceNotes": {
+      "familyFriendly": "not addressed on site",
+      "trainingRequired": "general character/call requirements stated, no specific program named"
+    },
+    "sourceUrl": "https://cmalliance.org/serve/international-work/"
+  },
+  {
+    "name": "Assemblies of God World Missions (AGWM)",
+    "url": "https://wideopenmissions.org/",
+    "tradition": "Pentecostal (Assemblies of God)",
+    "focus": [
+      "evangelism",
+      "church planting"
+    ],
+    "supportRaising": "full personal support raising",
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "career/long-term"
+    ],
+    "regions": [
+      "Europe",
+      "Southeast Asia",
+      "Central Asia",
+      "Sub-Saharan Africa",
+      "Latin America",
+      "Middle East / North Africa"
+    ],
+    "roles": [
+      "church planting",
+      "media/creative",
+      "administration",
+      "business as mission",
+      "medical",
+      "education/TESOL"
+    ],
+    "trainingRequired": "Orientation/training in Springfield, MO before departure; application process can take up to 6 months",
+    "sourceNotes": {
+      "familyFriendly": "not addressed on site"
+    },
+    "sourceUrl": "https://wideopenmissions.org/faq"
+  },
+  {
+    "name": "World Gospel Mission",
+    "url": "https://wgm.org/",
+    "tradition": "Wesleyan-Holiness (their own description: \"interdenominational in organization, evangelistic in method, Wesleyan in doctrine\")",
+    "focus": [
+      "evangelism",
+      "discipleship"
+    ],
+    "supportRaising": "full personal support raising (faith-mission model)",
+    "familyFriendly": null,
+    "termLengths": [
+      "short-term (under 2 years)",
+      "career/long-term"
+    ],
+    "regions": [
+      "Middle East / North Africa",
+      "South Asia",
+      "Latin America",
+      "Sub-Saharan Africa",
+      "Europe"
+    ],
+    "roles": [
+      "medical",
+      "education/TESOL",
+      "relief and development",
+      "evangelism/discipleship",
+      "administration"
+    ],
+    "trainingRequired": null,
+    "sourceNotes": {
+      "familyFriendly": "not addressed on site",
+      "trainingRequired": "not clearly stated for applicants"
+    },
+    "sourceUrl": "https://wgm.org/"
   }
 ]

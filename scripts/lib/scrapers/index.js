@@ -29,6 +29,9 @@ import GFAScraper from './gfa.js';
 import TeamExpansionScraper from './teamexpansion.js';
 import ReachingAndTeachingScraper from './reachingandteaching.js';
 import OCMCScraper from './ocmc.js';
+import CMAScraper from './cma.js';
+import WideOpenMissionsScraper from './wideopenmissions.js';
+import WGMScraper from './wgm.js';
 
 export const SCRAPERS = {
   imb:            new IMBScraper(),
@@ -62,6 +65,9 @@ export const SCRAPERS = {
   teamexpansion:  new TeamExpansionScraper(),
   reachingandteaching: new ReachingAndTeachingScraper(),
   ocmc:           new OCMCScraper(),
+  cma:            new CMAScraper(),
+  wideopenmissions: new WideOpenMissionsScraper(),
+  wgm:            new WGMScraper(),
 };
 
 export const SCRAPER_KEYS = Object.keys(SCRAPERS);
