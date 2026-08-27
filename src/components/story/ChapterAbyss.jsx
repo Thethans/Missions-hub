@@ -223,8 +223,8 @@ export default function ChapterAbyss() {
           <div className="abyss-text-panel">
             <p className="abyss-landing-kicker">An unreached people group is</p>
             <p className="abyss-landing-def">
-              An ethnic or sociological group with no indigenous community of believers with adequate
-              numbers and resources to evangelize this people group without outside assistance.
+              A people group with no adequate indigenous community of believers to reach it without
+              outside help.
             </p>
             <div className="abyss-landing-stats">
               <div>
