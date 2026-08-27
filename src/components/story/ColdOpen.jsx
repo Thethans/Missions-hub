@@ -17,7 +17,13 @@ export default function ColdOpen() {
         className="cold-open-content"
         initial={prefersReduced ? false : { opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.6 }}
+        // amount: 0 (not 0.6) — the hero above is now deliberately shorter
+        // than the viewport (see .hero's own comment in styles.css) so a
+        // slice of this section is visible, cut off, before any scroll
+        // happens, as a "there's more below" cue. A 0.6 threshold kept
+        // that whole peeked slice invisible until the reader had already
+        // scrolled most of the way past it — defeating the cue entirely.
+        viewport={{ once: true, amount: 0 }}
         transition={{ duration: 1, ease: EASE }}
       >
         <VariableBloom className="cold-open-number" variant="numeral">{population}B</VariableBloom>

@@ -504,7 +504,18 @@ html:not([data-app-booted]) [data-reveal] {
 
 .hero {
   position: relative;
-  flex: 1;
+  flex: none;
+  /* Deliberately shorter than the viewport, not flex:1 filling whatever
+     space is left — the gap is the point. ColdOpen's own content (the
+     "4.3B" stat) rides right up behind the hero in normal flow, so
+     capping the hero's height means a slice of it is already visible,
+     cut off by the viewport edge, before any scroll happens: a stronger
+     "there's more below" signal than .hero-scroll-hint's chevron alone.
+     min-height is the floor for short viewports (old phones in landscape,
+     a resized desktop window) — below that, correctness of the hero's
+     own content (wordmark, tagline, CTA) wins over the peek effect. */
+  height: calc(100vh - 230px);
+  min-height: 460px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -512,11 +523,6 @@ html:not([data-app-booted]) [data-reveal] {
   text-align: center;
   background: var(--ink-navy);
   color: var(--atlas-paper);
-  /* Less bottom padding than top — top clears the sticky nav, bottom used
-     to match it exactly, which (combined with ColdOpen's own top padding
-     right after, same ink-navy background, no divider) stacked into a
-     long stretch of nothing between "Take the quiz" and the next real
-     content. */
   padding: var(--space-16) var(--space-6) var(--space-8);
   overflow: hidden;
 }
