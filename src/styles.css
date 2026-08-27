@@ -1369,57 +1369,47 @@ html:not([data-app-booted]) [data-reveal] {
   text-align: left;
 }
 
-/* Fills the same 1000px width as the heading above (not a narrow left-hung
-   column leaving the right half of the section empty) — four parallel
-   things (not a sequence, so no numbering) as a real 2x2 grid instead of a
-   single file of rows. */
-.capabilities-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-12) var(--space-12);
+/* A label column + a content column, not equal-width grid cells — reads as
+   a spec sheet (term, then its value) rather than three interchangeable
+   feature-card slots. Fills the same 1000px width as the heading above. */
+.capabilities-list {
+  display: flex;
+  flex-direction: column;
   max-width: 1000px;
   margin: 0 auto;
 }
 
-/* ITEMS is temporarily 3 long (the checklist item is pulled — see
-   Capabilities.jsx's own comment) — a fixed 2-column grid would leave the
-   3rd item alone in an empty-feeling second row, so Capabilities.jsx adds
-   this modifier class (based on ITEMS.length, not hardcoded) whenever it's
-   exactly 3, reverting to the plain 2x2 above once the 4th item returns. */
-.capabilities-grid--three {
-  grid-template-columns: repeat(3, 1fr);
-}
-
 .capability-item {
-  padding-top: var(--space-6);
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--space-6);
+  align-items: baseline;
+  padding: var(--space-6) 0;
   border-top: 1px solid rgba(250, 247, 240, 0.14);
 }
+.capability-item:last-child { border-bottom: 1px solid rgba(250, 247, 240, 0.14); }
 
-.capability-item h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-3);
-  font-size: 1.15rem;
-  color: var(--atlas-paper);
-}
-
-/* Inline with the title, not a separate left-hand column — one compact
-   mark per item rather than a repeated icon-beside-text layout. */
-.capability-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 999px;
-  background: var(--glass-dark-bg);
-  border: 1px solid var(--glass-dark-border);
+/* Mono/uppercase like the hero eyebrow and other site kickers — a label,
+   not a decorative icon-in-a-circle standing in for one. */
+.capability-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--voyage-teal);
-  flex-shrink: 0;
 }
 
-.capability-item p { margin: 0; color: rgba(250, 247, 240, 0.7); line-height: 1.6; max-width: 40ch; }
+.capability-item p {
+  margin: 0;
+  color: rgba(250, 247, 240, 0.8);
+  line-height: 1.6;
+  max-width: 56ch;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 600px) {
+  .capability-item { grid-template-columns: 1fr; gap: var(--space-2); }
+}
 
 @media (max-width: 640px) {
   .capabilities h2 { text-align: center; }

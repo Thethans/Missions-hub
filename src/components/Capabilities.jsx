@@ -1,10 +1,8 @@
 import React from 'react';
 import { m } from 'framer-motion';
-import { Globe, Compass, Briefcase } from '@phosphor-icons/react';
 import agencies from '../data/agencies.json';
 import { QUESTIONS } from '../data/quizQuestions.js';
 import opportunitiesMeta from '../data/opportunitiesMeta.json';
-import useTilt from '../hooks/useTilt.js';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import SpotlightOverlay from './SpotlightOverlay.jsx';
 
@@ -17,41 +15,38 @@ import SpotlightOverlay from './SpotlightOverlay.jsx';
 // scripts/generate-component.js (the same pipeline OpportunitiesExplorer.jsx
 // itself comes from) — rather than a second script computing the same
 // number a different way.
+//
+// Deliberately not "A live map, not a static graphic" / "A matcher that
+// shows its work" / "An explorer stocked with real openings" — three
+// parallel "A/An ___" titles in a 3-up icon grid is close to a verbatim
+// match for the generic AI feature-section template (see the design-audit
+// artifact this replaces). Each line below is shaped differently on
+// purpose — a fragment, a number-led clause, an imperative — so they don't
+// scan as one templated triplet, and there's no icon-in-a-circle per item
+// (that motif alone reads as decoration reached for by default rather than
+// a considered mark).
 const ITEMS = [
   {
-    icon: Globe,
-    title: 'A live map, not a static graphic',
-    desc: 'The world map pulls real, current people-group data from Joshua Project — not a one-time snapshot.'
+    kicker: 'Map',
+    line: 'Refreshes weekly, straight from Joshua Project.'
   },
   {
-    icon: Compass,
-    title: 'A matcher that shows its work',
-    desc: `${QUESTIONS.length} questions, ${agencies.length} researched sending agencies, and a results view that explains exactly what matched and what to ask about — not just a ranked list.`
+    kicker: 'Quiz',
+    line: () => `${QUESTIONS.length} questions, ${agencies.length} agencies, and a real answer for why each one matched — or didn't.`
   },
   {
-    icon: Briefcase,
-    title: 'An explorer stocked with real openings',
-    desc: `${opportunitiesMeta.opportunityCount.toLocaleString()} live opportunities across ${opportunitiesMeta.agencyCount} agencies — filter by role, region, or term length instead of scrolling one long list.`
+    kicker: 'Listings',
+    line: () =>
+      `${opportunitiesMeta.opportunityCount.toLocaleString()} openings across ${opportunitiesMeta.agencyCount} agencies. Filter by role, region, or term length and skip the scrolling.`
   }
-  // A 4th item ("A checklist that adapts to you", CheckSquare icon) is
-  // temporarily removed — see TopNav.jsx's own comment: the checklist
-  // page/route is still live, just pulled from the nav tabs for now, so
-  // promoting it here would point somewhere the primary nav no longer
-  // surfaces. Re-add (and re-import CheckSquare above) once the nav link
-  // comes back.
 ];
 
 const EASE = [0.16, 1, 0.3, 1];
 
-// A 2x2 grid, not a single narrow column: four parallel things (not a
-// sequence, so no numbering — see CLAUDE.md-adjacent guidance against
-// numbering content that isn't actually ordered) filling the same width as
-// the heading above instead of a left-hung column leaving the right half
-// of the section empty. The icon sits inline with its title, not in its
-// own left-hand column — one compact visual mark per item, not a repeated
-// "icon | text" layout down the page.
+// A single stacked column, ragged-right, not a grid of equal-width cells —
+// three unrelated facts read down the page like a spec sheet rather than
+// three interchangeable slots in a template.
 function CapabilityItem({ item, index }) {
-  const tilt = useTilt();
   const prefersReduced = usePrefersReducedMotion();
   return (
     <m.div
@@ -64,13 +59,8 @@ function CapabilityItem({ item, index }) {
       viewport={{ once: true, amount: 0.4 }}
       transition={{ duration: 0.55, delay: index * 0.07, ease: EASE }}
     >
-      <h3>
-        <m.span ref={tilt.ref} style={tilt.style} className="capability-glyph">
-          <item.icon size={16} weight="bold" />
-        </m.span>
-        {item.title}
-      </h3>
-      <p>{item.desc}</p>
+      <span className="capability-kicker">{item.kicker}</span>
+      <p>{typeof item.line === 'function' ? item.line() : item.line}</p>
     </m.div>
   );
 }
@@ -89,9 +79,9 @@ export default function Capabilities() {
       >
         What&rsquo;s actually in here
       </m.h2>
-      <div className={`capabilities-grid${ITEMS.length === 3 ? ' capabilities-grid--three' : ''}`}>
+      <div className="capabilities-list">
         {ITEMS.map((item, i) => (
-          <CapabilityItem key={item.title} item={item} index={i} />
+          <CapabilityItem key={item.kicker} item={item} index={i} />
         ))}
       </div>
     </section>

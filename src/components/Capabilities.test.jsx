@@ -12,7 +12,7 @@ describe('Capabilities', () => {
   it('cites the real question and agency counts, not hardcoded numbers', () => {
     render(<Capabilities />);
     expect(
-      screen.getByText(new RegExp(`${QUESTIONS.length} questions, ${agencies.length} researched sending agencies`))
+      screen.getByText(new RegExp(`${QUESTIONS.length} questions, ${agencies.length} agencies`))
     ).toBeInTheDocument();
   });
 });
