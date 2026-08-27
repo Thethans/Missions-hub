@@ -51,6 +51,19 @@ function HeroHeadline() {
     <m.h1
       className="hero-wordmark"
       data-reveal
+      // scripts/prerender.js captures the static snapshot ~2s after load,
+      // partway through this element's 2.6s weight bloom — so without this,
+      // the baked-in inline font-variation-settings is whatever mid-animation
+      // value Puppeteer happened to catch (already heavier than the CSS
+      // default below), not the thin starting value real hydration re-mounts
+      // to. That mismatch is invisible on a fast connection (hydration
+      // overwrites it in milliseconds) but stands out badly on a slow one:
+      // visitors see the heavier prerendered frame, then a visible snap back
+      // to thin, then the whole bloom replays. data-hydration-reset="style"
+      // strips the baked inline style before capture so the static HTML
+      // already matches the CSS default (also thin) — see .hero-wordmark
+      // in styles.css.
+      data-hydration-reset="style"
       style={{ fontVariationSettings }}
       variants={heroWordmarkRise}
     >
