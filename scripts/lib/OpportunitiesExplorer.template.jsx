@@ -134,6 +134,15 @@ const REGIONS = '__REGIONS__';
 const ROLE_TYPES = '__ROLE_TYPES__';
 const TERM_LENGTHS = '__TERM_LENGTHS__';
 
+// Opportunities carry only a coarse `region` string, not coordinates or a
+// country code, so "10/40 Window" (the ~10-40°N band spanning North Africa,
+// the Middle East, and Asia) can only be approximated by which of our
+// existing region buckets fall inside it — not computed precisely. Chosen
+// deliberately over Sub-Saharan Africa (mostly south of 10°N), Europe,
+// Latin America, North America, and Oceania, none of which are part of the
+// window.
+const WINDOW_1040_REGIONS = ['Middle East / North Africa', 'Central Asia', 'South Asia', 'Southeast Asia', 'East Asia'];
+
 // "Inquire" needs an object — but agency names are a mix of shapes
 // ("ABWE", "Africa Inland Mission (AIM)", "Cru (Campus Crusade for
 // Christ)"), so a blind "text in parens" extraction would turn Cru into
@@ -390,6 +399,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
   // example (`?category=medical`) — it maps to the role_type field.
   const [selectedRoles, setSelectedRoles] = useState(() => parseSetParam(searchParams, 'category'));
   const [selectedTerms, setSelectedTerms] = useState(() => parseSetParam(searchParams, 'term'));
+  const [show1040Only, setShow1040Only] = useState(() => searchParams.get('window1040') === '1');
   const [showFilters, setShowFilters] = useState(false);
   const filtersPanelRef = useRef(null);
   const filterToggleRef = useRef(null);
@@ -643,6 +653,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (skipKey !== 'region' && selectedRegions.size > 0) out = out.filter((o) => selectedRegions.has(o.region));
     if (skipKey !== 'role' && selectedRoles.size > 0) out = out.filter((o) => selectedRoles.has(o.role_type));
     if (skipKey !== 'term' && selectedTerms.size > 0) out = out.filter((o) => selectedTerms.has(o.term_length));
+    if (skipKey !== 'window1040' && show1040Only) out = out.filter((o) => WINDOW_1040_REGIONS.includes(o.region));
     return out;
   }
 
@@ -658,19 +669,23 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
 
   const agencyCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'agency'), 'agency'),
-    [opportunities, matchedIds, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedRegions, selectedRoles, selectedTerms, show1040Only, showSavedOnly, savedIds]
   );
   const regionCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'region'), 'region'),
-    [opportunities, matchedIds, selectedAgencies, selectedRoles, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedAgencies, selectedRoles, selectedTerms, show1040Only, showSavedOnly, savedIds]
   );
   const roleCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'role'), 'role_type'),
-    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedTerms, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedTerms, show1040Only, showSavedOnly, savedIds]
   );
   const termCounts = useMemo(
     () => countBy(baseFilteredList(opportunities || [], 'term'), 'term_length'),
-    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, showSavedOnly, savedIds]
+    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, show1040Only, showSavedOnly, savedIds]
+  );
+  const window1040Count = useMemo(
+    () => baseFilteredList(opportunities || [], 'window1040').filter((o) => WINDOW_1040_REGIONS.includes(o.region)).length,
+    [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds]
   );
 
   const filtered = useMemo(() => {
@@ -691,7 +706,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     }
 
     return list;
-  }, [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, savedIds, sortMode, quizScores]);
+  }, [opportunities, matchedIds, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, show1040Only, showSavedOnly, savedIds, sortMode, quizScores]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = useMemo(
@@ -799,12 +814,13 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     if (selectedRegions.size > 0) next.set('region', [...selectedRegions].join(','));
     if (selectedRoles.size > 0) next.set('category', [...selectedRoles].join(','));
     if (selectedTerms.size > 0) next.set('term', [...selectedTerms].join(','));
+    if (show1040Only) next.set('window1040', '1');
     if (showSavedOnly) next.set('saved', '1');
     if (sortMode !== SORT_MIXED) next.set('sort', sortMode);
     if (page > 1) next.set('page', String(page));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly, sortMode, page]);
+  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, show1040Only, showSavedOnly, sortMode, page]);
 
   function toggleSave(id) {
     const wasSaved = savedIds.has(id);
@@ -845,10 +861,11 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     setSelectedRegions(new Set());
     setSelectedRoles(new Set());
     setSelectedTerms(new Set());
+    setShow1040Only(false);
     setShowSavedOnly(false);
   }
 
-  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size;
+  const activeFilterCount = selectedAgencies.size + selectedRegions.size + selectedRoles.size + selectedTerms.size + (show1040Only ? 1 : 0);
   const hasActiveFilters = search || searchTerms.length > 0 || activeFilterCount > 0 || showSavedOnly;
 
   // Removable-chip summary of every active filter, independent of whether
@@ -862,9 +879,10 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
     for (const r of selectedRegions) chips.push({ key: `region-${r}`, label: r, onRemove: () => toggleFilter(setSelectedRegions, r) });
     for (const r of selectedRoles) chips.push({ key: `role-${r}`, label: r, onRemove: () => toggleFilter(setSelectedRoles, r) });
     for (const t of selectedTerms) chips.push({ key: `term-${t}`, label: t, onRemove: () => toggleFilter(setSelectedTerms, t) });
+    if (show1040Only) chips.push({ key: 'window1040', label: '10/40 Window', onRemove: () => setShow1040Only(false) });
     if (showSavedOnly) chips.push({ key: 'saved', label: 'Saved only', onRemove: () => setShowSavedOnly(false) });
     return chips;
-  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, showSavedOnly]);
+  }, [search, searchTerms, selectedAgencies, selectedRegions, selectedRoles, selectedTerms, show1040Only, showSavedOnly]);
 
   // Below ~640px the filter panel becomes a bottom sheet (see .opp-filters
   // in styles.css) — this gives it the keyboard behavior a sheet actually
@@ -1042,6 +1060,19 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
                 <FilterChip key={r} label={r} active={selectedRegions.has(r)} count={regionCounts.get(r) || 0}
                   onClick={() => toggleFilter(setSelectedRegions, r)} />
               ))}
+            </div>
+          </div>
+          <div className="opp-filter-group">
+            <span className="opp-filter-label" title="Approximate — based on region, not exact coordinates">
+              Geography
+            </span>
+            <div className="opp-chip-row">
+              <FilterChip
+                label="10/40 Window"
+                active={show1040Only}
+                count={window1040Count}
+                onClick={() => setShow1040Only((v) => !v)}
+              />
             </div>
           </div>
           <div className="opp-filter-group">
