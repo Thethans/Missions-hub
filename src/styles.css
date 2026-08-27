@@ -756,6 +756,16 @@ html:not([data-app-booted]) [data-reveal] {
   font-variation-settings: 'wght' 250, 'opsz' 12, 'WONK' 1;
 }
 
+/* usePrefersReducedMotion skips the bloom entirely and sets the motion
+   values straight to their end state (wght 800, opsz 100) — so for these
+   users the thin default above would itself be the flash. Match final
+   weight instead. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-wordmark {
+    font-variation-settings: 'wght' 800, 'opsz' 100, 'WONK' 1;
+  }
+}
+
 .hero-tagline {
   font-family: var(--font-mono);
   font-size: 0.9rem;
