@@ -13,6 +13,9 @@ export default function ChapterCommand() {
   return (
     <section className="chapter chapter-command">
       <ChapterTitle number="I" title="The Command" />
+      <p className="command-lede">
+        Jesus commanded his disciples to go into the nations and preach the Good News.
+      </p>
       <div className="command-grid">
         <div className="command-scripture">
           <blockquote>
