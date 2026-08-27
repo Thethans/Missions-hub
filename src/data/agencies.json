@@ -940,7 +940,7 @@
       "church planting",
       "evangelism"
     ],
-    "supportRaising": "Great Commission Fund \u2014 most international workers are not required to personally raise their own support; some community-development roles raise partial support",
+    "supportRaising": "fully-funded / salaried (agency pays you)",
     "familyFriendly": null,
     "termLengths": [
       "short-term (under 2 years)",
@@ -964,7 +964,8 @@
     "trainingRequired": null,
     "sourceNotes": {
       "familyFriendly": "not addressed on site",
-      "trainingRequired": "general character/call requirements stated, no specific program named"
+      "trainingRequired": "general character/call requirements stated, no specific program named",
+      "supportRaising": "Closest fit to the quiz's three support-model options, not an exact match \u2014 most international workers are funded through C&MA's central Great Commission Fund rather than personally raising support (some community-development roles raise partial support). Scored as-is so a real mismatch against this still surfaces as the normal \"worth asking about\" conflict, same as any other agency."
     },
     "sourceUrl": "https://cmalliance.org/serve/international-work/"
   },
