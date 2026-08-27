@@ -848,6 +848,29 @@ html:not([data-app-booted]) [data-reveal] {
   text-decoration-color: var(--atlas-paper);
 }
 
+/* A quiet "there's more below" cue at the foot of the hero — the section
+   is a fixed-viewport block above a long scroll narrative, with nothing
+   else on screen signaling that. Absolutely positioned against .hero
+   (not part of the centered flex stack), so it sits at the section's own
+   bottom edge regardless of how tall the content above it is. */
+.hero-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  transform: translateX(-50%);
+  color: rgba(250, 247, 240, 0.55);
+  animation: hero-scroll-hint-bounce 2.2s ease-in-out infinite;
+}
+
+@keyframes hero-scroll-hint-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-hint { animation: none; }
+}
+
 /* ==== HOME: STATS STRIP ==== */
 
 .stats-strip {
@@ -5239,4 +5262,166 @@ html:not([data-app-booted]) [data-reveal] {
   .pmp { grid-template-columns: 1fr; }
   .pmp-visual { min-height: 280px; }
   .pmp-content { padding: var(--space-8) var(--space-6); }
+}
+
+/* ==== LANDING MAP PREVIEW ==== */
+/* LandingMapPreview.jsx — the dark clustered map at the end of the landing
+   page's story, plus its sticky header (LandingMapHeader.jsx) and the quiz
+   CTA (QuizCTA.jsx) that follows it. Same glass/vignette/status-message
+   patterns as the full /map (.map-vignette, .map-loading, .map-data-error
+   above) — this is a lighter preview of that map, not a different visual
+   language. */
+
+.landing-map {
+  background: var(--ink-navy);
+  padding: var(--space-16) 0 0;
+}
+
+/* React.lazy's Suspense fallback while LandingMapPreview's own chunk
+   (maplibre-gl included) is still loading — brief, and not yet inside the
+   positioned .landing-map-wrapper, so this is plain flow layout rather
+   than .landing-map-status's absolute overlay positioning. */
+.landing-map-suspense-fallback {
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  margin: 0;
+}
+
+.landing-map-wrapper {
+  position: relative;
+  height: 640px;
+  max-height: 80vh;
+}
+
+.landing-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.landing-map-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(15, 24, 38, 0.45) 100%);
+}
+
+.landing-map-status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--glass-dark-bg);
+  border: 1px solid var(--glass-dark-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-dark-sheen);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--atlas-paper);
+  text-align: center;
+}
+
+/* Pinned to the top of the map container (not the page) — persists while
+   panning/zooming the canvas beneath it. */
+.landing-map-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: linear-gradient(to bottom, rgba(15, 24, 38, 0.85), transparent);
+}
+
+.landing-map-header-left,
+.landing-map-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.landing-map-brand {
+  display: flex;
+  align-items: center;
+  color: var(--atlas-paper);
+}
+
+.landing-map-country-select select {
+  background: var(--glass-dark-bg);
+  border: 1px solid var(--glass-dark-border);
+  border-radius: var(--radius);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.landing-map-country-select select:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.landing-map-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+
+.landing-map-stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--atlas-paper);
+}
+
+.landing-map-stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(250, 247, 240, 0.6);
+}
+
+.landing-map-search-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--glass-dark-bg);
+  border: 1px solid var(--glass-dark-border);
+  color: var(--atlas-paper);
+}
+
+.landing-map-search-link:focus-visible,
+.landing-map-brand:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.quiz-cta {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+  color: var(--atlas-paper);
+}
+
+.quiz-cta p { color: rgba(250, 247, 240, 0.75); margin-bottom: var(--space-6); }
+
+@media (max-width: 640px) {
+  .landing-map-wrapper { height: 520px; }
+  .landing-map-header { flex-wrap: wrap; }
+  .landing-map-header-right { flex-wrap: wrap; justify-content: flex-end; }
 }

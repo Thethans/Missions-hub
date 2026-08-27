@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { m, useMotionValue, useMotionTemplate, animate, useScroll, useTransform } from 'framer-motion';
+import { CaretDown } from '@phosphor-icons/react';
 import StatsStrip from '../components/StatsStrip.jsx';
 import JourneySection from '../components/JourneySection.jsx';
 import Capabilities from '../components/Capabilities.jsx';
@@ -159,6 +160,24 @@ export default function HomePage() {
               <Link to="/map" className="hero-secondary-link">or see the map</Link>
             </m.div>
           </m.div>
+          {/* Sibling of .hero-content, not a child: it needs to anchor to
+              the bottom of the full hero section (via .hero-zoom, which
+              spans .hero's whole box), not to .hero-content's own
+              tightly-wrapped, vertically-centered bounding box — nesting it
+              inside .hero-content would position it just under the CTA row
+              instead of at the section's actual bottom edge.
+              aria-hidden: purely an affordance hint that the page keeps
+              going below the fold — every real "where can I go" path
+              already exists as the quiz/map links above and the nav, so a
+              screen-reader user loses nothing by not hearing this. Plain
+              div, not an m.div: the CSS bounce (gated by prefers-reduced-
+              motion in styles.css) already carries all the motion this
+              needs — a scripted entrance on top of it was firing
+              unreliably against the hero's own scroll-linked re-renders
+              and added nothing a static-then-bouncing icon doesn't. */}
+          <div className="hero-scroll-hint" aria-hidden="true">
+            <CaretDown size={20} weight="bold" />
+          </div>
         </m.div>
       </section>
       <ColdOpen />
