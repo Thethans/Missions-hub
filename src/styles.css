@@ -1736,8 +1736,11 @@ html:not([data-app-booted]) [data-reveal] {
   column-gap: var(--space-8);
   padding: var(--space-8) var(--space-8) 0;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  line-height: 2;
+  /* Bumped up from 0.7rem/line-height:2 — bigger, taller glyphs read as
+     looming rather than a dense ticker, and land at ~4 visible rows per
+     screen instead of ~6 as a side effect. Experimental — may revert. */
+  font-size: 1.05rem;
+  line-height: 1.9;
   color: rgba(250, 247, 240, 0.4);
   will-change: transform;
 }
