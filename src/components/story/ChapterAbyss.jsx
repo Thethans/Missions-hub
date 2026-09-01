@@ -190,7 +190,16 @@ function NameWall({ active }) {
 
   return (
     <div className="abyss-namewall" aria-hidden="true">
-      <div ref={wallRef} className="abyss-namewall-text">{nameWallText}</div>
+      {/* data-hydration-reset="children": this text starts empty and only
+          fills in once the ~270KB unreachedNames.js chunk resolves (see
+          useNameWallText above), well after prerender's capture. Stripping
+          it here keeps the prerendered snapshot matching a real visitor's
+          pre-effect hydration render (same convention prerender.js already
+          uses for MapLibre/cobe's imperative DOM) instead of shipping all
+          9,045 names as static HTML on every homepage request. */}
+      <div ref={wallRef} className="abyss-namewall-text" data-hydration-reset="children">
+        {nameWallText}
+      </div>
     </div>
   );
 }
