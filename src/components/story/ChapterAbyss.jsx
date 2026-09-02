@@ -247,8 +247,8 @@ export default function ChapterAbyss() {
             </div>
             <p className="abyss-landing-close">
               Every people group you scrolled past just now is real, drawn from an actual list of{' '}
-              {groups} unreached groups. The screen looked empty not because no people are there, but
-              because very few people have gone to them.
+              {groups} unreached groups. That emptiness didn't mean the people aren't there. It meant
+              almost no one has gone to them.
             </p>
           </div>
         </div>

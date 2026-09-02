@@ -2169,7 +2169,7 @@ html:not([data-app-booted]) [data-reveal] {
 
 /* min-height (not just flex:1) so this never collapses when the detail
    panel below pushes total page content past the viewport height. */
-.page-map { flex: 1; display: flex; min-height: 70vh; position: relative; }
+.page-map { flex: 1; display: flex; min-height: 70dvh; position: relative; }
 .map-wrapper { position: relative; flex: 1; display: flex; }
 #map-container { width: 100%; flex: 1; }
 
@@ -2855,6 +2855,11 @@ html:not([data-app-booted]) [data-reveal] {
   .pgl-grid { grid-template-columns: 1fr; }
   .map-view-toggle { width: 100%; }
   .map-view-toggle-btn { flex: 1; justify-content: center; }
+  /* On a short mobile map (70dvh, not a full desktop viewport), the legend's
+     desktop max-height (100vh minus a couple space tokens) can eat most of
+     the map underneath it — cap it well below the map's own height instead
+     so the map stays primary and the legend scrolls internally. */
+  .map-legend { max-height: 45dvh; }
 }
 
 /* ==== MAP: DETAIL PANEL ==== */
@@ -3061,6 +3066,15 @@ html:not([data-app-booted]) [data-reveal] {
   margin: 0 0 var(--space-2);
   padding: 0 var(--space-3);
   font-weight: 600;
+}
+
+.question-helper {
+  width: 100%;
+  margin: 0 0 var(--space-3);
+  padding: 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted-text);
 }
 
 .matcher label {
@@ -3347,7 +3361,13 @@ html:not([data-app-booted]) [data-reveal] {
 
 @media (max-width: 640px) {
   .matcher-steps { gap: var(--space-1); }
-  .matcher-step-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+  /* The "Question X of Y" label above already carries the count, so the
+     per-dot digit is redundant on a single-viewport screen — hide it and
+     let the dots read as plain progress markers. Size grows (not shrinks)
+     to meet the 44x44 mobile touch-target minimum; seven dots at 44px
+     plus gaps still fit a standard phone viewport in one row. */
+  .matcher-step-dot { width: 44px; height: 44px; font-size: 0.7rem; }
+  .matcher-step-num { display: none; }
 }
 
 .matcher > button {
@@ -5420,7 +5440,10 @@ html:not([data-app-booted]) [data-reveal] {
 .quiz-cta p { color: rgba(250, 247, 240, 0.75); margin-bottom: var(--space-6); }
 
 @media (max-width: 640px) {
-  .landing-map-wrapper { height: 520px; }
+  /* dvh (not vh) so mobile browser chrome showing/hiding doesn't leave a
+     gap or crop the map; ~75% of the viewport keeps the map the primary
+     element instead of a sliver above the fold. */
+  .landing-map-wrapper { height: 75dvh; max-height: none; }
   .landing-map-header { flex-wrap: wrap; }
   .landing-map-header-right { flex-wrap: wrap; justify-content: flex-end; }
 }

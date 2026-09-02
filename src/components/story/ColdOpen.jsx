@@ -28,7 +28,7 @@ export default function ColdOpen() {
       >
         <VariableBloom className="cold-open-number" variant="numeral">{population}B</VariableBloom>
         <p>People alive right now who have no path to hear the gospel in their own language and culture.</p>
-        <p>This is where they are, and who is meant to go.</p>
+        <p>This is where they are. This is who is meant to reach them.</p>
       </m.div>
     </section>
   );

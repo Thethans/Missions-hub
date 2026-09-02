@@ -187,7 +187,7 @@ export default function MatchQuiz() {
             className={`matcher-step-dot${i === step ? ' matcher-step-dot--current' : ''}${isAnswered(q, answers) ? ' matcher-step-dot--answered' : ''}`}
             onClick={() => goToStep(i)}
           >
-            {isAnswered(q, answers) ? <CheckCircle weight="fill" size={14} /> : i + 1}
+            {isAnswered(q, answers) ? <CheckCircle weight="fill" size={14} /> : <span className="matcher-step-num">{i + 1}</span>}
           </button>
         ))}
       </div>

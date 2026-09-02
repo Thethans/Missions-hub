@@ -48,6 +48,7 @@ export default function QuizQuestion({ question, value, onChange }) {
         <legend className="visually-hidden">{question.text}</legend>
         <div className="question-card">
           <p className="question-heading" aria-hidden="true">{question.text}</p>
+          <p className="question-helper">Select all that apply.</p>
           {question.options.map((opt) => (
             <label key={opt}>
               <input

@@ -64,7 +64,7 @@ export const QUESTIONS = [
   {
     key: 'lifeStage',
     text: "What's your current family/life stage?",
-    options: ['single', 'married, no kids yet', 'married with kids', 'not sure yet']
+    options: ['single', 'married, no kids yet', 'married with kids']
   },
   {
     key: 'termLength',
