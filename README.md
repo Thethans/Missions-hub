@@ -15,7 +15,7 @@ Everything here runs on free tiers.
 - Logistics/budget calculators, support-raising templates, pre-field checklist UI
 - Mentor matching, forum/community features
 - Real styling pass (current CSS is a plain placeholder, not a design)
-- Expanded `agencies.json` — only 7 seed agencies; needs real research to be trustworthy
+- Expanded `agencies.json` — now at 37 agencies; needs real research to be trustworthy
 
 ---
 

@@ -90,7 +90,7 @@ Fonts are self-hosted via `@fontsource` — never add font CDN links.
 - Big datasets are static JSON in `public/data/` (CDN-cached, same-origin):
   `people-groups.geojson`, `opportunities-fallback.json`, `stats.json`. Pattern:
   static file is the fast path, Supabase is the freshness/auth path.
-- Agency data for the quiz: `src/data/agencies.json` + `scoreAgency.js` (28 agencies,
+- Agency data for the quiz: `src/data/agencies.json` + `scoreAgency.js` (37 agencies,
   weighted dimensions, `matched`/`concerns` output). Reuse `getMatches` for any
   "relevance to your quiz" ranking — do not invent a second scoring system.
 - Supabase tables: `opportunities`, `inquiries`, checklist tables, prayer-map tables
