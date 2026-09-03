@@ -81,21 +81,27 @@ async function tryLoadMore(page) {
   for (const sel of LOAD_MORE_SELECTORS) {
     try {
       // :has-text is not real CSS — handle those with XPath
+      let btn;
       if (sel.includes(':has-text(')) {
         const textMatch = sel.match(/:has-text\("(.+?)"\)/);
         if (!textMatch) continue;
         const text = textMatch[0].slice(11, -2);
         const tag = sel.split(':')[0] || '*';
-        const [btn] = await page.$x(`//${tag}[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "${text.toLowerCase()}")]`);
-        if (btn && await btn.isIntersectingViewport()) {
-          await btn.click();
-          await page.waitForNetworkIdle({ idleTime: 1000, timeout: 8000 }).catch(() => {});
-          return true;
-        }
-        continue;
+        // page.$x() was removed in Puppeteer 25 — page.$$('xpath/...') is
+        // its replacement. This silently threw and was swallowed by the
+        // catch below on every call, so every text-matched "Load More"/
+        // "View More" button on every browser scraper has been a no-op.
+        [btn] = await page.$$(`xpath/.//${tag}[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "${text.toLowerCase()}")]`);
+      } else {
+        btn = await page.$(sel);
       }
-      const btn = await page.$(sel);
-      if (btn && await btn.isIntersectingViewport()) {
+      if (!btn) continue;
+      // The button is frequently below the fold on a long listing page —
+      // isIntersectingViewport() is false until it's scrolled into view,
+      // which silently made every "load more" check fail on tall pages.
+      await btn.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await sleep(300);
+      if (await btn.isIntersectingViewport()) {
         await btn.click();
         await page.waitForNetworkIdle({ idleTime: 1000, timeout: 8000 }).catch(() => {});
         return true;

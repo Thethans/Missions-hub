@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { fetchRenderedHTML } from './browser.js';
+import { fetchRenderedHTML, paginateAndCollectHTML } from './browser.js';
 import { BaseScraper } from './base.js';
 
 const BASE = 'https://serves.efca.org';
@@ -14,12 +14,22 @@ export default class ReachGlobalScraper extends BaseScraper {
     const opportunities = [];
     let totalPages = 0;
 
-    console.log('ReachGlobal: scraping opportunities (JS-rendered)…');
+    // The main listing only server-renders the first 12 of ~57 positions —
+    // the rest sit behind a Vue "View More" paginator button (class
+    // "paginator ... ", no href) that fetchRenderedHTML's single snapshot
+    // never clicks. paginateAndCollectHTML drives that button (it's matched
+    // by the button:has-text("View More") selector) up to maxPages times,
+    // and each snapshot is cumulative, so extractCards' own dedup (via the
+    // running `opportunities` list) collapses the overlap back down to the
+    // true unique set.
+    console.log('ReachGlobal: scraping opportunities (JS-rendered, paginated)…');
     try {
-      const html = await fetchRenderedHTML(LISTING_URL, { timeout: 30000 });
-      totalPages = 1;
-      const $ = cheerio.load(html);
-      this.extractCards($, opportunities);
+      const htmlPages = await paginateAndCollectHTML(LISTING_URL, { maxPages: 8, timeout: 30000 });
+      totalPages += htmlPages.length;
+      for (const html of htmlPages) {
+        const $ = cheerio.load(html);
+        this.extractCards($, opportunities);
+      }
     } catch (err) {
       console.warn(`ReachGlobal: main page failed — ${err.message}`);
     }
@@ -63,7 +73,12 @@ export default class ReachGlobalScraper extends BaseScraper {
       if (/^(filter|search|clear|back|next|view more|show)$/i.test(title)) return;
       seen.add(title.toLowerCase());
 
-      const linkEl = $el.find('a[href]').first();
+      // The whole card is itself the <a> on this site (no nested anchor),
+      // so .find('a[href]') (descendants only) came up empty for every
+      // card and silently fell back to the listing URL for all of them —
+      // dedup() then collapsed nearly all distinct cards into one because
+      // they all appeared to share that one URL. Check self before descendants.
+      const linkEl = $el.is('a[href]') ? $el : $el.find('a[href]').first();
       const href = linkEl.attr('href') || '';
       const url = this.resolveUrl(href) || LISTING_URL;
 
