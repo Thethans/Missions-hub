@@ -1,14 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { m, useMotionValue, useMotionTemplate, animate, useScroll, useTransform } from 'framer-motion';
 import { CaretDown } from '@phosphor-icons/react';
-import StatsStrip from '../components/StatsStrip.jsx';
-import JourneySection from '../components/JourneySection.jsx';
-import Capabilities from '../components/Capabilities.jsx';
-import MapTeaser from '../components/MapTeaser.jsx';
-import AgencyMarquee from '../components/AgencyMarquee.jsx';
-import PartnerQuotePlaceholder from '../components/PartnerQuotePlaceholder.jsx';
-import Faq from '../components/Faq.jsx';
 import ColdOpen from '../components/story/ColdOpen.jsx';
 import ChapterCommand from '../components/story/ChapterCommand.jsx';
 import ChapterAbyss from '../components/story/ChapterAbyss.jsx';
@@ -21,6 +14,12 @@ import SectionDivider from '../components/SectionDivider.jsx';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import usePageMeta from '../hooks/usePageMeta.js';
 import useMagnetic from '../hooks/useMagnetic.js';
+
+// Lazy, same reasoning as MapPage.jsx's WorldMap split: this pulls in
+// maplibre-gl, the heaviest dependency in the app, and bundling it inline
+// would force the whole story-chapter chunk above it to wait on maplibre
+// evaluating before any of it could paint.
+const LandingMapPreview = lazy(() => import('../components/LandingMapPreview.jsx'));
 
 const DRAMATIC = [0.16, 1, 0.3, 1];
 
@@ -187,25 +186,15 @@ export default function HomePage() {
       <ChapterAbyss />
       <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
       <ChapterPattern />
-      {/* AgencyMarquee moved up here (was after ChapterCost/Ending) — same
-          atlas-paper background as ChapterPattern right above it, so no
-          divider needed, and it lands earlier in the read as requested. */}
-      <AgencyMarquee />
-      <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
-      <StatsStrip />
-      <JourneySection />
-      <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
-      <Capabilities />
-      {/* No divider here on purpose: MapTeaser's own visual (its full-bleed
-          map preview) is the same ink-navy as Capabilities right above it
-          — a paper-colored curve between two navy sections would promise a
-          color change that never actually arrives. */}
-      <MapTeaser />
+      {/* No divider here: ChapterPattern, ChapterCost, and StoryFinale are
+          all atlas-paper — the divider belongs at the one real color change,
+          right before the map preview's dark canvas. */}
       <ChapterCost />
-      <PartnerQuotePlaceholder />
       <StoryFinale />
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
-      <Faq />
+      <Suspense fallback={<p className="landing-map-suspense-fallback" role="status">Loading the map&hellip;</p>}>
+        <LandingMapPreview />
+      </Suspense>
       <Footer />
     </>
   );

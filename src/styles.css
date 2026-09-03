@@ -5447,3 +5447,199 @@ html:not([data-app-booted]) [data-reveal] {
   .landing-map-header { flex-wrap: wrap; }
   .landing-map-header-right { flex-wrap: wrap; justify-content: flex-end; }
 }
+
+/* ==== CHURCH-PRIVATE MISSIONARY DIRECTORY ==== */
+
+.cm-explorer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-16);
+}
+
+.cm-loading, .cm-error, .cm-empty {
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  color: var(--muted-text);
+}
+
+.cm-error { max-width: 480px; margin: 0 auto; }
+
+.cm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.cm-card-wrapper { height: 100%; }
+
+.cm-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cm-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 35, 59, 0.16);
+}
+
+.cm-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.cm-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cm-card-avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 35, 59, 0.06);
+  color: var(--ink-navy);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cm-card-agency {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--voyage-teal);
+  margin: 0 0 2px;
+}
+
+.cm-card-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Always-visible strip for the missionary's is_current=true need — sits
+   right under the header, styled distinctly from the muted description
+   below it so a member scanning the grid can spot it without reading the
+   whole card. */
+.cm-card-prayer-need {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.88rem;
+  color: var(--ink-navy);
+  background: rgba(217, 142, 92, 0.12);
+  border: 1px solid rgba(217, 142, 92, 0.3);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.cm-card-prayer-need svg { flex-shrink: 0; margin-top: 2px; color: var(--warm-clay); }
+
+.cm-card-past-needs {
+  font-size: 0.82rem;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-3);
+}
+
+.cm-card-past-needs summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--voyage-teal);
+}
+
+.cm-card-past-needs ul {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+}
+
+.cm-card-desc {
+  font-size: 0.9rem;
+  color: var(--muted-text);
+  margin: 0 0 var(--space-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cm-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.cm-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  background: rgba(22, 35, 59, 0.04);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius);
+}
+
+.cm-card-tag svg { flex-shrink: 0; }
+
+.cm-card-media {
+  margin-bottom: var(--space-3);
+}
+
+.cm-card-media-thumb {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  display: block;
+}
+
+.cm-card-media-thumb--video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+}
+
+.cm-card-media-caption {
+  font-size: 0.8rem;
+  color: var(--muted-text);
+  margin: var(--space-1) 0 0;
+}
+
+.cm-card-footer {
+  margin-top: auto;
+  display: flex;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.cm-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--voyage-teal);
+}
+
+@media (max-width: 640px) {
+  .cm-grid { grid-template-columns: 1fr; }
+}

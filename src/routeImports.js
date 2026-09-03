@@ -16,6 +16,7 @@ export const routeImports = {
   '/for-churches/:missionaryId': () => import('./pages/MissionaryProfilePage.jsx'),
   '/for-churches/onboarding': () => import('./pages/ChurchOnboardingPage.jsx'),
   '/admin/review-queue': () => import('./pages/AdminReviewQueuePage.jsx'),
+  '/church/:churchId/missionaries': () => import('./pages/ChurchMissionariesPage.jsx'),
   '/about': () => import('./pages/AboutPage.jsx'),
   '/terms': () => import('./pages/TermsPage.jsx'),
   '/privacy': () => import('./pages/PrivacyPage.jsx')

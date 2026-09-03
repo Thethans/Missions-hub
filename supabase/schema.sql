@@ -848,3 +848,258 @@ create policy "church_profiles_read_by_requested_missionary"
       where ir.church_id = church_profiles.id and ir.missionary_id = auth.uid()
     )
   );
+
+-- Church-private missionary directory ------------------------------------
+-- Lets a church keep a private, member-only page of the missionaries it
+-- supports: prayer needs and photo/video updates, scoped per-church via RLS
+-- (not a public directory). Distinct from missionary_profiles above (the
+-- support-matching feature's PK is auth.users.id, with status/verification/
+-- agency fields for the church<->missionary matching flow) — this feature's
+-- profile table is named church_missionary_profiles specifically to avoid
+-- colliding with that one. A person can have rows in either table, both, or
+-- neither; they are never joined together.
+
+-- Churches ------------------------------------------------------------------
+create table if not exists churches (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid references auth.users(id),
+  created_at timestamptz default now()
+);
+
+-- Church membership, roles scoped per church (a user can be an admin of one
+-- church and a plain member of another).
+create table if not exists church_members (
+  id uuid primary key default gen_random_uuid(),
+  church_id uuid references churches(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
+  role text not null check (role in ('admin', 'member')),
+  created_at timestamptz default now(),
+  unique (church_id, user_id)
+);
+
+-- Missionary profiles for this feature (missionary owns and edits their own
+-- row). Named church_missionary_profiles, not missionary_profiles — see the
+-- comment above this section.
+create table if not exists church_missionary_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  full_name text not null,
+  family_summary text,
+  sending_agency text,
+  ministry_field text,
+  bio text,
+  contact_email text,
+  photo_url text,
+  latitude numeric,
+  longitude numeric,
+  updated_at timestamptz default now()
+);
+
+-- Which missionaries a church has added to its private list.
+create table if not exists church_missionaries (
+  id uuid primary key default gen_random_uuid(),
+  church_id uuid references churches(id) on delete cascade,
+  missionary_id uuid references church_missionary_profiles(id) on delete cascade,
+  added_by uuid references auth.users(id),
+  created_at timestamptz default now(),
+  unique (church_id, missionary_id)
+);
+
+create index if not exists church_missionaries_church_id_idx on church_missionaries (church_id);
+
+-- Prayer needs; most recent current one shown first on the card/profile.
+create table if not exists prayer_needs (
+  id uuid primary key default gen_random_uuid(),
+  missionary_id uuid references church_missionary_profiles(id) on delete cascade,
+  need_text text not null,
+  is_current boolean default true,
+  posted_at timestamptz default now()
+);
+
+create index if not exists prayer_needs_missionary_id_idx on prayer_needs (missionary_id, is_current);
+
+-- Photo/video updates, one combined feed per missionary.
+create table if not exists media_updates (
+  id uuid primary key default gen_random_uuid(),
+  missionary_id uuid references church_missionary_profiles(id) on delete cascade,
+  media_type text not null check (media_type in ('video', 'photo')),
+  url text not null,
+  caption text,
+  posted_at timestamptz default now()
+);
+
+create index if not exists media_updates_missionary_id_idx on media_updates (missionary_id, posted_at desc);
+
+-- Helper functions ----------------------------------------------------------
+-- church_members' own select/insert/delete policies need to check "is this
+-- requester an admin of this church?", which if written as a plain subquery
+-- on church_members itself would hit the same infinite-recursion trap
+-- documented at is_active_verified_admin() above (error 42P17). Same fix:
+-- a security-definer function runs as its owner, bypassing RLS on the inner
+-- query, so the admin check doesn't re-trigger the policy that calls it.
+create or replace function is_church_member(check_user_id uuid, check_church_id uuid) returns boolean as $$
+  select exists (
+    select 1 from church_members
+    where user_id = check_user_id and church_id = check_church_id
+  );
+$$ language sql security definer set search_path = public;
+
+create or replace function is_church_admin(check_user_id uuid, check_church_id uuid) returns boolean as $$
+  select exists (
+    select 1 from church_members
+    where user_id = check_user_id and church_id = check_church_id and role = 'admin'
+  );
+$$ language sql security definer set search_path = public;
+
+-- church_missionary_profiles has no public-select policy at all (per spec):
+-- a missionary's data is visible only to (a) themself, or (b) a member of a
+-- church that has explicitly added them via church_missionaries. Used by
+-- that table's own select policy and by prayer_needs/media_updates below, so
+-- their access always mirrors the parent profile's visibility. Security
+-- definer for the same recursion reason as above: the owner-check branch
+-- queries church_missionary_profiles from within that table's own policy.
+create or replace function can_read_missionary(check_missionary_id uuid) returns boolean as $$
+  select exists (
+    select 1 from church_missionary_profiles p
+    where p.id = check_missionary_id and p.user_id = auth.uid()
+  )
+  or exists (
+    select 1 from church_missionaries cm
+    join church_members mem on mem.church_id = cm.church_id
+    where cm.missionary_id = check_missionary_id and mem.user_id = auth.uid()
+  );
+$$ language sql security definer set search_path = public;
+
+alter table churches enable row level security;
+alter table church_members enable row level security;
+alter table church_missionary_profiles enable row level security;
+alter table church_missionaries enable row level security;
+alter table prayer_needs enable row level security;
+alter table media_updates enable row level security;
+
+-- Churches: readable only by members of that church.
+drop policy if exists "churches_member_read" on churches;
+create policy "churches_member_read"
+  on churches for select
+  using (is_church_member(auth.uid(), id));
+
+-- Anyone can create a church record they'll administer; church_members'
+-- bootstrap insert policy below is what actually makes them its first admin.
+drop policy if exists "churches_creator_insert" on churches;
+create policy "churches_creator_insert"
+  on churches for insert
+  with check (created_by = auth.uid());
+
+-- church_members: a user reads their own membership rows, or every row for
+-- a church they admin (needed for the admin's member-management UI).
+drop policy if exists "church_members_self_or_admin_read" on church_members;
+create policy "church_members_self_or_admin_read"
+  on church_members for select
+  using (user_id = auth.uid() or is_church_admin(auth.uid(), church_id));
+
+-- Only an existing admin can add members to their church, EXCEPT for the
+-- one-time bootstrap case: the person who created the church adding
+-- themself as its first admin (there is no existing admin yet to do it).
+drop policy if exists "church_members_admin_or_bootstrap_insert" on church_members;
+create policy "church_members_admin_or_bootstrap_insert"
+  on church_members for insert
+  with check (
+    is_church_admin(auth.uid(), church_id)
+    or (
+      user_id = auth.uid()
+      and role = 'admin'
+      and exists (select 1 from churches c where c.id = church_id and c.created_by = auth.uid())
+      and not exists (select 1 from church_members m where m.church_id = church_id)
+    )
+  );
+
+-- Only admins can remove members from their church.
+drop policy if exists "church_members_admin_delete" on church_members;
+create policy "church_members_admin_delete"
+  on church_members for delete
+  using (is_church_admin(auth.uid(), church_id));
+
+-- church_missionary_profiles: a missionary can read/update only their own
+-- row, or be read by a member of a church that has added them (no public
+-- select policy exists on this table at all).
+drop policy if exists "church_missionary_profiles_read" on church_missionary_profiles;
+create policy "church_missionary_profiles_read"
+  on church_missionary_profiles for select
+  using (can_read_missionary(id));
+
+drop policy if exists "church_missionary_profiles_owner_insert" on church_missionary_profiles;
+create policy "church_missionary_profiles_owner_insert"
+  on church_missionary_profiles for insert
+  with check (user_id = auth.uid());
+
+drop policy if exists "church_missionary_profiles_owner_update" on church_missionary_profiles;
+create policy "church_missionary_profiles_owner_update"
+  on church_missionary_profiles for update
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- church_missionaries: write access (adding/removing missionaries from a
+-- church's list) is admin-only, per spec. Read access is intentionally
+-- broadened to any member of the church, not just admins — the card/map/
+-- globe views need to list which missionaries belong to their church, and
+-- PostgREST's embedded-join queries need a select grant on this join table
+-- itself to return rows, not just on missionary_profiles at the far end.
+drop policy if exists "church_missionaries_member_read" on church_missionaries;
+create policy "church_missionaries_member_read"
+  on church_missionaries for select
+  using (is_church_member(auth.uid(), church_id));
+
+drop policy if exists "church_missionaries_admin_insert" on church_missionaries;
+create policy "church_missionaries_admin_insert"
+  on church_missionaries for insert
+  with check (is_church_admin(auth.uid(), church_id));
+
+drop policy if exists "church_missionaries_admin_delete" on church_missionaries;
+create policy "church_missionaries_admin_delete"
+  on church_missionaries for delete
+  using (is_church_admin(auth.uid(), church_id));
+
+-- prayer_needs: readable by anyone who can read the parent missionary
+-- profile; writable only by the missionary who owns that profile.
+drop policy if exists "prayer_needs_read" on prayer_needs;
+create policy "prayer_needs_read"
+  on prayer_needs for select
+  using (can_read_missionary(missionary_id));
+
+drop policy if exists "prayer_needs_owner_insert" on prayer_needs;
+create policy "prayer_needs_owner_insert"
+  on prayer_needs for insert
+  with check (
+    exists (select 1 from church_missionary_profiles p where p.id = missionary_id and p.user_id = auth.uid())
+  );
+
+drop policy if exists "prayer_needs_owner_update" on prayer_needs;
+create policy "prayer_needs_owner_update"
+  on prayer_needs for update
+  using (
+    exists (select 1 from church_missionary_profiles p where p.id = missionary_id and p.user_id = auth.uid())
+  )
+  with check (
+    exists (select 1 from church_missionary_profiles p where p.id = missionary_id and p.user_id = auth.uid())
+  );
+
+-- media_updates: same read/write pattern as prayer_needs above.
+drop policy if exists "media_updates_read" on media_updates;
+create policy "media_updates_read"
+  on media_updates for select
+  using (can_read_missionary(missionary_id));
+
+drop policy if exists "media_updates_owner_insert" on media_updates;
+create policy "media_updates_owner_insert"
+  on media_updates for insert
+  with check (
+    exists (select 1 from church_missionary_profiles p where p.id = missionary_id and p.user_id = auth.uid())
+  );
+
+drop policy if exists "media_updates_owner_delete" on media_updates;
+create policy "media_updates_owner_delete"
+  on media_updates for delete
+  using (
+    exists (select 1 from church_missionary_profiles p where p.id = missionary_id and p.user_id = auth.uid())
+  );
