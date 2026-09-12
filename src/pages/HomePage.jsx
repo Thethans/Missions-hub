@@ -50,18 +50,24 @@ function LazyChapter({ inView, sectionRef, children }) {
   );
 }
 
-function HeroHeadline() {
+function HeroHeadline({ skipEntrance }) {
   const prefersReduced = usePrefersReducedMotion();
+  // skipEntrance (see consumePrerenderedFirstPaint below): the visitor's
+  // very first paint already showed this wordmark fully bloomed via the
+  // prerendered snapshot, so starting the motion values back at their thin
+  // "hidden" starting point and replaying the bloom would be the same
+  // flash-then-replay this dual-mechanism already avoids for prefersReduced.
+  const skipBloom = prefersReduced || skipEntrance;
   // Starts further from its resting weight/width than the rest of the hero's
   // bloom (250/12 vs the old 340/18) and runs longer (2.6s vs 2.1s) — the
   // wordmark is the one element that gets its own, more theatrical entrance;
   // everything else around it still uses the snappier heroRise timing.
-  const wght = useMotionValue(prefersReduced ? 800 : 250);
-  const opsz = useMotionValue(prefersReduced ? 100 : 12);
+  const wght = useMotionValue(skipBloom ? 800 : 250);
+  const opsz = useMotionValue(skipBloom ? 100 : 12);
   const fontVariationSettings = useMotionTemplate`'wght' ${wght}, 'opsz' ${opsz}, 'WONK' 1`;
 
   useEffect(() => {
-    if (prefersReduced) return;
+    if (skipBloom) return;
     // Slow, dramatic bloom: the wordmark swells from a thin, condensed form
     // into its full display weight over ~2.6s.
     const wghtControls = animate(wght, 800, { duration: 2.6, ease: DRAMATIC });
@@ -72,7 +78,7 @@ function HeroHeadline() {
     };
     // wght/opsz are framer-motion `useMotionValue` containers — stable
     // identity across renders (like a ref), safe to list here.
-  }, [prefersReduced, wght, opsz]);
+  }, [skipBloom, wght, opsz]);
 
   return (
     <m.h1
@@ -131,9 +137,31 @@ const heroWordmarkRise = {
   }
 };
 
+// Module-scoped (evaluated once per JS session, not per render/mount) —
+// true only the one time it's called when the visitor's very first paint
+// was the actual prerendered static HTML for "/" (see
+// window.__PRERENDERED_ENTRY_PATH__ in main.jsx). Without this, every load
+// of the hero — including that first one — discards whatever's already
+// on screen and replays the whole entrance animation from fully hidden,
+// which reads as the visible hero flashing away and fading back in rather
+// than just staying put. Consuming (not just reading) the flag means a
+// later in-app navigation back to "/" — which has no prerendered snapshot
+// of its own to preserve — still gets the normal entrance animation.
+let prerenderedFirstPaintConsumed = false;
+function consumePrerenderedFirstPaint() {
+  if (prerenderedFirstPaintConsumed) return false;
+  prerenderedFirstPaintConsumed = true;
+  return typeof window !== 'undefined' && window.__PRERENDERED_ENTRY_PATH__ === '/';
+}
+
 export default function HomePage() {
   const prefersReduced = usePrefersReducedMotion();
   usePageMeta({ path: '/' });
+
+  // See consumePrerenderedFirstPaint above — stays constant for this
+  // component instance's whole lifetime (computed once via useRef, not
+  // re-evaluated on every render).
+  const skipEntrance = useRef(consumePrerenderedFirstPaint()).current;
 
   // Cinematic exit: as the hero scrolls out from under the viewport, it
   // fades and scales up slightly — reads as pulling back from the map
@@ -184,13 +212,13 @@ export default function HomePage() {
           <m.div
             className="hero-content"
             variants={heroContainer}
-            initial={prefersReduced ? false : 'hidden'}
+            initial={prefersReduced || skipEntrance ? false : 'hidden'}
             animate="show"
           >
             <m.span className="hero-eyebrow" data-reveal variants={heroRise}>
               Live map of unreached people groups worldwide
             </m.span>
-            <HeroHeadline />
+            <HeroHeadline skipEntrance={skipEntrance} />
             <m.p className="hero-tagline" data-reveal variants={heroRise}>Get to the field.</m.p>
             <m.p data-reveal variants={heroRise}>
               Find the people still waiting to hear, the agencies who can send you, and everything in between.

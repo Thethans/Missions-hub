@@ -1,5 +1,6 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Funnel, X } from '@phosphor-icons/react';
 import RELIGION_SUMMARIES from '../data/religionSummaries.js';
 
 const ITEMS = [
@@ -76,45 +77,90 @@ export default function MapLegend({
   religionActive,
   onToggleReligion
 }) {
+  // Below ~640px the always-open corner panel would cover most of the map
+  // (see the mobile rules in styles.css), so it becomes a closed-by-default
+  // bottom sheet opened by this toggle instead. Above that breakpoint the
+  // toggle/overlay/mobile header are all hidden by CSS and .map-legend
+  // renders exactly as it always has, regardless of this state.
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
   return (
-    <div className="map-legend">
-      {ITEMS.map((item) => {
-        const isActive = !active || active.has(item.status);
-        return (
-          <button
-            key={item.status}
-            type="button"
-            className={`map-legend-item${isActive ? '' : ' map-legend-item--off'}`}
-            onClick={() => onToggle && onToggle(item.status)}
-            aria-pressed={isActive}
-          >
-            <span className={`map-legend-swatch status-${item.status}`} />
-            {item.label}
-            {counts && <span className="map-legend-count">{counts[item.status] ?? 0}</span>}
-          </button>
-        );
-      })}
-      {religions && religions.length > 0 && (
-        <div className="map-legend-religion">
-          <span className="map-legend-religion-label">
-            Religion
-            {religionActive.size > 0 && (
-              <span className="map-legend-religion-label-count">{religionActive.size}</span>
-            )}
-          </span>
-          <div className="map-legend-religion-chips">
-            {religions.map((religion) => (
-              <ReligionChip
-                key={religion}
-                religion={religion}
-                isActive={religionActive.has(religion)}
-                count={religionCounts[religion] ?? 0}
-                onClick={() => onToggleReligion && onToggleReligion(religion)}
-              />
-            ))}
-          </div>
-        </div>
+    <>
+      <button
+        type="button"
+        className="map-legend-mobile-toggle"
+        onClick={() => setMobileOpen(true)}
+        aria-expanded={mobileOpen}
+        aria-controls="map-legend-panel"
+      >
+        <Funnel size={16} weight="bold" />
+        Filters
+      </button>
+      {mobileOpen && (
+        <div className="map-legend-overlay" onClick={() => setMobileOpen(false)} aria-hidden="true" />
       )}
-    </div>
+      <div
+        className={`map-legend${mobileOpen ? ' map-legend--sheet-open' : ''}`}
+        id="map-legend-panel"
+      >
+        <div className="map-legend-mobile-header">
+          <span className="map-legend-mobile-title">Filters</span>
+          <button
+            type="button"
+            className="map-legend-mobile-close"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close filters"
+          >
+            <X size={18} weight="bold" />
+          </button>
+        </div>
+        {ITEMS.map((item) => {
+          const isActive = !active || active.has(item.status);
+          return (
+            <button
+              key={item.status}
+              type="button"
+              className={`map-legend-item${isActive ? '' : ' map-legend-item--off'}`}
+              onClick={() => onToggle && onToggle(item.status)}
+              aria-pressed={isActive}
+            >
+              <span className={`map-legend-swatch status-${item.status}`} />
+              {item.label}
+              {counts && <span className="map-legend-count">{counts[item.status] ?? 0}</span>}
+            </button>
+          );
+        })}
+        {religions && religions.length > 0 && (
+          <div className="map-legend-religion">
+            <span className="map-legend-religion-label">
+              Religion
+              {religionActive.size > 0 && (
+                <span className="map-legend-religion-label-count">{religionActive.size}</span>
+              )}
+            </span>
+            <div className="map-legend-religion-chips">
+              {religions.map((religion) => (
+                <ReligionChip
+                  key={religion}
+                  religion={religion}
+                  isActive={religionActive.has(religion)}
+                  count={religionCounts[religion] ?? 0}
+                  onClick={() => onToggleReligion && onToggleReligion(religion)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

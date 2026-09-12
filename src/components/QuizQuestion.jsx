@@ -49,18 +49,20 @@ export default function QuizQuestion({ question, value, onChange }) {
         <div className="question-card">
           <p className="question-heading" aria-hidden="true">{question.text}</p>
           <p className="question-helper">Select all that apply.</p>
-          {question.options.map((opt) => (
-            <label key={opt}>
-              <input
-                type="checkbox"
-                name={question.key}
-                value={opt}
-                checked={selected.includes(opt)}
-                onChange={() => toggle(opt)}
-              />
-              {' '}<span className="option-label">{displayLabel(opt)}</span>
-            </label>
-          ))}
+          <div className="question-options-scroll">
+            {question.options.map((opt) => (
+              <label key={opt}>
+                <input
+                  type="checkbox"
+                  name={question.key}
+                  value={opt}
+                  checked={selected.includes(opt)}
+                  onChange={() => toggle(opt)}
+                />
+                {' '}<span className="option-label">{displayLabel(opt)}</span>
+              </label>
+            ))}
+          </div>
           <p className="visually-hidden" role="status" aria-live="polite">{announcement}</p>
         </div>
       </fieldset>

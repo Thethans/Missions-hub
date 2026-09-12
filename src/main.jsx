@@ -33,6 +33,17 @@ if (preloadEl) {
   }
 }
 
+// The one path (if any) whose prerendered static HTML was actually already
+// painted on screen before this script ran — captured here, at true page
+// load, because it's the only point where location.pathname is guaranteed
+// to reflect the real entry URL rather than wherever client-side routing
+// has since navigated to. Pages with an entrance animation that plays on
+// mount (see HomePage.jsx's hero) read this once to skip replaying that
+// animation over content a visitor can already see, without affecting a
+// later in-app navigation to the same route (which has nothing prerendered
+// to preserve).
+window.__PRERENDERED_ENTRY_PATH__ = preloadEl ? window.location.pathname : null;
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
