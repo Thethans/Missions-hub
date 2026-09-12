@@ -4,6 +4,16 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from './HomePage.jsx';
 
+// HomePage only mounts LandingMapPreview once its section is in view (see
+// useInView.js) — jsdom's IntersectionObserver never fires (vitest.setup.js
+// stubs it as a permanent no-op, since ChapterAbyss/RevealOnScroll etc. also
+// use it via framer-motion's own useInView and nothing here should touch
+// that shared global), so this reports "always in view" instead, same as a
+// visitor who's already scrolled the map into frame.
+vi.mock('../hooks/useInView.js', () => ({
+  default: () => [{ current: null }, true]
+}));
+
 // Same jsdom-has-no-WebGL stub used by MapPage.test.jsx / LandingMapPreview.test.jsx.
 vi.mock('maplibre-gl', () => ({
   default: {

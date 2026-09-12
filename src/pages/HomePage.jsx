@@ -14,14 +14,41 @@ import SectionDivider from '../components/SectionDivider.jsx';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import usePageMeta from '../hooks/usePageMeta.js';
 import useMagnetic from '../hooks/useMagnetic.js';
+import useInView from '../hooks/useInView.js';
 
 // Lazy, same reasoning as MapPage.jsx's WorldMap split: this pulls in
 // maplibre-gl, the heaviest dependency in the app, and bundling it inline
 // would force the whole story-chapter chunk above it to wait on maplibre
 // evaluating before any of it could paint.
+//
+// lazy() only controls how the code is *bundled* — React still calls the
+// import() the instant it tries to render this component, which (without
+// the useInView gate below) is immediately on HomePage mount. That import
+// firing eagerly is exactly what scripts/prerender.js was capturing into
+// dist/index.html as baked-in <link rel="modulepreload"> tags for the
+// maplibre-gl chunk — forcing every real visitor to fetch it on page load
+// regardless of whether they ever scroll down to the map.
 const LandingMapPreview = lazy(() => import('../components/LandingMapPreview.jsx'));
 
 const DRAMATIC = [0.16, 1, 0.3, 1];
+
+// Below-the-fold chapters that don't drive scroll-linked/sticky mechanics
+// (unlike ChapterAbyss's pinned "falling" section) can safely wait to
+// mount until they're actually approaching the viewport. Deferring their
+// mount — not just their whileInView animation trigger, which was already
+// lazy — means the browser doesn't have to set up framer-motion tracking
+// for every chapter on the page at once during initial load; a CPU profile
+// under mobile-equivalent throttling showed framer-motion's own setup work
+// as the single largest named contributor to that initial stall. The
+// min-height keeps the swap-in from being a visible layout jump for normal
+// scroll speeds, given useInView's 800px lookahead margin.
+function LazyChapter({ inView, sectionRef, children }) {
+  return (
+    <div ref={sectionRef}>
+      {inView ? children : <div style={{ minHeight: '70vh' }} aria-hidden="true" />}
+    </div>
+  );
+}
 
 function HeroHeadline() {
   const prefersReduced = usePrefersReducedMotion();
@@ -120,6 +147,26 @@ export default function HomePage() {
 
   const ctaMagnetic = useMagnetic();
 
+  // Only starts LandingMapPreview's (and maplibre-gl's) import() once this
+  // section is within 800px of the viewport — see the comment on the lazy()
+  // call above for why gating *when* the import fires matters, not just how
+  // it's bundled.
+  const [mapSectionRef, mapInView] = useInView();
+
+  // ColdOpen/ChapterCommand/ChapterAbyss are excluded from this treatment:
+  // ColdOpen is already partially visible at scroll position 0 (see its own
+  // "deliberately shorter than viewport" hero comment) and ChapterCommand
+  // sits close enough behind it that the lookahead margin would fire almost
+  // immediately anyway — deferring either buys nothing but placeholder risk.
+  // ChapterAbyss uses position:sticky over a ~320vh spacer for its "falling"
+  // effect; gating its mount on an approximate placeholder height would risk
+  // a real, visible scroll-position jump right as the reader falls into it,
+  // and its two actually-expensive parts (the canvas draw loop and the
+  // 9,045-name chunk/layout) are already deferred internally.
+  const [patternRef, patternInView] = useInView();
+  const [costRef, costInView] = useInView();
+  const [finaleRef, finaleInView] = useInView();
+
   return (
     <>
       {/* heroRef stays on this plain, untransformed section — useScroll
@@ -185,16 +232,28 @@ export default function HomePage() {
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
       <ChapterAbyss />
       <SectionDivider from="var(--ink-navy)" to="var(--atlas-paper)" />
-      <ChapterPattern />
+      <LazyChapter sectionRef={patternRef} inView={patternInView}>
+        <ChapterPattern />
+      </LazyChapter>
       {/* No divider here: ChapterPattern, ChapterCost, and StoryFinale are
           all atlas-paper — the divider belongs at the one real color change,
           right before the map preview's dark canvas. */}
-      <ChapterCost />
-      <StoryFinale />
+      <LazyChapter sectionRef={costRef} inView={costInView}>
+        <ChapterCost />
+      </LazyChapter>
+      <LazyChapter sectionRef={finaleRef} inView={finaleInView}>
+        <StoryFinale />
+      </LazyChapter>
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
-      <Suspense fallback={<p className="landing-map-suspense-fallback" role="status">Loading the map&hellip;</p>}>
-        <LandingMapPreview />
-      </Suspense>
+      <div ref={mapSectionRef}>
+        {mapInView ? (
+          <Suspense fallback={<p className="landing-map-suspense-fallback" role="status">Loading the map&hellip;</p>}>
+            <LandingMapPreview />
+          </Suspense>
+        ) : (
+          <p className="landing-map-suspense-fallback" role="status">Loading the map&hellip;</p>
+        )}
+      </div>
       <Footer />
     </>
   );

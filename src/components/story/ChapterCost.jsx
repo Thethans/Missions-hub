@@ -31,7 +31,7 @@ export default function ChapterCost() {
             ("Operation Auca"). */}
         <Photo
           variant="v-night"
-          src="/images/operation-auca-five.png"
+          src="/images/operation-auca-five.jpg"
           alt="The five missionaries of Operation Auca: Jim Elliot, Nate Saint, Ed McCully, Roger Youderian, and Pete Fleming."
           caption="The five missionaries killed by Waorani tribesmen in Ecuador on January 8, 1956, while attempting first peaceful contact: Jim Elliot, Nate Saint, Ed McCully, Roger Youderian, and Pete Fleming."
           className="cost-split-photo"

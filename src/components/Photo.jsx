@@ -31,7 +31,7 @@ export default function Photo({ variant, caption, src, alt, className = '' }) {
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1] }}
       >
-        {src && <img src={src} alt={alt || ''} className="photo-real-img" />}
+        {src && <img src={src} alt={alt || ''} className="photo-real-img" loading="lazy" decoding="async" />}
       </m.div>
       {caption && <figcaption>{caption}</figcaption>}
     </m.figure>

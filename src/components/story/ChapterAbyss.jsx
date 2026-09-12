@@ -9,11 +9,21 @@ import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion.js';
 // group names (see scripts/generate-unreached-names.js), and HomePage isn't
 // code-split from the app's shared entry (see App.jsx's own "everything but
 // the landing page" comment) — a static import here would land in the one
-// JS chunk every route pays for, not just the homepage. Fetched as its own
-// chunk instead, only once this component actually mounts.
-function useNameWallText() {
+// JS chunk every route pays for, not just the homepage.
+//
+// Gated on `active` (ChapterAbyss's own in-view signal), not fired on raw
+// mount: ChapterAbyss itself mounts immediately with the rest of the
+// homepage, so an unconditional import here used to fetch this chunk AND
+// force the browser to line-break/column-layout all 255K+ characters of it
+// (see .abyss-namewall-text's CSS columns) during initial page load, on
+// every visit — including ones that never scroll this far. Waiting for
+// `active` defers both the fetch and that layout cost to when the reader
+// has actually scrolled into the section, using the void spacer's own long
+// scroll runway as the lead time instead of stealing it from first paint.
+function useNameWallText(active) {
   const [text, setText] = useState('');
   useEffect(() => {
+    if (!active || text) return;
     let cancelled = false;
     import('../../data/unreachedNames.js').then(({ UNREACHED_NAMES }) => {
       // One string, not 9,045 React-managed elements — the whole point of
@@ -23,7 +33,7 @@ function useNameWallText() {
       if (!cancelled) setText(UNREACHED_NAMES.join('   ·   '));
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [active, text]);
   return text;
 }
 
@@ -59,10 +69,19 @@ function makeLayer(count, seed) {
   });
 }
 
+// Split lit/dim once at module load rather than filtering every draw() call
+// — dot membership never changes, only position — so the per-frame cost
+// below is two ctx.fillStyle/shadow writes per layer instead of one per
+// dot (up to ~280 canvas state writes/frame just to set the same handful
+// of values over and over).
+function withLitSplit(layer) {
+  return { ...layer, litDots: layer.dots.filter((d) => d.lit), dimDots: layer.dots.filter((d) => !d.lit) };
+}
+
 const LAYERS = [
-  { dots: makeLayer(140, 1.7), speed: 0.15, size: 1.1, opacity: 0.25 },
-  { dots: makeLayer(90, 4.3), speed: 0.35, size: 1.6, opacity: 0.45 },
-  { dots: makeLayer(50, 9.1), speed: 0.6, size: 2.2, opacity: 0.75 }
+  withLitSplit({ dots: makeLayer(140, 1.7), speed: 0.15, size: 1.1, opacity: 0.25 }),
+  withLitSplit({ dots: makeLayer(90, 4.3), speed: 0.35, size: 1.6, opacity: 0.45 }),
+  withLitSplit({ dots: makeLayer(50, 9.1), speed: 0.6, size: 2.2, opacity: 0.75 })
 ];
 
 function AbyssCanvas({ active }) {
@@ -106,28 +125,35 @@ function AbyssCanvas({ active }) {
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
 
+    function drawDot(dot, layer, fraction) {
+      const drift = fraction * layer.speed * height * 1.4;
+      const px = dot.x * width;
+      const py = (dot.y * height * 3 - drift) % (height * 1.4);
+      const y = py < 0 ? py + height * 1.4 : py;
+      if (y < -20 || y > height + 20) return;
+      ctx.beginPath();
+      ctx.arc(px, y, layer.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Two passes per layer instead of one ctx.fillStyle/shadow write per
+    // dot (see withLitSplit above) — canvas context state changes are real
+    // GPU-side cost, and every dim dot was previously paying for a
+    // shadowBlur reset it never used.
     function draw() {
       ctx.clearRect(0, 0, width, height);
       const fraction = scrollFractionRef.current;
       LAYERS.forEach((layer) => {
-        const drift = fraction * layer.speed * height * 1.4;
-        layer.dots.forEach((dot) => {
-          const px = dot.x * width;
-          const py = (dot.y * height * 3 - drift) % (height * 1.4);
-          const y = py < 0 ? py + height * 1.4 : py;
-          if (y < -20 || y > height + 20) return;
-          ctx.beginPath();
-          ctx.arc(px, y, layer.size, 0, Math.PI * 2);
-          if (dot.lit) {
-            ctx.fillStyle = 'rgba(217, 164, 65, 0.95)';
-            ctx.shadowColor = 'rgba(217, 164, 65, 0.8)';
-            ctx.shadowBlur = 6;
-          } else {
-            ctx.fillStyle = `rgba(148, 168, 196, ${layer.opacity})`;
-            ctx.shadowBlur = 0;
-          }
-          ctx.fill();
-        });
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(148, 168, 196, ${layer.opacity})`;
+        layer.dimDots.forEach((dot) => drawDot(dot, layer, fraction));
+
+        if (layer.litDots.length > 0) {
+          ctx.fillStyle = 'rgba(217, 164, 65, 0.95)';
+          ctx.shadowColor = 'rgba(217, 164, 65, 0.8)';
+          ctx.shadowBlur = 6;
+          layer.litDots.forEach((dot) => drawDot(dot, layer, fraction));
+        }
       });
       rafRef.current = requestAnimationFrame(draw);
     }
@@ -162,7 +188,7 @@ function NameWall({ active }) {
   const rafRef = useRef(null);
   const sectionElRef = useRef(null);
   const prefersReduced = usePrefersReducedMotion();
-  const nameWallText = useNameWallText();
+  const nameWallText = useNameWallText(active);
 
   useEffect(() => {
     sectionElRef.current = wallRef.current?.closest('.chapter-abyss') || null;

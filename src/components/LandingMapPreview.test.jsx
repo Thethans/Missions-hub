@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import LandingMapPreview from './LandingMapPreview.jsx';
 
@@ -147,7 +148,8 @@ describe('LandingMapPreview', () => {
     expect(screen.getByRole('link', { name: /take the quiz/i })).toHaveAttribute('href', '/quiz');
   });
 
-  it('populates the "Explore by country" select with real countries from the loaded data', async () => {
+  it('populates the "Explore by country" combobox with real countries from the loaded data', async () => {
+    const user = userEvent.setup();
     render(
       <MemoryRouter>
         <LandingMapPreview />
@@ -157,8 +159,31 @@ describe('LandingMapPreview', () => {
     await waitFor(() => expect(lastMockMap).not.toBeNull());
     await lastMockMap.__triggerLoad();
 
-    const select = await screen.findByLabelText(/explore by country/i);
-    expect(select).toContainHTML('Sudan');
-    expect(select).toContainHTML('Chad');
+    const combobox = await screen.findByRole('combobox', { name: /explore by country/i });
+    await user.click(combobox);
+    expect(await screen.findByRole('option', { name: 'Sudan' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Chad' })).toBeInTheDocument();
+  });
+
+  it('filters the country combobox by typed text and flies to the selected country', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <LandingMapPreview />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(lastMockMap).not.toBeNull());
+    await lastMockMap.__triggerLoad();
+
+    const combobox = await screen.findByRole('combobox', { name: /explore by country/i });
+    await user.type(combobox, 'Cha');
+
+    expect(screen.queryByRole('option', { name: 'Sudan' })).not.toBeInTheDocument();
+    const option = screen.getByRole('option', { name: 'Chad' });
+    expect(option).toBeInTheDocument();
+
+    await user.click(option);
+    expect(lastMockMap.flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [20, 15] }));
   });
 });

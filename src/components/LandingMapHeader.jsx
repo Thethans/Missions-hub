@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { m, animate, useInView } from 'framer-motion';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import BrandLockup from './BrandMark.jsx';
+import CountryCombobox from './CountryCombobox.jsx';
 import statsData from '../data/stats.json';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 
@@ -60,13 +61,6 @@ export default function LandingMapHeader({ countries, onSelectCountry }) {
     };
   }, []);
 
-  const handleCountryChange = (e) => {
-    const name = e.target.value;
-    if (!name) return;
-    const match = countries.find((c) => c.name === name);
-    if (match) onSelectCountry(match.coordinates);
-  };
-
   return (
     <div className="landing-map-header">
       <div className="landing-map-header-left">
@@ -74,15 +68,7 @@ export default function LandingMapHeader({ countries, onSelectCountry }) {
           <BrandLockup expanded />
         </Link>
         {countries.length > 0 && (
-          <label className="landing-map-country-select">
-            <span className="visually-hidden">Explore by country</span>
-            <select onChange={handleCountryChange} defaultValue="">
-              <option value="" disabled>Explore by country</option>
-              {countries.map((c) => (
-                <option key={c.name} value={c.name}>{c.name}</option>
-              ))}
-            </select>
-          </label>
+          <CountryCombobox countries={countries} onSelectCountry={onSelectCountry} />
         )}
       </div>
       <div className="landing-map-header-right">

@@ -380,6 +380,12 @@ html:not([data-app-booted]) [data-reveal] {
 
 .site-nav-drawer a.active .site-nav-tag { color: rgba(22, 35, 59, 0.7); }
 
+/* The 01-08 tags are a desktop-only affordance (they read as a numbered
+   index alongside the compact horizontal nav) — the drawer's stacked,
+   full-width rows don't need them and they just add noise next to the
+   larger label text at this size. */
+.site-nav-drawer .site-nav-tag { display: none; }
+
 @media (max-width: 768px) {
   .site-nav-links--desktop { display: none; }
   .site-nav-hamburger { display: flex; }
@@ -5375,7 +5381,10 @@ html:not([data-app-booted]) [data-reveal] {
   color: var(--atlas-paper);
 }
 
-.landing-map-country-select select {
+.landing-map-country-select { position: relative; }
+
+.landing-map-country-select input {
+  width: 12rem;
   background: var(--glass-dark-bg);
   border: 1px solid var(--glass-dark-border);
   border-radius: var(--radius);
@@ -5385,9 +5394,47 @@ html:not([data-app-booted]) [data-reveal] {
   padding: var(--space-2) var(--space-3);
 }
 
-.landing-map-country-select select:focus-visible {
+.landing-map-country-select input::placeholder { color: rgba(250, 247, 240, 0.6); }
+
+.landing-map-country-select input:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+.landing-map-country-listbox {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+  background: var(--ink-navy);
+  border: 1px solid var(--glass-dark-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 3;
+}
+
+.landing-map-country-option {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  color: var(--atlas-paper);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.landing-map-country-option--active,
+.landing-map-country-option:hover { background: var(--glass-dark-bg); }
+
+.landing-map-country-empty {
+  padding: var(--space-2) var(--space-3);
+  color: rgba(250, 247, 240, 0.6);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
 }
 
 .landing-map-stat {
