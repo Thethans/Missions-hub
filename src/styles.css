@@ -550,6 +550,15 @@ html:not([data-app-booted]) [data-reveal] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* This element's opacity/scale update on every scroll tick (see
+     HomePage.jsx's heroOpacity/heroScale), and it also contains the
+     always-animating SVG background (HeroBackground's pulses/routes/
+     particles). Without a promoted compositing layer, the browser can
+     repaint that whole animated subtree on every scroll-driven transform
+     update instead of just recompositing an already-rasterized layer —
+     on lower-end mobile hardware that reads as continuous choppy scrolling
+     through the entire hero, not just at any one moment. */
+  will-change: transform, opacity;
 }
 
 .hero-background {
@@ -1818,6 +1827,13 @@ html:not([data-app-booted]) [data-reveal] {
 @media (max-width: 640px) {
   .abyss-void { height: 120vh; }
   .abyss-landing-stats { flex-direction: column; gap: var(--space-4); }
+  /* .abyss-namewall-text's columns:220px (desktop) needs at least 2x that
+     width to actually multi-column — below it, it silently collapses to a
+     single column of ordinary left-aligned wrapped text, reading as body
+     copy instead of the atmospheric "wall" texture it's meant to be.
+     Centering keeps it feeling like a texture rather than a paragraph at
+     the one width where the column layout itself can't do that job. */
+  .abyss-namewall-text { text-align: center; }
 }
 
 /* -- Chapter III: Pattern -- */
@@ -5466,7 +5482,19 @@ html:not([data-app-booted]) [data-reveal] {
   max-height: 80vh;
 }
 
-.landing-map-canvas {
+/* Scoped under .landing-map-wrapper (not just .landing-map-canvas alone)
+   for specificity, not style: MapLibre auto-adds its own "maplibregl-map"
+   class to this element, and maplibre-gl.css's own ".maplibregl-map {
+   position: relative }" rule has equal specificity to a bare single-class
+   selector here. Because LandingMapPreview is React.lazy()-loaded, that
+   CSS is injected into <head> at runtime, after this stylesheet — so on
+   equal specificity, MapLibre's rule loads later and wins the cascade,
+   collapsing this element to position:relative with zero height (no
+   explicit height, and its only child is taken out of flow) even though
+   the map itself renders correctly underneath. The extra ancestor class
+   here beats maplibregl-map's specificity outright, regardless of load
+   order. */
+.landing-map-wrapper .landing-map-canvas {
   position: absolute;
   inset: 0;
 }
