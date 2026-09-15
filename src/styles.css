@@ -56,6 +56,31 @@ html { scrollbar-color: var(--voyage-teal) var(--atlas-paper); scrollbar-width: 
   border: 0;
 }
 
+/* Standard skip-link pattern: off-screen until keyboard-focused, then
+   pinned to the top corner above everything else. Used by HomePage's
+   "Skip intro, jump to map" link — mouse users never see it. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--space-4);
+  z-index: 1000;
+  background: var(--ink-navy);
+  color: var(--atlas-paper);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus-visible {
+  top: var(--space-4);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}
+
 h1, h2, h3 { font-family: var(--font-display); }
 
 a { color: var(--voyage-teal); }
@@ -524,8 +549,7 @@ html:not([data-app-booted]) [data-reveal] {
      doesn't resize this box out from under the scroll-linked heroOpacity/
      heroScale transform in HomePage.jsx — a vh-driven resize right as the
      user scrolls back up read as the hero's text fading/shrinking away
-     mid-gesture. Same reasoning as .landing-map-wrapper's mobile dvh rule
-     further down this file. */
+     mid-gesture. */
   height: calc(100dvh - 230px);
   min-height: 460px;
   display: flex;
@@ -1823,6 +1847,17 @@ html:not([data-app-booted]) [data-reveal] {
 .abyss-landing-stats > div { display: flex; flex-direction: column; }
 .abyss-landing-number { font-size: 2.2rem; color: var(--warm-clay); }
 .abyss-landing-close { color: rgba(250, 247, 240, 0.75); line-height: 1.7; }
+
+/* prefers-reduced-motion path (see ChapterAbyss.jsx's AbyssStatic) — same
+   navy/atlas-paper section, no grid-overlap/sticky-pin mechanics: just a
+   normal, short, centered block replacing the ~320vh animated version. */
+.chapter-abyss--static {
+  display: block;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+}
 
 @media (max-width: 640px) {
   .abyss-void { height: 120vh; }
@@ -5462,53 +5497,24 @@ html:not([data-app-booted]) [data-reveal] {
 }
 
 /* ==== LANDING MAP PREVIEW ==== */
-/* LandingMapPreview.jsx — the dark clustered map at the end of the landing
-   page's story, plus its sticky header (LandingMapHeader.jsx) and the quiz
-   CTA (QuizCTA.jsx) that follows it. Same glass/vignette/status-message
-   patterns as the full /map (.map-vignette, .map-loading, .map-data-error
-   above) — this is a lighter preview of that map, not a different visual
-   language. */
+/* LandingMapPreview.jsx — a static, non-interactive hint at the end of the
+   landing page's story (real counts + the hero's own dot-matrix "living
+   atlas" background, no live MapLibre instance), pointing to the real map
+   at /map, plus the quiz CTA (QuizCTA.jsx) that follows it. Previously an
+   actual embedded map — removed because a second live map instance nobody
+   was meant to interact with wasn't worth its own weight (maplibre-gl) or
+   its own failure modes; a real hint plus one clear action is more honest
+   about what this section is for. */
 
 .landing-map {
   background: var(--ink-navy);
   padding: var(--space-16) 0 0;
 }
 
-/* React.lazy's Suspense fallback while LandingMapPreview's own chunk
-   (maplibre-gl included) is still loading — brief, and not yet inside the
-   positioned .landing-map-wrapper, so this is plain flow layout rather
-   than .landing-map-status's absolute overlay positioning. */
-.landing-map-suspense-fallback {
-  background: var(--ink-navy);
-  color: var(--atlas-paper);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  text-align: center;
-  padding: var(--space-16) var(--space-6);
-  margin: 0;
-}
-
-.landing-map-wrapper {
+.landing-map-teaser {
   position: relative;
-  height: 640px;
-  max-height: 80vh;
-}
-
-/* Scoped under .landing-map-wrapper (not just .landing-map-canvas alone)
-   for specificity, not style: MapLibre auto-adds its own "maplibregl-map"
-   class to this element, and maplibre-gl.css's own ".maplibregl-map {
-   position: relative }" rule has equal specificity to a bare single-class
-   selector here. Because LandingMapPreview is React.lazy()-loaded, that
-   CSS is injected into <head> at runtime, after this stylesheet — so on
-   equal specificity, MapLibre's rule loads later and wins the cascade,
-   collapsing this element to position:relative with zero height (no
-   explicit height, and its only child is taken out of flow) even though
-   the map itself renders correctly underneath. The extra ancestor class
-   here beats maplibregl-map's specificity outright, regardless of load
-   order. */
-.landing-map-wrapper .landing-map-canvas {
-  position: absolute;
-  inset: 0;
+  height: 420px;
+  overflow: hidden;
 }
 
 .landing-map-vignette {
@@ -5518,113 +5524,34 @@ html:not([data-app-booted]) [data-reveal] {
   background: radial-gradient(ellipse at center, transparent 55%, rgba(15, 24, 38, 0.45) 100%);
 }
 
-.landing-map-status {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--glass-dark-bg);
-  border: 1px solid var(--glass-dark-border);
-  border-radius: var(--radius);
-  box-shadow: var(--glass-dark-sheen);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  padding: var(--space-3) var(--space-5);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--atlas-paper);
+.landing-map-teaser-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
   text-align: center;
+  padding: var(--space-6);
 }
 
-/* Pinned to the top of the map container (not the page) — persists while
-   panning/zooming the canvas beneath it. */
-.landing-map-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-6);
-  background: linear-gradient(to bottom, rgba(15, 24, 38, 0.85), transparent);
-}
-
-.landing-map-header-left,
-.landing-map-header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.landing-map-brand {
-  display: flex;
-  align-items: center;
-  color: var(--atlas-paper);
-}
-
-.landing-map-country-select { position: relative; }
-
-.landing-map-country-select input {
-  width: 12rem;
-  background: var(--glass-dark-bg);
-  border: 1px solid var(--glass-dark-border);
-  border-radius: var(--radius);
-  color: var(--atlas-paper);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: var(--space-2) var(--space-3);
-}
-
-.landing-map-country-select input::placeholder { color: rgba(250, 247, 240, 0.6); }
-
-.landing-map-country-select input:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.landing-map-country-listbox {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  left: 0;
-  right: 0;
-  max-height: 16rem;
-  overflow-y: auto;
+.landing-map-teaser-lede {
+  max-width: 480px;
   margin: 0;
-  padding: var(--space-2);
-  list-style: none;
-  background: var(--ink-navy);
-  border: 1px solid var(--glass-dark-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  z-index: 3;
+  color: rgba(250, 247, 240, 0.8);
 }
 
-.landing-map-country-option {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  color: var(--atlas-paper);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.landing-map-country-option--active,
-.landing-map-country-option:hover { background: var(--glass-dark-bg); }
-
-.landing-map-country-empty {
-  padding: var(--space-2) var(--space-3);
-  color: rgba(250, 247, 240, 0.6);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
+.landing-map-teaser-stats {
+  display: flex;
+  gap: var(--space-8);
 }
 
 .landing-map-stat {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   line-height: 1.2;
 }
 
@@ -5642,24 +5569,6 @@ html:not([data-app-booted]) [data-reveal] {
   color: rgba(250, 247, 240, 0.6);
 }
 
-.landing-map-search-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius);
-  background: var(--glass-dark-bg);
-  border: 1px solid var(--glass-dark-border);
-  color: var(--atlas-paper);
-}
-
-.landing-map-search-link:focus-visible,
-.landing-map-brand:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 .quiz-cta {
   max-width: 640px;
   margin: 0 auto;
@@ -5671,12 +5580,8 @@ html:not([data-app-booted]) [data-reveal] {
 .quiz-cta p { color: rgba(250, 247, 240, 0.75); margin-bottom: var(--space-6); }
 
 @media (max-width: 640px) {
-  /* dvh (not vh) so mobile browser chrome showing/hiding doesn't leave a
-     gap or crop the map; ~75% of the viewport keeps the map the primary
-     element instead of a sliver above the fold. */
-  .landing-map-wrapper { height: 75dvh; max-height: none; }
-  .landing-map-header { flex-wrap: wrap; }
-  .landing-map-header-right { flex-wrap: wrap; justify-content: flex-end; }
+  .landing-map-teaser { height: 360px; }
+  .landing-map-teaser-stats { gap: var(--space-4); }
 }
 
 /* ==== CHURCH-PRIVATE MISSIONARY DIRECTORY ==== */

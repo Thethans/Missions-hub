@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { m, useMotionValue, useMotionTemplate, animate, useScroll, useTransform } from 'framer-motion';
 import { CaretDown } from '@phosphor-icons/react';
@@ -10,25 +10,12 @@ import ChapterCost from '../components/story/ChapterCost.jsx';
 import StoryFinale from '../components/story/StoryFinale.jsx';
 import Footer from '../components/Footer.jsx';
 import HeroBackground from '../components/HeroBackground.jsx';
+import LandingMapPreview from '../components/LandingMapPreview.jsx';
 import SectionDivider from '../components/SectionDivider.jsx';
 import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.js';
 import usePageMeta from '../hooks/usePageMeta.js';
 import useMagnetic from '../hooks/useMagnetic.js';
 import useInView from '../hooks/useInView.js';
-
-// Lazy, same reasoning as MapPage.jsx's WorldMap split: this pulls in
-// maplibre-gl, the heaviest dependency in the app, and bundling it inline
-// would force the whole story-chapter chunk above it to wait on maplibre
-// evaluating before any of it could paint.
-//
-// lazy() only controls how the code is *bundled* — React still calls the
-// import() the instant it tries to render this component, which (without
-// the useInView gate below) is immediately on HomePage mount. That import
-// firing eagerly is exactly what scripts/prerender.js was capturing into
-// dist/index.html as baked-in <link rel="modulepreload"> tags for the
-// maplibre-gl chunk — forcing every real visitor to fetch it on page load
-// regardless of whether they ever scroll down to the map.
-const LandingMapPreview = lazy(() => import('../components/LandingMapPreview.jsx'));
 
 const DRAMATIC = [0.16, 1, 0.3, 1];
 
@@ -175,12 +162,6 @@ export default function HomePage() {
 
   const ctaMagnetic = useMagnetic();
 
-  // Only starts LandingMapPreview's (and maplibre-gl's) import() once this
-  // section is within 800px of the viewport — see the comment on the lazy()
-  // call above for why gating *when* the import fires matters, not just how
-  // it's bundled.
-  const [mapSectionRef, mapInView] = useInView();
-
   // ColdOpen/ChapterCommand/ChapterAbyss are excluded from this treatment:
   // ColdOpen is already partially visible at scroll position 0 (see its own
   // "deliberately shorter than viewport" hero comment) and ChapterCommand
@@ -197,6 +178,15 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Visually hidden until focused (standard skip-link pattern) — the
+          homepage's own scrollytelling (Chapters I-IV, including the
+          Abyss's ~320vh near-empty scroll) is a lot of distance to Tab or
+          arrow-key through before reaching the map preview at the bottom.
+          Sighted mouse users never see this; keyboard and screen-reader
+          users get a direct jump. #homepage-map-preview is the map
+          section's own wrapper div below, given tabIndex={-1} so the
+          browser moves focus there (not just scroll) on activation. */}
+      <a href="#homepage-map-preview" className="skip-link">Skip intro, jump to map</a>
       {/* heroRef stays on this plain, untransformed section — useScroll
           measures it to compute scroll progress. Applying the scale/opacity
           transform to this same element would feed back into that
@@ -273,14 +263,12 @@ export default function HomePage() {
         <StoryFinale />
       </LazyChapter>
       <SectionDivider from="var(--atlas-paper)" to="var(--ink-navy)" />
-      <div ref={mapSectionRef}>
-        {mapInView ? (
-          <Suspense fallback={<p className="landing-map-suspense-fallback" role="status">Loading the map&hellip;</p>}>
-            <LandingMapPreview />
-          </Suspense>
-        ) : (
-          <p className="landing-map-suspense-fallback" role="status">Loading the map&hellip;</p>
-        )}
+      {/* id/tabIndex: the "Skip intro" link's target — tabIndex={-1} makes
+          this programmatically focusable so the browser moves keyboard
+          focus here (not just scroll position) when the link is
+          activated, same as a real in-page landmark would. */}
+      <div id="homepage-map-preview" tabIndex={-1}>
+        <LandingMapPreview />
       </div>
       <Footer />
     </>

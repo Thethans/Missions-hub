@@ -152,7 +152,12 @@ function Routes({ routes, animate }) {
   );
 }
 
-export default function HeroBackground() {
+// minimal: drops the route paths/coordinate labels and ambient particles,
+// keeping only the dot-matrix continents + status pulses — for reuse in a
+// much shorter box (LandingMapPreview's teaser card) where the routes'
+// text labels, sized and positioned for a full hero viewport, would
+// otherwise land on top of whatever content that box centers over it.
+export default function HeroBackground({ minimal = false }) {
   const prefersReduced = usePrefersReducedMotion();
   const mobile = useMatchMedia(MOBILE_QUERY);
   const finePointer = useMatchMedia(FINE_POINTER_QUERY);
@@ -204,11 +209,11 @@ export default function HeroBackground() {
           <Dots dots={atlas.dots} mobile={mobile} />
         </m.g>
         <m.g style={parallaxActive ? { x: fgX, y: fgY } : undefined}>
-          <Routes routes={atlas.routes} animate={!prefersReduced} />
+          {!minimal && <Routes routes={atlas.routes} animate={!prefersReduced} />}
           <Pulses pulses={atlas.pulses} animate={!prefersReduced} />
         </m.g>
       </svg>
-      {!prefersReduced && <AmbientParticles />}
+      {!minimal && !prefersReduced && <AmbientParticles />}
     </div>
   );
 }

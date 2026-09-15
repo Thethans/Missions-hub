@@ -230,6 +230,62 @@ function NameWall({ active }) {
   );
 }
 
+// The stats/definition block is identical content in both the animated and
+// static paths — same markup, same classes (.abyss-landing-stats etc. don't
+// depend on the scroll mechanics, so they're reused as-is rather than
+// duplicated with a second set of class names).
+function AbyssStats({ groups, population }) {
+  return (
+    <div className="abyss-landing-stats">
+      <div>
+        <VariableBloom className="abyss-landing-number" variant="numeral">{groups}</VariableBloom>
+        <span>unreached people groups</span>
+      </div>
+      <div>
+        <VariableBloom className="abyss-landing-number" variant="numeral">{population}B</VariableBloom>
+        <span>people, waiting</span>
+      </div>
+    </div>
+  );
+}
+
+// prefers-reduced-motion path: the animated version's entire point is that
+// its ~320vh of scroll distance (mostly .abyss-void, an intentionally near-
+// empty spacer under a pinned canvas) makes the reader feel the scale of
+// "4.3 billion, one at a time" physically, not just read it as a number.
+// That's exactly the kind of effect reduced-motion users have opted out of
+// — for them this renders as extra scroll distance with no payoff, not
+// restraint. So this isn't the same content with the animation switched
+// off; it's the same facts (same stats, same definition, same source
+// data) laid out as a normal, short, static panel — no sticky pin, no void
+// spacer, no canvas/name-wall (both purely decorative and only meaningful
+// as motion). Same <h2> chapter heading and reading order either way, so
+// the surrounding page's heading hierarchy and narrative sequence don't
+// depend on which path rendered.
+function AbyssStatic({ groups, population }) {
+  return (
+    <section className="chapter-abyss chapter-abyss--static">
+      <div className="abyss-text-panel">
+        <ChapterTitle number="II" title="The Abyss" />
+        <p className="abyss-landing-def">
+          It represents {population} billion people who currently have no access to the gospel in
+          their own language and culture — {groups} distinct unreached people groups.
+        </p>
+        <p className="abyss-landing-kicker">An unreached people group is</p>
+        <p className="abyss-landing-def">
+          A people group with no adequate indigenous community of believers to reach it without
+          outside help.
+        </p>
+        <AbyssStats groups={groups} population={population} />
+        <p className="abyss-landing-close">
+          Every one of those {groups} groups is real, drawn from an actual list — not a scroll
+          effect. That's what "unreached" looks like at scale.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function ChapterAbyss() {
   const sectionRef = useRef(null);
   const inView = useInView(sectionRef, { amount: 0.1 });
@@ -238,10 +294,14 @@ export default function ChapterAbyss() {
   const groups = statsData.unreachedGroups.toLocaleString();
   const population = (statsData.unreachedPopulation / 1e9).toFixed(1);
 
+  if (prefersReduced) {
+    return <AbyssStatic groups={groups} population={population} />;
+  }
+
   return (
     <section className="chapter-abyss" ref={sectionRef}>
       <div className="abyss-pin">
-        <AbyssCanvas active={inView && !prefersReduced} />
+        <AbyssCanvas active={inView} />
         <div className="abyss-vignette" aria-hidden="true" />
         <NameWall active={inView} />
       </div>
@@ -261,16 +321,7 @@ export default function ChapterAbyss() {
               A people group with no adequate indigenous community of believers to reach it without
               outside help.
             </p>
-            <div className="abyss-landing-stats">
-              <div>
-                <VariableBloom className="abyss-landing-number" variant="numeral">{groups}</VariableBloom>
-                <span>unreached people groups</span>
-              </div>
-              <div>
-                <VariableBloom className="abyss-landing-number" variant="numeral">{population}B</VariableBloom>
-                <span>people, waiting</span>
-              </div>
-            </div>
+            <AbyssStats groups={groups} population={population} />
             <p className="abyss-landing-close">
               Every people group you scrolled past just now is real, drawn from an actual list of{' '}
               {groups} unreached groups. That emptiness didn't mean the people aren't there. It meant

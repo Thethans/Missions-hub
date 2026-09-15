@@ -4,33 +4,15 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from './HomePage.jsx';
 
-// HomePage only mounts LandingMapPreview once its section is in view (see
-// useInView.js) — jsdom's IntersectionObserver never fires (vitest.setup.js
-// stubs it as a permanent no-op, since ChapterAbyss/RevealOnScroll etc. also
-// use it via framer-motion's own useInView and nothing here should touch
-// that shared global), so this reports "always in view" instead, same as a
-// visitor who's already scrolled the map into frame.
+// HomePage only mounts the below-the-fold story chapters (Pattern/Cost/
+// Finale) once their own section is in view (see useInView.js) — jsdom's
+// IntersectionObserver never fires (vitest.setup.js stubs it as a permanent
+// no-op, since ChapterAbyss/RevealOnScroll etc. also use it via
+// framer-motion's own useInView and nothing here should touch that shared
+// global), so this reports "always in view" instead, same as a visitor
+// who's already scrolled that far down.
 vi.mock('../hooks/useInView.js', () => ({
   default: () => [{ current: null }, true]
-}));
-
-// Same jsdom-has-no-WebGL stub used by MapPage.test.jsx / LandingMapPreview.test.jsx.
-vi.mock('maplibre-gl', () => ({
-  default: {
-    Map: vi.fn(function MockMap() {
-      return new Proxy(
-        {},
-        {
-          get(target, prop) {
-            if (prop === 'on' || prop === 'once') return () => {};
-            if (prop === 'getCanvas') return () => ({ style: {} });
-            if (!(prop in target)) target[prop] = vi.fn();
-            return target[prop];
-          }
-        }
-      );
-    })
-  }
 }));
 
 describe('HomePage', () => {
@@ -49,10 +31,8 @@ describe('HomePage', () => {
       </MemoryRouter>
     );
 
-    // LandingMapPreview (and the quiz CTA inside it) is lazy-loaded — see
-    // HomePage.jsx's comment on why (keeps maplibre-gl out of the eager
-    // story-chapter chunk) — so its content only appears once that chunk's
-    // dynamic import resolves.
+    // The quiz CTA lives inside LandingMapPreview, whose own opportunity
+    // stats come from an async fetch — wait for it to resolve.
     await screen.findByRole('heading', { name: /which agency is worth a conversation/i }, { timeout: 3000 });
 
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
@@ -80,5 +60,20 @@ describe('HomePage', () => {
     const quizLinks = await screen.findAllByRole('link', { name: /take the quiz/i });
     expect(quizLinks.length).toBeGreaterThanOrEqual(2);
     quizLinks.forEach((link) => expect(link).toHaveAttribute('href', '/quiz'));
+  });
+
+  it('has a skip-intro link that targets a focusable map-preview landmark', async () => {
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    const skipLink = screen.getByRole('link', { name: /skip intro/i });
+    expect(skipLink).toHaveAttribute('href', '#homepage-map-preview');
+
+    const target = document.getElementById('homepage-map-preview');
+    expect(target).toBeInTheDocument();
+    expect(target).toHaveAttribute('tabindex', '-1');
   });
 });
