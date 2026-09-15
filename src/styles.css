@@ -4747,6 +4747,18 @@ html:not([data-app-booted]) [data-reveal] {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  /* Above 640px this stays the inline (non-sheet) region — but left
+     unbounded, a long chip list (30+ agencies) makes the page taller than
+     the panel itself, so browsing it means scrolling the whole page, which
+     carries the panel's own top edge — including whichever filter was just
+     selected — up underneath .site-nav's sticky, opaque header. Capping the
+     height and scrolling inside the panel instead means the page never has
+     to scroll past .site-nav to see the rest of the list. Same fix the
+     640px sheet below already applies for its own reason (keeping the
+     sheet's close button on-screen) — this just extends it to the inline
+     desktop layout too. */
+  max-height: min(560px, calc(100vh - 160px));
+  overflow-y: auto;
 }
 
 /* Overlay + mobile-only header are always in the DOM when the panel is

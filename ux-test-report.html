@@ -1,0 +1,354 @@
+<title>Field Test Report</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink-navy: #16233b;
+    --atlas-paper: #faf7f0;
+    --voyage-teal: #2b6e76;
+    --warm-clay: #d98e5c;
+    --brand-ember: #e0793b;
+    --gold: #d9a441;
+    --status-reached: #4c8a5e;
+    --status-unreached: #b5482f;
+    --line: rgba(22, 35, 59, 0.14);
+    --muted-text: rgba(22, 35, 59, 0.62);
+    --card-bg: #ffffff;
+    --tag-bg: rgba(22, 35, 59, 0.05);
+    --shadow: 0 2px 16px rgba(22, 35, 59, 0.08);
+
+    --sev-high-bg: rgba(181, 72, 47, 0.1);
+    --sev-high-fg: #b5482f;
+    --sev-med-bg: rgba(217, 164, 65, 0.14);
+    --sev-med-fg: #9c7317;
+    --sev-low-bg: rgba(43, 110, 118, 0.1);
+    --sev-low-fg: #2b6e76;
+    --sev-pos-bg: rgba(76, 138, 94, 0.1);
+    --sev-pos-fg: #4c8a5e;
+    --sev-info-bg: rgba(22, 35, 59, 0.06);
+    --sev-info-fg: rgba(22, 35, 59, 0.65);
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Karla', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink-navy: #f2ede1;
+      --atlas-paper: #141c2c;
+      --card-bg: #1a2436;
+      --line: rgba(242, 237, 225, 0.14);
+      --muted-text: rgba(242, 237, 225, 0.62);
+      --tag-bg: rgba(242, 237, 225, 0.06);
+      --shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+      --voyage-teal: #5fa8b0;
+      --warm-clay: #e3a978;
+      --brand-ember: #ef8c53;
+      --gold: #e8bc63;
+      --status-reached: #6bad7d;
+      --status-unreached: #e08a6c;
+      --sev-high-bg: rgba(224, 138, 108, 0.16);
+      --sev-high-fg: #e08a6c;
+      --sev-med-bg: rgba(232, 188, 99, 0.16);
+      --sev-med-fg: #e8bc63;
+      --sev-low-bg: rgba(95, 168, 176, 0.16);
+      --sev-low-fg: #5fa8b0;
+      --sev-pos-bg: rgba(107, 173, 125, 0.16);
+      --sev-pos-fg: #6bad7d;
+      --sev-info-bg: rgba(242, 237, 225, 0.08);
+      --sev-info-fg: rgba(242, 237, 225, 0.65);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink-navy: #f2ede1;
+    --atlas-paper: #141c2c;
+    --card-bg: #1a2436;
+    --line: rgba(242, 237, 225, 0.14);
+    --muted-text: rgba(242, 237, 225, 0.62);
+    --tag-bg: rgba(242, 237, 225, 0.06);
+    --shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+    --voyage-teal: #5fa8b0;
+    --warm-clay: #e3a978;
+    --brand-ember: #ef8c53;
+    --gold: #e8bc63;
+    --status-reached: #6bad7d;
+    --status-unreached: #e08a6c;
+    --sev-high-bg: rgba(224, 138, 108, 0.16);
+    --sev-high-fg: #e08a6c;
+    --sev-med-bg: rgba(232, 188, 99, 0.16);
+    --sev-med-fg: #e8bc63;
+    --sev-low-bg: rgba(95, 168, 176, 0.16);
+    --sev-low-fg: #5fa8b0;
+    --sev-pos-bg: rgba(107, 173, 125, 0.16);
+    --sev-pos-fg: #6bad7d;
+    --sev-info-bg: rgba(242, 237, 225, 0.08);
+    --sev-info-fg: rgba(242, 237, 225, 0.65);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--atlas-paper);
+    color: var(--ink-navy);
+    font-family: var(--font-body);
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  header.page { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--voyage-teal); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: clamp(30px, 4.5vw, 42px); line-height: 1.08; margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .lede { max-width: 66ch; color: var(--muted-text); font-size: 16px; margin: 0 0 8px; }
+  .meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted-text); margin-top: 14px; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 28px 0 8px;
+  }
+  .stat { background: var(--card-bg); padding: 16px 14px; text-align: center; }
+  .stat .n { font-family: var(--font-display); font-size: 26px; font-weight: 600; }
+  .stat .l { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-text); margin-top: 2px; }
+  .stat.high .n { color: var(--sev-high-fg); }
+  .stat.med .n { color: var(--sev-med-fg); }
+  .stat.blocked .n { color: var(--sev-info-fg); }
+  .stat.pos .n { color: var(--sev-pos-fg); }
+
+  section.persona {
+    margin-top: 44px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .persona__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+  .persona__head h2 { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin: 0; }
+  .persona__head .role { font-size: 13.5px; color: var(--muted-text); }
+  .persona__lens { font-size: 14px; color: var(--muted-text); max-width: 68ch; margin: 6px 0 22px; }
+
+  .finding {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 18px 22px;
+    margin-bottom: 14px;
+  }
+  .finding__top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .sev {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 20px; font-weight: 500;
+  }
+  .sev.high { background: var(--sev-high-bg); color: var(--sev-high-fg); }
+  .sev.med { background: var(--sev-med-bg); color: var(--sev-med-fg); }
+  .sev.low { background: var(--sev-low-bg); color: var(--sev-low-fg); }
+  .sev.pos { background: var(--sev-pos-bg); color: var(--sev-pos-fg); }
+  .sev.info { background: var(--sev-info-bg); color: var(--sev-info-fg); }
+  .finding__title { font-weight: 600; font-size: 15.5px; }
+  .finding__where {
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-text);
+    margin-bottom: 8px;
+  }
+  .finding p { margin: 0 0 8px; font-size: 14.5px; }
+  .finding p:last-child { margin-bottom: 0; }
+  .repro {
+    font-size: 13px; color: var(--muted-text); border-left: 2px solid var(--line);
+    padding-left: 12px; margin-top: 10px;
+  }
+  .repro b { color: var(--ink-navy); font-weight: 600; }
+
+  footer.page {
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--muted-text);
+  }
+  footer.page p { margin: 0 0 8px; }
+</style>
+
+<div class="wrap">
+
+  <header class="page">
+    <p class="eyebrow">Fielded · Frontend QA</p>
+    <h1>Field Test Report</h1>
+    <p class="lede">Live walkthrough of the quiz, opportunities explorer, and pre-field checklist against
+      the three <a href="#" style="color:inherit">Field Personas</a> — Maya (first-time seeker, mobile),
+      Dana (comparison shopper, desktop), and Grace (returning checklist user).</p>
+    <p class="meta">Local dev build · localhost:5173 · viewports tested: 375×812, 390×844, desktop (~1280px)</p>
+    <p class="meta" style="color:var(--sev-pos-fg)">Updated — the filter-panel finding below has been fixed and re-verified. The modal finding was retested with direct DOM measurements and retracted: it was a rendering-tool artifact, not a real bug.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat pos"><div class="n">1</div><div class="l">Fixed</div></div>
+    <div class="stat med"><div class="n">1</div><div class="l">Medium (open)</div></div>
+    <div class="stat blocked"><div class="n">2</div><div class="l">Blocked / Info</div></div>
+    <div class="stat pos"><div class="n">6</div><div class="l">Verified working</div></div>
+  </div>
+
+  <section class="persona">
+    <div class="persona__head">
+      <h2>Maya Reyes</h2>
+      <span class="role">First-time seeker · mobile, 375×812</span>
+    </div>
+    <p class="persona__lens">Landing on the homepage from a social link and taking the agency-match quiz
+      cold, with no prior vocabulary.</p>
+
+    <div class="finding">
+      <div class="finding__top"><span class="sev med">Medium</span><span class="finding__title">Primary CTA sits below the fold on first mobile load</span></div>
+      <div class="finding__where">src/pages/HomePage.jsx — hero section</div>
+      <p>At 375×812, the initial viewport shows the "LIVE MAP OF UNREACHED PEOPLE GROUPS" pill, the
+        full-bleed "Fielded" wordmark, and the scroll chevron — but not the tagline or the "Take the quiz"
+        button. A first-time visitor has to scroll before seeing any path forward, which matters most for
+        exactly this persona: someone arriving via a bio-link tap who may not scroll past an apparently
+        complete-looking screen.</p>
+      <div class="repro"><b>Repro:</b> load <code>/</code> at 375×812, take a screenshot at scroll position 0
+        — CTA and tagline are absent; scrolling ~250px reveals them.</div>
+    </div>
+
+    <div class="finding">
+      <div class="sev pos" style="display:inline-block">Verified</div>
+      <p style="margin-top:8px;"><b>Quiz framing matches Maya's need for a low-pressure entry point.</b>
+        The quiz opens with "This is a starting point, not a final answer. Always talk with a real person
+        at the agency before deciding" — directly defuses the "am I being sold to" concern before question 1.</p>
+    </div>
+
+    <div class="finding">
+      <div class="sev pos" style="display:inline-block">Verified</div>
+      <p style="margin-top:8px;"><b>Quiz questions use a correct accessible fieldset/legend pattern.</b>
+        Each question pairs a <code>visually-hidden</code> legend (screen-reader name, read once) with an
+        <code>aria-hidden</code> visible heading, so the question text isn't double-announced —
+        src/components/QuizQuestion.jsx:44–50. A live region also announces when picking "no strong
+        preference" silently clears other checkboxes, which a sighted user sees happen but a screen-reader
+        user otherwise wouldn't.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding__top"><span class="sev info">Info</span><span class="finding__title">Results-card fade-in looked broken under scripted navigation — confirmed not a bug</span></div>
+      <p>Jumping straight to the results view (bypassing a natural scroll) briefly showed a match card at
+        very low opacity/contrast. A real scroll gesture resolved it immediately — this is the intended
+        <code>RevealOnScroll</code> entrance animation, not a stuck state. Flagging only because it's worth a
+        real-device check if anyone notices "grayed out" match cards — the fix, if any, is design intent,
+        not implementation.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding__top"><span class="sev low">Low · doc</span><span class="finding__title">README says "7-question" quiz; live quiz has 8 questions</span></div>
+      <p>Not a UI defect — the quiz itself is coherent and well-paced (theology → support model → region →
+        life stage → commitment length → role → religious focus). Just flagging the stale count in
+        README.md so it doesn't propagate into onboarding copy elsewhere.</p>
+    </div>
+  </section>
+
+  <section class="persona">
+    <div class="persona__head">
+      <h2>Dana Okafor</h2>
+      <span class="role">Comparison shopper · desktop, ~1280px</span>
+    </div>
+    <p class="persona__lens">Skipping the quiz, going straight to the opportunities explorer, filtering
+      aggressively, and opening an inquiry.</p>
+
+    <div class="finding">
+      <div class="finding__top"><span class="sev pos">Fixed</span><span class="finding__title">Filter panel scrolled under the sticky nav header when browsing a long chip list</span></div>
+      <div class="finding__where">src/styles.css — .opp-filters</div>
+      <p>Above 640px, the filter panel is an intentionally inline region (not a floating dropdown) that
+        pushes page content down — confirmed by the component's own code comments. With ~30 agency chips
+        plus region/role sections, though, the panel had no cap on its own height, so seeing the full list
+        meant scrolling the whole page — carrying the panel's top edge (including whichever chip was just
+        selected) up underneath <code>.site-nav</code>'s sticky, opaque header.</p>
+      <div class="repro"><b>Repro (before fix):</b> open Filters, scroll the page down a few rows → the
+        "AGENCY" label and top chip row render behind the navy nav bar. Confirmed via
+        <code>getBoundingClientRect()</code>: panel top at −218px vs. nav bottom at 69px.</div>
+      <p style="margin-top:10px;"><b>Fix:</b> capped <code>.opp-filters</code> at
+        <code>max-height: min(560px, calc(100vh - 160px))</code> with <code>overflow-y: auto</code> —
+        the same internal-scroll pattern the 640px bottom sheet already used for the same reason (keeping
+        its own close button on-screen). Re-verified: the panel now scrolls within itself and never
+        crosses under the header, at any page-scroll depth. Mobile's bottom sheet was unaffected either
+        way — it already had its own fixed, scrollable container.</p>
+    </div>
+
+    <div class="finding">
+      <div class="sev pos" style="display:inline-block">Verified (retracted an earlier finding)</div>
+      <p style="margin-top:8px;"><b>The inquiry modal is correctly viewport-fixed.</b> The original report
+        flagged this modal as rendering under the header too. Re-tested directly against the DOM
+        (<code>getBoundingClientRect</code> + a walk up the ancestor chain checking for
+        <code>transform</code>/<code>filter</code>/<code>contain</code>/<code>will-change</code>, any of
+        which would break <code>position: fixed</code>) at two scroll depths — the modal centered
+        correctly in the viewport both times, and no offending ancestor exists. The original screenshot
+        was almost certainly a rendering-tool artifact from this session's browser pane (which
+        intermittently desynced during testing, confirmed separately by screenshots coming back visibly
+        wrong immediately after a tab-focus change). Retracting this one rather than "fixing" something
+        that wasn't broken.</p>
+    </div>
+
+    <div class="finding">
+      <div class="sev pos" style="display:inline-block">Verified</div>
+      <p style="margin-top:8px;"><b>Filtering is correct.</b> Selecting "ReachGlobal (EFCA)" updated the
+        chip count, the "47 opportunities matching your filters" line, and the card list to matching
+        agency cards consistently — no drift between the three.</p>
+    </div>
+
+    <div class="finding">
+      <div class="sev pos" style="display:inline-block">Verified</div>
+      <p style="margin-top:8px;"><b>Quiz-to-explorer handoff works.</b> Arriving at the explorer after
+        completing the quiz, it opens already "Sorted by your quiz matches" — exactly the kind of
+        cross-tool continuity Dana would expect and not question.</p>
+    </div>
+
+    <div class="finding">
+      <div class="sev pos" style="display:inline-block">Verified</div>
+      <p style="margin-top:8px;"><b>Honest data-gap copy is consistent in the explorer too.</b> Listings
+        with thin data show "Few details — check the agency's site" rather than guessing — same standard
+        as the quiz's "worth asking about."</p>
+    </div>
+  </section>
+
+  <section class="persona">
+    <div class="persona__head">
+      <h2>Grace Lindqvist</h2>
+      <span class="role">Returning / pre-field checklist user</span>
+    </div>
+    <p class="persona__lens">Logging in via magic link and resuming the pre-field checklist.</p>
+
+    <div class="finding">
+      <div class="finding__top"><span class="sev info">Blocked</span><span class="finding__title">Couldn't test end-to-end — no Supabase credentials in this environment</span></div>
+      <p>This local dev instance has no <code>VITE_SUPABASE_URL</code> / <code>VITE_SUPABASE_ANON_KEY</code>
+        set, so auth, checklist-state persistence, and the prayer-map update flow — the whole core of
+        Grace's persona — couldn't be exercised. Saying this explicitly rather than claiming it works:
+        it needs a real (or staging) Supabase project to verify.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding__top"><span class="sev low">Low · defensive</span><span class="finding__title">The "no Supabase" guard short-circuits the whole page, including the anonymous/local-only path</span></div>
+      <div class="finding__where">src/components/Checklist.jsx:582–584</div>
+      <p>The component returns a single line — <code>"Supabase isn't configured — set VITE_SUPABASE_URL
+        and VITE_SUPABASE_ANON_KEY."</code> — the moment <code>supabase</code> is null, before ever
+        reaching the <code>isAnonymous</code> branch. That's fine as a local-dev diagnostic (and it does
+        follow CLAUDE.md's null-guard rule — no crash). But it means that if those env vars were ever
+        missing in production, every visitor — including someone who never intends to create an account
+        and only wants the anonymous local-storage checklist — would see a raw env-var name instead of the
+        plain-language error copy the site's own voice guidelines call for ("say what happened and what to
+        do"). Low likelihood since Vercel envs are already set, but worth a guard rail given this is
+        Grace's one page.</p>
+    </div>
+  </section>
+
+  <footer class="page">
+    <p><b>What this covers:</b> homepage hero, agency-match quiz (all 8 questions, results view), and the
+      opportunities explorer (search, filters, sort, inquiry modal) — at mobile (375×812, 390×844) and
+      desktop widths, console/network checked throughout, no errors observed outside the expected
+      Supabase-unconfigured message.</p>
+    <p><b>What it doesn't cover:</b> the checklist and prayer-map's authenticated flows (needs Supabase
+      credentials), the map explorer, church/missionary directories, and a real screen-reader pass
+      (Marcus's lens) — worth a follow-up if those are in scope.</p>
+  </footer>
+
+</div>
