@@ -1,0 +1,518 @@
+<title>Field Personas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink-navy: #16233b;
+    --atlas-paper: #faf7f0;
+    --voyage-teal: #2b6e76;
+    --warm-clay: #d98e5c;
+    --brand-ember: #e0793b;
+    --gold: #d9a441;
+    --line: rgba(22, 35, 59, 0.14);
+    --muted-text: rgba(22, 35, 59, 0.62);
+    --card-bg: #ffffff;
+    --tag-bg: rgba(22, 35, 59, 0.05);
+    --shadow: 0 2px 16px rgba(22, 35, 59, 0.08);
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Karla', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink-navy: #f2ede1;
+      --atlas-paper: #141c2c;
+      --card-bg: #1a2436;
+      --line: rgba(242, 237, 225, 0.14);
+      --muted-text: rgba(242, 237, 225, 0.62);
+      --tag-bg: rgba(242, 237, 225, 0.06);
+      --shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+      --voyage-teal: #5fa8b0;
+      --warm-clay: #e3a978;
+      --brand-ember: #ef8c53;
+      --gold: #e8bc63;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink-navy: #f2ede1;
+    --atlas-paper: #141c2c;
+    --card-bg: #1a2436;
+    --line: rgba(242, 237, 225, 0.14);
+    --muted-text: rgba(242, 237, 225, 0.62);
+    --tag-bg: rgba(242, 237, 225, 0.06);
+    --shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+    --voyage-teal: #5fa8b0;
+    --warm-clay: #e3a978;
+    --brand-ember: #ef8c53;
+    --gold: #e8bc63;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--atlas-paper);
+    color: var(--ink-navy);
+    font-family: var(--font-body);
+    line-height: 1.55;
+  }
+  a { color: inherit; }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  header.page {
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--voyage-teal);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(32px, 5vw, 46px);
+    line-height: 1.08;
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+  .lede {
+    max-width: 62ch;
+    color: var(--muted-text);
+    font-size: 16.5px;
+    margin: 0;
+  }
+
+  .persona {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+    overflow: hidden;
+  }
+
+  .persona__band {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--line);
+    background: var(--tag-bg);
+  }
+  .persona__index {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .persona__segment {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+  }
+
+  .persona__body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+  }
+  @media (max-width: 680px) {
+    .persona__body { grid-template-columns: 1fr; }
+  }
+
+  .persona__id {
+    padding: 28px 24px 28px 28px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  @media (max-width: 680px) {
+    .persona__id { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--atlas-paper);
+    background: var(--accent);
+  }
+
+  .persona__name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+  .persona__role {
+    font-size: 14px;
+    color: var(--muted-text);
+    margin: 0;
+  }
+
+  dl.facts {
+    margin: 0;
+    display: grid;
+    gap: 9px;
+    font-size: 13px;
+  }
+  dl.facts div { display: flex; justify-content: space-between; gap: 10px; }
+  dl.facts dt {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+    white-space: nowrap;
+  }
+  dl.facts dd { margin: 0; text-align: right; font-weight: 500; }
+
+  .proficiency {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .proficiency__label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+  }
+  .dots { display: flex; gap: 5px; }
+  .dots span {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--line);
+  }
+  .dots span.on { background: var(--accent); }
+
+  .persona__main {
+    padding: 28px 28px 30px;
+  }
+
+  .quote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.42;
+    color: var(--ink-navy);
+    margin: 0 0 26px;
+    padding-left: 18px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 28px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 560px) {
+    .grid2 { grid-template-columns: 1fr; }
+  }
+
+  .block h3 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+    margin: 0 0 10px;
+  }
+  .block ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14.5px;
+  }
+  .block li { margin-bottom: 6px; }
+  .block li::marker { color: var(--accent); }
+
+  .goals p { margin: 0 0 8px; font-size: 14.5px; }
+  .goals .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--tag-bg);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .scenario {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+  .scenario h3 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  .scenario p {
+    font-size: 14.5px;
+    margin: 0;
+    max-width: 68ch;
+  }
+
+  footer.page {
+    margin-top: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--muted-text);
+  }
+
+  .p-maya { --accent: var(--brand-ember); }
+  .p-dana { --accent: var(--voyage-teal); }
+  .p-grace { --accent: var(--gold); }
+</style>
+
+<div class="wrap">
+
+  <header class="page">
+    <p class="eyebrow">Fielded · UX Research</p>
+    <h1>Field Personas</h1>
+    <p class="lede">Three composite personas covering Fielded's primary user segments — discernment,
+      comparison, and pre-field logistics — drawn from the site's actual surfaces: the agency-match
+      quiz, the opportunities explorer, and the Supabase-backed checklist.</p>
+  </header>
+
+  <article class="persona p-maya">
+    <div class="persona__band">
+      <span class="persona__index">Segment 01</span>
+      <span class="persona__segment">First-time seeker</span>
+    </div>
+    <div class="persona__body">
+      <div class="persona__id">
+        <div class="avatar">MR</div>
+        <div>
+          <p class="persona__name">Maya Reyes</p>
+          <p class="persona__role">23 · Nursing student</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Location</dt><dd>Wichita, KS</dd></div>
+          <div><dt>Stage</dt><dd>Discernment</dd></div>
+          <div><dt>Sending context</dt><dd>Campus ministry</dd></div>
+          <div><dt>Found via</dt><dd>Instagram bio link</dd></div>
+        </dl>
+        <div class="proficiency">
+          <span class="proficiency__label">Tech proficiency</span>
+          <div class="dots">
+            <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span>
+          </div>
+        </div>
+      </div>
+      <div class="persona__main">
+        <p class="quote">"I don't want to sign up for anything — I just want to know if this is even for me."</p>
+        <div class="grid2">
+          <div class="block goals">
+            <h3>Goals</h3>
+            <p><span class="tag">Primary</span>Find out whether missions is a realistic path before telling anyone she's considering it.</p>
+            <p><span class="tag">Secondary</span>See which agencies would even want someone with her skill set (pre-licensure nursing).</p>
+          </div>
+          <div class="block">
+            <h3>Pain points</h3>
+            <ul>
+              <li>Doesn't know the vocabulary — "UPG," "sending agency," "member care" all read as jargon.</li>
+              <li>Assumes any quiz result is a lead-gen funnel in disguise.</li>
+              <li>1,500 listings feels like a wall, not a starting point.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Behaviors</h3>
+            <ul>
+              <li>Googles "how to become a missionary" late at night.</li>
+              <li>Follows missionary accounts on Instagram; hasn't contacted an agency directly yet.</li>
+              <li>Screenshots things to ask her small-group leader about later.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Motivations</h3>
+            <ul>
+              <li>Wants honesty over polish — a plain "we don't know" beats a confident guess.</li>
+              <li>Needs to feel she can leave without having "committed" to anything.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scenario">
+          <h3>Scenario</h3>
+          <p>Maya opens the quiz link during a study break, phone in hand, expecting a sales pitch after
+            three questions. When an agency's support-cost field shows "worth asking about" instead of a
+            confident number, she relaxes a little — it doesn't feel like it's trying to close her. She
+            saves three matches to revisit after finals and doesn't create an account.</p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="persona p-dana">
+    <div class="persona__band">
+      <span class="persona__index">Segment 02</span>
+      <span class="persona__segment">Comparison shopper</span>
+    </div>
+    <div class="persona__body">
+      <div class="persona__id">
+        <div class="avatar">DO</div>
+        <div>
+          <p class="persona__name">Dana Okafor</p>
+          <p class="persona__role">34 · Former TESOL teacher</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Location</dt><dd>Austin, TX</dd></div>
+          <div><dt>Stage</dt><dd>Active applicant, 1 agency</dd></div>
+          <div><dt>Household</dt><dd>Spouse + 2 kids</dd></div>
+          <div><dt>Found via</dt><dd>Google, "TESOL missions agencies"</dd></div>
+        </dl>
+        <div class="proficiency">
+          <span class="proficiency__label">Tech proficiency</span>
+          <div class="dots">
+            <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span>
+          </div>
+        </div>
+      </div>
+      <div class="persona__main">
+        <p class="quote">"Show me what's actually different — not just what every agency says about itself."</p>
+        <div class="grid2">
+          <div class="block goals">
+            <h3>Goals</h3>
+            <p><span class="tag">Primary</span>Compare placement types, field support, and cost structure across 2–3 agencies against the one she's already applying to.</p>
+            <p><span class="tag">Secondary</span>Find education-sector openings in regions viable for a family with school-age kids.</p>
+          </div>
+          <div class="block">
+            <h3>Pain points</h3>
+            <ul>
+              <li>Distrusts self-reported agency copy — "everyone says they have great member care."</li>
+              <li>Generic listings waste her time; she wants filters that actually narrow the set.</li>
+              <li>Family logistics (schooling, healthcare abroad) rarely show up as filterable fields.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Behaviors</h3>
+            <ul>
+              <li>Keeps a spreadsheet scoring agencies on her own criteria.</li>
+              <li>Reads missionary-alumni forums for the parts agencies don't put in brochures.</li>
+              <li>Emails agencies directly with pointed, specific questions.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Motivations</h3>
+            <ul>
+              <li>Efficiency — she's done the emotional discernment; now it's due diligence.</li>
+              <li>Wants tradeoffs named plainly, not smoothed over.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scenario">
+          <h3>Scenario</h3>
+          <p>Dana skips the quiz — she's past that stage — and goes straight to the opportunities
+            explorer on her laptop. She filters by region, "family-friendly," and education sector,
+            opens inquiry forms on two listings that clear her bar, and saves the rest to cross-check
+            against her spreadsheet that evening. A filter that silently returns zero results without
+            explaining why is the fastest way to lose her.</p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="persona p-grace">
+    <div class="persona__band">
+      <span class="persona__index">Segment 03</span>
+      <span class="persona__segment">Pre-field / returning user</span>
+    </div>
+    <div class="persona__body">
+      <div class="persona__id">
+        <div class="avatar">GL</div>
+        <div>
+          <p class="persona__name">Grace Lindqvist</p>
+          <p class="persona__role">41 · Nurse practitioner</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Location</dt><dd>Minneapolis, MN</dd></div>
+          <div><dt>Stage</dt><dd>Accepted, 4 months to deployment</dd></div>
+          <div><dt>Sending context</dt><dd>Home church support team</dd></div>
+          <div><dt>Found via</dt><dd>Her agency's onboarding email</dd></div>
+        </dl>
+        <div class="proficiency">
+          <span class="proficiency__label">Tech proficiency</span>
+          <div class="dots">
+            <span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+      <div class="persona__main">
+        <p class="quote">"I just need this thing to remember where I left off."</p>
+        <div class="grid2">
+          <div class="block goals">
+            <h3>Goals</h3>
+            <p><span class="tag">Primary</span>Work through pre-field logistics — training, paperwork, support raising — without losing progress between sessions.</p>
+            <p><span class="tag">Secondary</span>Keep her home church's prayer team updated without a separate tool.</p>
+          </div>
+          <div class="block">
+            <h3>Pain points</h3>
+            <ul>
+              <li>A past support-raising tool logged her out mid-form and lost an afternoon's work.</li>
+              <li>Anxious about missing a required step with no visible way to confirm it's done.</li>
+              <li>Gets flustered by auth flows that don't clearly confirm success or failure.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Behaviors</h3>
+            <ul>
+              <li>Checks the checklist on a set weekly cadence, usually Tuesday mornings.</li>
+              <li>Signs in by magic link from whatever device is nearest.</li>
+              <li>Posts short prayer updates for her sending church after each session.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Motivations</h3>
+            <ul>
+              <li>Reliability over features — she will not forgive lost progress twice.</li>
+              <li>Wants to feel accompanied, not just administered to.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="scenario">
+          <h3>Scenario</h3>
+          <p>Grace logs in via a magic-link email between patients. The checklist opens exactly where she
+            left it — "Medical clearance" still unchecked from last week. She uploads confirmation,
+            checks it off, watches for the save to register, then posts a two-line update to the prayer
+            map before her next appointment. If the check mark doesn't visibly stick, she'll email her
+            agency contact to ask if it actually went through.</p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <footer class="page">
+    Composite personas for internal UX evaluation — not drawn from a fielded research study.
+    Built to stress-test onboarding, filtering, and checklist/auth flows from three distinct
+    entry points into the site.
+  </footer>
+
+</div>
