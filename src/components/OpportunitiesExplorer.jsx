@@ -37,8 +37,8 @@
 //   --glass-shadow: 0 8px 32px rgba(22, 35, 59, 0.18)
 //   --focus-ring: 0 0 0 2px var(--atlas-paper), 0 0 0 4px var(--voyage-teal)
 //
-// Generated: "2026-09-03T20:26:20.819Z"
-// Opportunities: 1794 across 34 agencies
+// Generated: "2026-09-15T14:47:31.268Z"
+// Opportunities: 1816 across 34 agencies
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -49,6 +49,7 @@ import { supabase } from '../supabaseClient.js';
 import RevealOnScroll from './RevealOnScroll.jsx';
 import useDebouncedValue from '../hooks/useDebouncedValue.js';
 import useJsonLd from '../hooks/useJsonLd.js';
+import { getPreloaded, setPreloaded } from '../utils/preloadedData.js';
 
 // Reuses the quiz's own scoring output (src/data/scoreAgency.js via
 // MatchQuiz.jsx) rather than a second scoring system — CLAUDE.md is explicit
@@ -196,6 +197,7 @@ const ROLE_TYPES = [
   "prayer",
   "relief and development",
   "research",
+  "residency program",
   "short-term missions",
   "sports ministry",
   "staff/leadership",
@@ -447,7 +449,15 @@ function InquiryModal({ opportunity, onClose }) {
 export default function OpportunitiesExplorer({ agencyFilter }) {
   // null = not loaded yet (distinct from "loaded, zero results" so the
   // empty-filters copy doesn't flash for a normal loading heartbeat).
-  const [opportunities, setOpportunities] = useState(null);
+  // Seeded from window.__PRELOADED__ when present (see
+  // src/utils/preloadedData.js) — scripts/prerender.js's static snapshot
+  // already has real listings baked into its HTML by the time a crawler or
+  // slow first visit sees it, but a real visitor's own React tree still
+  // starts fresh on every load (this app uses createRoot, not hydrateRoot —
+  // see main.jsx). Without this seed, that fresh start began at `null`
+  // regardless, so the already-rendered real cards flashed to a loading
+  // skeleton and back — worse than just showing the skeleton throughout.
+  const [opportunities, setOpportunities] = useState(() => getPreloaded('opportunities') ?? null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
@@ -540,6 +550,7 @@ export default function OpportunitiesExplorer({ agencyFilter }) {
       })
       .then((data) => {
         if (cancelled) return;
+        setPreloaded('opportunities', data);
         setOpportunities((prev) => (prev === null ? data : prev));
       })
       .catch((err) => {

@@ -161,12 +161,12 @@ describe('MapPage', () => {
       await vi.waitFor(() => expect(lastMockMap).not.toBeNull());
       // Deliberately never call __triggerLoad or __triggerError.
 
-      expect(screen.getByText(/finding unreached peoples/i)).toBeInTheDocument();
+      expect(screen.getByText(/loading unreached-group counts/i)).toBeInTheDocument();
 
       await vi.advanceTimersByTimeAsync(20000);
 
       expect(screen.getByRole('alert')).toHaveTextContent(/taking longer than expected/i);
-      expect(screen.queryByText(/finding unreached peoples/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading unreached-group counts/i)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
       consoleError.mockRestore();

@@ -109,7 +109,13 @@ export default function MapPage() {
       </section>
       {view === 'map' ? (
         <div className="page-map">
-          <Suspense fallback={<p className="map-loading" role="status">Loading map&hellip;</p>}>
+          <Suspense
+            fallback={
+              <div className="map-page-skeleton">
+                <p className="visually-hidden" role="status">Loading map&hellip;</p>
+              </div>
+            }
+          >
             <WorldMap
               selected={selected}
               onSelect={setSelected}

@@ -141,8 +141,8 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
   // actually contains (set on load, see the tally below) — not a hand-typed
   // "major world religions" list, so the filter never offers a category with
   // zero real matches or silently drops one Joshua Project adds later.
-  const [religions, setReligions] = useState([]);
-  const [religionCounts, setReligionCounts] = useState({});
+  const [religions, setReligions] = useState(() => getPreloaded('mapReligions') ?? []);
+  const [religionCounts, setReligionCounts] = useState(() => getPreloaded('mapReligionCounts') ?? {});
   // Empty set = no restriction (every religion shown) — unlike `active`
   // above, where membership means "shown" and the set starts full. Matches
   // the same "nothing selected = unfiltered" chip semantics already used by
@@ -275,7 +275,10 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
       setCounts(tally);
       // Most-represented first — reads as "the real major religions in this
       // dataset" rather than an alphabetical list.
-      setReligions(Object.keys(religionTally).sort((a, b) => religionTally[b] - religionTally[a]));
+      const sortedReligions = Object.keys(religionTally).sort((a, b) => religionTally[b] - religionTally[a]);
+      setPreloaded('mapReligions', sortedReligions);
+      setReligions(sortedReligions);
+      setPreloaded('mapReligionCounts', religionTally);
       setReligionCounts(religionTally);
 
       // Share the loaded features with the parent (MapAccessibleSearch) so a
@@ -579,9 +582,12 @@ export default function WorldMap({ selected, onSelect, onDataLoaded, initialReli
         </p>
       ) : (
         <>
-          {counts === null && (
-            <p className="map-loading" role="status">Finding unreached peoples&hellip;</p>
-          )}
+          {/* The initial "loading" state now lives inside MapLegend itself
+              (shimmering count placeholders) — see its own comment for why
+              a separate floating badge here would just duplicate/overlap
+              it. filtering is a distinct, much shorter-lived case (a
+              visibility-flag update after a filter click, not the first
+              data load), so it keeps its own small transient badge. */}
           {filtering && (
             <p className="map-loading" role="status">Updating map&hellip;</p>
           )}

@@ -2233,6 +2233,22 @@ html:not([data-app-booted]) [data-reveal] {
 /* min-height (not just flex:1) so this never collapses when the detail
    panel below pushes total page content past the viewport height. */
 .page-map { flex: 1; display: flex; min-height: 70dvh; position: relative; }
+
+/* React.lazy's Suspense fallback while WorldMap's own chunk (maplibre-gl
+   included) is still loading — .page-map's own min-height already reserves
+   this box's footprint, so swapping this for the real map causes no
+   layout shift; this only needs to fill that already-reserved space. */
+.map-page-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, var(--ink-navy) 30%, rgba(255, 255, 255, 0.05) 45%, var(--ink-navy) 60%);
+  background-size: 200% 100%;
+  animation: opp-skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-page-skeleton { animation: none; }
+}
 .map-wrapper { position: relative; flex: 1; display: flex; }
 #map-container { width: 100%; flex: 1; }
 
@@ -2518,6 +2534,23 @@ html:not([data-app-booted]) [data-reveal] {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--muted-text);
+}
+
+/* Same shimmer keyframe as .opp-card-skeleton (styles.css, OPPORTUNITIES
+   section) — reused rather than a second animation for the same "content
+   is coming" cue, just on a small inline bar instead of a whole card. */
+.map-legend-count-skeleton {
+  margin-left: auto;
+  width: 1.5rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(100deg, rgba(22, 35, 59, 0.08) 30%, rgba(22, 35, 59, 0.18) 45%, rgba(22, 35, 59, 0.08) 60%);
+  background-size: 200% 100%;
+  animation: opp-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-legend-count-skeleton { animation: none; }
 }
 
 /* Keyboard-operable alternative to clicking a canvas point (see

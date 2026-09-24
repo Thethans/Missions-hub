@@ -1,4 +1,14 @@
+import { afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
+
+// src/utils/preloadedData.js reads/writes this real global — components
+// that seed initial state from it (WorldMap's mapCounts/mapReligions,
+// OpportunitiesExplorer's opportunities list) would otherwise leak
+// preloaded data from one test into the next test in the same file, since
+// jsdom's window persists across it() blocks unless reset.
+afterEach(() => {
+  delete window.__PRELOADED__;
+});
 
 // jsdom doesn't implement these — several components rely on them
 // (usePrefersReducedMotion via matchMedia, JourneySection via

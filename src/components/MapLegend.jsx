@@ -123,6 +123,16 @@ export default function MapLegend({
             <X size={18} weight="bold" />
           </button>
         </div>
+        {/* counts is null only until the geojson tally resolves (see
+            WorldMap.jsx) — most real visits skip this entirely, since
+            counts/religions are seeded from the prerendered snapshot's
+            preloaded data (src/utils/preloadedData.js). A shimmering
+            placeholder in the count's own slot reads as "this number is
+            coming" rather than the swatches/labels looking finished while
+            silently missing data. */}
+        {counts === null && (
+          <p className="visually-hidden" role="status">Loading unreached-group counts&hellip;</p>
+        )}
         {ITEMS.map((item) => {
           const isActive = !active || active.has(item.status);
           return (
@@ -135,7 +145,11 @@ export default function MapLegend({
             >
               <span className={`map-legend-swatch status-${item.status}`} />
               {item.label}
-              {counts && <span className="map-legend-count">{counts[item.status] ?? 0}</span>}
+              {counts ? (
+                <span className="map-legend-count">{counts[item.status] ?? 0}</span>
+              ) : (
+                <span className="map-legend-count-skeleton" aria-hidden="true" />
+              )}
             </button>
           );
         })}
